@@ -10,516 +10,374 @@
   <link rel="manifest" href="manifest.json">
   <title>CleanUp</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --primary:       #4f46e5;
-      --primary-light: #e0e7ff;
-      --danger:        #ef4444;
-      --danger-light:  #fee2e2;
-      --warning:       #d97706;
-      --warning-light: #fef3c7;
-      --orange:        #f97316;
-      --orange-light:  #fff7ed;
-      --success:       #10b981;
-      --success-light: #d1fae5;
-      --gray-50:  #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-400: #9ca3af;
-      --gray-500: #6b7280;
-      --gray-700: #374151;
-      --gray-900: #111827;
-      --radius:    16px;
-      --radius-sm: 10px;
-      --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-      --shadow-lg: 0 10px 25px rgba(0,0,0,.12);
+      --primary: #4f46e5; --primary-light: #e0e7ff;
+      --danger: #ef4444;  --danger-light: #fee2e2;
+      --warning: #d97706; --warning-light: #fef3c7;
+      --orange: #f97316;  --orange-light: #fff7ed;
+      --success: #10b981; --success-light: #d1fae5;
+      --g50:#f9fafb; --g100:#f3f4f6; --g200:#e5e7eb; --g300:#d1d5db;
+      --g400:#9ca3af; --g500:#6b7280; --g700:#374151; --g900:#111827;
+      --r:16px; --rs:10px;
+      --sh: 0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+      --shl: 0 10px 25px rgba(0,0,0,.12);
     }
-
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--gray-50);
-      color: var(--gray-900);
-      max-width: 480px;
-      margin: 0 auto;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-      -webkit-tap-highlight-color: transparent;
+      font-family:'Inter',-apple-system,sans-serif; background:var(--g50);
+      color:var(--g900); max-width:480px; margin:0 auto; min-height:100vh;
+      -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
     }
 
     /* ── Header ── */
     .header {
-      background: white;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--gray-200);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 20;
+      background:white; padding:13px 18px; border-bottom:1px solid var(--g200);
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:20;
     }
-    .header h1 { font-size: 20px; font-weight: 700; color: var(--primary); letter-spacing: -0.3px; }
-    .points-badge {
-      background: var(--primary-light);
-      color: var(--primary);
-      font-size: 13px;
-      font-weight: 700;
-      padding: 6px 13px;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: transform .2s;
+    .header h1 { font-size:19px; font-weight:800; color:var(--primary); letter-spacing:-.3px; }
+    .pts-badge {
+      background:var(--primary-light); color:var(--primary); font-size:13px;
+      font-weight:700; padding:6px 13px; border-radius:20px; cursor:default;
     }
-    .points-badge.bump { animation: bump .3s ease; }
-    @keyframes bump { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    .pts-badge.bump { animation:bump .3s ease; }
+    @keyframes bump{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 
     /* ── Views ── */
-    .view { display: none; padding: 14px 14px 88px; }
-    .view.active { display: block; }
+    .view { display:none; padding:12px 12px 88px; }
+    .view.active { display:block; }
 
     /* ── Bottom nav ── */
     .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      max-width: 480px;
-      background: white;
-      border-top: 1px solid var(--gray-200);
-      display: flex;
-      z-index: 20;
-      padding-bottom: env(safe-area-inset-bottom);
+      position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+      width:100%; max-width:480px; background:white; border-top:1px solid var(--g200);
+      display:flex; z-index:20; padding-bottom:env(safe-area-inset-bottom);
     }
     .nav-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 0 12px;
-      cursor: pointer;
-      color: var(--gray-400);
-      font-size: 11px;
-      font-weight: 600;
-      gap: 3px;
-      border: none;
-      background: none;
-      font-family: inherit;
-      transition: color .15s;
+      flex:1; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; padding:9px 0 11px; cursor:pointer; color:var(--g400);
+      font-size:11px; font-weight:600; gap:3px; border:none; background:none;
+      font-family:inherit; transition:color .15s;
     }
-    .nav-item.active { color: var(--primary); }
-    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item.active { color:var(--primary); }
+    .nav-item svg { width:22px; height:22px; }
 
-    /* ── Section labels ── */
-    .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--gray-400);
-      margin: 18px 2px 8px;
+    /* ── Category sections ── */
+    .cat-section { margin-bottom:6px; }
+    .cat-header {
+      display:flex; align-items:center; gap:8px; padding:10px 12px;
+      background:white; border-radius:var(--r); box-shadow:var(--sh);
+      cursor:pointer; user-select:none; margin-bottom:0;
+      transition:border-radius .2s;
     }
-    .section-label:first-child { margin-top: 4px; }
+    .cat-header.open { border-radius:var(--r) var(--r) 0 0; }
+    .cat-title { flex:1; font-size:14px; font-weight:700; }
+    .cat-summary { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+    .chevron {
+      width:20px; height:20px; color:var(--g400); flex-shrink:0;
+      transition:transform .2s;
+    }
+    .cat-header.open .chevron { transform:rotate(180deg); }
+    .cat-body {
+      background:white; border-radius:0 0 var(--r) var(--r);
+      border-top:1px solid var(--g100); overflow:hidden;
+      max-height:0; transition:max-height .25s ease;
+    }
+    .cat-body.open { max-height:2000px; }
+    .cat-body-inner { padding:8px 10px 10px; display:flex; flex-direction:column; gap:8px; }
 
-    /* ── Task cards (dashboard) ── */
+    /* ── Task cards ── */
     .task-card {
-      background: white;
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      box-shadow: var(--shadow);
-      border-left: 4px solid var(--gray-200);
+      border-radius:var(--rs); padding:12px 14px;
+      border-left:4px solid var(--g200); background:var(--g50);
     }
-    .task-card.overdue   { border-left-color: var(--danger); }
-    .task-card.due-today { border-left-color: var(--warning); }
-    .task-card.due-soon  { border-left-color: var(--orange); }
-    .task-card.upcoming  { border-left-color: var(--success); }
-
-    .task-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .task-name { font-size: 15px; font-weight: 700; color: var(--gray-900); line-height: 1.3; }
-    .task-meta { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
-
-    .badge-row { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    .task-card.overdue   { border-left-color:var(--danger);  background:#fff5f5; }
+    .task-card.due-today { border-left-color:var(--warning); background:#fffbeb; }
+    .task-card.due-soon  { border-left-color:var(--orange);  background:#fff7ed; }
+    .task-card.upcoming  { border-left-color:var(--success); background:#f0fdf9; }
+    .task-name { font-size:14px; font-weight:700; }
+    .task-meta { font-size:11px; color:var(--g400); margin-top:1px; }
+    .badge-row { display:flex; gap:4px; flex-wrap:wrap; margin:7px 0; }
     .badge {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 20px;
-      white-space: nowrap;
+      font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px;
+      white-space:nowrap;
     }
-    .badge-category { background: var(--gray-100); color: var(--gray-500); }
-    .badge-overdue  { background: var(--danger-light);  color: var(--danger);  }
-    .badge-today    { background: var(--warning-light); color: var(--warning); }
-    .badge-soon     { background: var(--orange-light);  color: var(--orange);  }
-    .badge-upcoming { background: var(--success-light); color: var(--success); }
-    .badge-points   { background: var(--primary-light); color: var(--primary); }
-
-    .task-actions { display: flex; gap: 7px; }
+    .badge-overdue  { background:var(--danger-light);  color:var(--danger);  }
+    .badge-today    { background:var(--warning-light); color:var(--warning); }
+    .badge-soon     { background:var(--orange-light);  color:var(--orange);  }
+    .badge-upcoming { background:var(--success-light); color:var(--success); }
+    .badge-pts      { background:var(--primary-light); color:var(--primary); }
+    .task-actions { display:flex; gap:6px; }
     .btn {
-      border: none;
-      border-radius: var(--radius-sm);
-      padding: 9px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      transition: opacity .1s, transform .1s;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      -webkit-tap-highlight-color: transparent;
+      border:none; border-radius:var(--rs); padding:8px 12px; font-size:13px;
+      font-weight:700; cursor:pointer; font-family:inherit;
+      transition:opacity .1s,transform .1s; display:flex; align-items:center; gap:4px;
+      -webkit-tap-highlight-color:transparent;
     }
-    .btn:active { transform: scale(0.95); opacity: .85; }
-    .btn-done   { background: var(--primary); color: white; flex: 1; justify-content: center; }
-    .btn-snooze { background: var(--gray-100); color: var(--gray-600); }
+    .btn:active { transform:scale(0.95); opacity:.85; }
+    .btn-done   { background:var(--primary); color:white; flex:1; justify-content:center; }
+    .btn-snooze { background:var(--g100); color:var(--g700); }
 
     /* ── Empty state ── */
-    .empty-state { text-align: center; padding: 56px 24px; color: var(--gray-400); }
-    .empty-state .icon { font-size: 52px; margin-bottom: 12px; }
-    .empty-state p { font-size: 15px; line-height: 1.5; }
+    .empty-state { text-align:center; padding:52px 24px; color:var(--g400); }
+    .empty-state .icon { font-size:48px; margin-bottom:12px; }
+    .empty-state p { font-size:14px; line-height:1.6; }
 
-    /* ── Overlay / Bottom sheet ── */
+    /* ── Overlays / Sheets ── */
     .overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.45);
-      z-index: 100;
-      align-items: flex-end;
-      justify-content: center;
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
+      z-index:100; align-items:flex-end; justify-content:center;
     }
-    .overlay.open { display: flex; animation: fadeIn .2s; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
+    .overlay.open { display:flex; animation:fadeIn .2s; }
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     .sheet {
-      background: white;
-      border-radius: var(--radius) var(--radius) 0 0;
-      padding: 12px 20px 36px;
-      width: 100%;
-      max-width: 480px;
-      animation: slideUp .25s cubic-bezier(.25,.46,.45,.94);
-      max-height: 90vh;
-      overflow-y: auto;
+      background:white; border-radius:var(--r) var(--r) 0 0;
+      padding:10px 18px 34px; width:100%; max-width:480px;
+      animation:slideUp .24s cubic-bezier(.25,.46,.45,.94);
+      max-height:90vh; overflow-y:auto;
     }
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
     .sheet-handle {
-      width: 40px; height: 4px;
-      background: var(--gray-200);
-      border-radius: 2px;
-      margin: 6px auto 18px;
+      width:40px; height:4px; background:var(--g200);
+      border-radius:2px; margin:4px auto 16px;
     }
-    .sheet-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; }
+    .sheet-title { font-size:17px; font-weight:700; margin-bottom:16px; }
 
-    /* Done sheet specifics */
-    .done-points-display {
-      text-align: center;
-      padding: 20px;
-      background: linear-gradient(135deg, var(--primary-light), #ede9fe);
-      border-radius: var(--radius);
-      margin-bottom: 18px;
+    /* ── Done sheet ── */
+    .done-pts-box {
+      text-align:center; padding:18px; border-radius:var(--r); margin-bottom:16px;
+      background:linear-gradient(135deg,var(--primary-light),#ede9fe);
     }
-    .done-points-display .num  { font-size: 40px; font-weight: 800; color: var(--primary); }
-    .done-points-display .sub  { color: var(--primary); font-size: 13px; margin-top: 2px; font-weight: 500; }
+    .done-pts-box .num { font-size:38px; font-weight:800; color:var(--primary); }
+    .done-pts-box .sub { color:var(--primary); font-size:12px; margin-top:2px; font-weight:500; }
+    .interval-row {
+      display:flex; align-items:center; gap:10px; background:var(--g50);
+      border-radius:var(--rs); padding:13px 15px; margin-bottom:16px;
+    }
+    .interval-label { flex:1; font-size:14px; font-weight:600; color:var(--g700); }
+    .stepper { display:flex; align-items:center; gap:10px; }
+    .stbtn {
+      width:32px; height:32px; border-radius:50%; border:none; background:white;
+      box-shadow:var(--sh); font-size:19px; cursor:pointer; display:flex;
+      align-items:center; justify-content:center; font-weight:700; color:var(--g700);
+      transition:transform .1s;
+    }
+    .stbtn:active { transform:scale(0.9); }
+    .stval { font-size:19px; font-weight:800; min-width:30px; text-align:center; color:var(--primary); }
+    .stunit { font-size:12px; color:var(--g400); }
+    .btn-full { width:100%; justify-content:center; padding:13px; font-size:14px; border-radius:var(--r); }
+    .btn-primary   { background:var(--primary); color:white; }
+    .btn-danger    { background:var(--danger); color:white; }
+    .btn-secondary { background:var(--g100); color:var(--g700); margin-top:8px; }
+    .btn-warning   { background:var(--warning-light); color:var(--warning); }
 
-    .interval-control {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--gray-50);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-      margin-bottom: 18px;
+    /* ── Forms ── */
+    .form-group { margin-bottom:13px; }
+    .form-label {
+      display:block; font-size:11px; font-weight:700; color:var(--g500);
+      margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em;
     }
-    .interval-label { flex: 1; font-size: 14px; font-weight: 600; color: var(--gray-700); }
-    .interval-stepper { display: flex; align-items: center; gap: 10px; }
-    .stepper-btn {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      border: none;
-      background: white;
-      box-shadow: var(--shadow);
-      font-size: 20px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-family: inherit;
-      font-weight: 700;
-      color: var(--gray-700);
-      transition: transform .1s;
+    .form-input,.form-select {
+      width:100%; padding:11px 13px; border:1.5px solid var(--g200);
+      border-radius:var(--rs); font-size:15px; font-family:inherit;
+      color:var(--g900); background:white; outline:none; transition:border-color .15s;
     }
-    .stepper-btn:active { transform: scale(0.9); }
-    .interval-value {
-      font-size: 20px; font-weight: 800;
-      min-width: 32px; text-align: center;
-      color: var(--primary);
-    }
-    .interval-unit { font-size: 13px; color: var(--gray-400); font-weight: 500; }
+    .form-input:focus,.form-select:focus { border-color:var(--primary); }
+    .form-row { display:flex; gap:10px; }
+    .form-row .form-group { flex:1; }
 
-    .btn-full { width: 100%; justify-content: center; padding: 14px; font-size: 15px; border-radius: var(--radius); }
-    .btn-primary   { background: var(--primary); color: white; }
-    .btn-danger    { background: var(--danger); color: white; }
-    .btn-secondary { background: var(--gray-100); color: var(--gray-700); margin-top: 10px; }
-
-    /* ── Task form ── */
-    .form-group { margin-bottom: 14px; }
-    .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--gray-500); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
-    .form-input, .form-select {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid var(--gray-200);
-      border-radius: var(--radius-sm);
-      font-size: 15px;
-      font-family: inherit;
-      color: var(--gray-900);
-      background: white;
-      outline: none;
-      transition: border-color .15s;
-      appearance: auto;
-    }
-    .form-input:focus, .form-select:focus { border-color: var(--primary); }
-    .form-row { display: flex; gap: 10px; }
-    .form-row .form-group { flex: 1; }
-
-    /* ── Tasks management ── */
+    /* ── Task list (manage tab) ── */
     .task-item {
-      background: white;
-      border-radius: var(--radius-sm);
-      padding: 13px 15px;
-      margin-bottom: 8px;
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      background:white; border-radius:var(--rs); padding:12px 14px; margin-bottom:7px;
+      box-shadow:var(--sh); display:flex; align-items:center; gap:10px;
     }
-    .task-item-info { flex: 1; min-width: 0; }
-    .task-item-name { font-size: 15px; font-weight: 600; }
-    .task-item-sub  { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
-    .task-item-actions { display: flex; gap: 7px; flex-shrink: 0; }
+    .task-item-info { flex:1; min-width:0; }
+    .task-item-name { font-size:14px; font-weight:600; }
+    .task-item-sub  { font-size:11px; color:var(--g400); margin-top:2px; }
+    .task-item-actions { display:flex; gap:6px; flex-shrink:0; }
     .icon-btn {
-      width: 36px; height: 36px;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px;
+      width:34px; height:34px; border-radius:var(--rs); border:none; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; font-size:14px;
     }
-    .icon-btn-edit   { background: var(--primary-light); }
-    .icon-btn-delete { background: var(--danger-light); }
+    .icon-btn-edit   { background:var(--primary-light); }
+    .icon-btn-delete { background:var(--danger-light); }
 
     /* ── FAB ── */
     .fab {
-      position: fixed;
-      bottom: 76px;
-      right: 20px;
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: white;
-      border: none;
-      font-size: 26px;
-      cursor: pointer;
-      box-shadow: 0 4px 16px rgba(79,70,229,.45);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 10;
-      transition: transform .15s;
-      font-family: inherit;
+      position:fixed; bottom:74px; right:18px; width:54px; height:54px;
+      border-radius:50%; background:var(--primary); color:white; border:none;
+      font-size:26px; cursor:pointer; box-shadow:0 4px 16px rgba(79,70,229,.45);
+      display:flex; align-items:center; justify-content:center; z-index:10;
+      transition:transform .15s; font-family:inherit;
     }
-    .fab:active { transform: scale(0.9); }
+    .fab:active { transform:scale(0.9); }
 
     /* ── Rewards ── */
-    .points-hero {
-      background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
-      color: white;
-      border-radius: var(--radius);
-      padding: 26px 24px;
-      margin-bottom: 4px;
-      text-align: center;
+    .pts-hero {
+      background:linear-gradient(135deg,var(--primary),#7c3aed);
+      color:white; border-radius:var(--r); padding:22px 20px; margin-bottom:4px; text-align:center;
     }
-    .points-hero .total  { font-size: 52px; font-weight: 800; letter-spacing: -2px; }
-    .points-hero .label  { font-size: 14px; opacity: .85; margin-top: 2px; font-weight: 500; }
-    .points-hero .sub    { font-size: 12px; opacity: .65; margin-top: 8px; }
+    .pts-hero .pts-num {
+      font-size:50px; font-weight:800; letter-spacing:-2px; cursor:pointer;
+      border-bottom:2px dashed rgba(255,255,255,.4); display:inline-block;
+      transition:border-color .15s;
+    }
+    .pts-hero .pts-num:hover { border-color:rgba(255,255,255,.8); }
+    .pts-hero .pts-edit {
+      font-size:40px; font-weight:800; width:160px; text-align:center;
+      background:transparent; border:2px solid rgba(255,255,255,.6);
+      color:white; border-radius:12px; outline:none; font-family:inherit;
+      padding:4px 8px;
+    }
+    .pts-hero .pts-label { font-size:13px; opacity:.8; margin-top:3px; font-weight:500; }
+    .pts-hero .pts-sub   { font-size:11px; opacity:.6; margin-top:6px; }
+    .pts-hero .pts-hint  { font-size:10px; opacity:.5; margin-top:4px; }
 
     .reward-card {
-      background: white;
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      background:white; border-radius:var(--r); padding:13px 15px; margin-bottom:8px;
+      box-shadow:var(--sh); display:flex; align-items:center; gap:12px;
     }
-    .reward-emoji { font-size: 34px; flex-shrink: 0; }
-    .reward-info  { flex: 1; min-width: 0; }
-    .reward-name  { font-size: 15px; font-weight: 700; }
-    .reward-cost  { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
-
+    .reward-emoji { font-size:30px; flex-shrink:0; }
+    .reward-info  { flex:1; min-width:0; }
+    .reward-name  { font-size:14px; font-weight:700; }
+    .reward-cost  { font-size:12px; color:var(--g400); margin-top:1px; }
+    .reward-actions { display:flex; gap:6px; align-items:center; flex-shrink:0; }
     .btn-redeem {
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: var(--radius-sm);
-      padding: 9px 16px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      white-space: nowrap;
-      transition: opacity .15s, transform .1s;
-      flex-shrink: 0;
+      background:var(--primary); color:white; border:none; border-radius:var(--rs);
+      padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer;
+      font-family:inherit; white-space:nowrap; transition:opacity .15s,transform .1s;
     }
-    .btn-redeem:active { transform: scale(0.95); }
-    .btn-redeem:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; transform: none; }
+    .btn-redeem:active { transform:scale(0.95); }
+    .btn-redeem:disabled { background:var(--g200); color:var(--g400); cursor:not-allowed; transform:none; }
 
     /* ── History ── */
     .history-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: white;
-      border-radius: var(--radius-sm);
-      margin-bottom: 6px;
-      font-size: 13px;
+      display:flex; align-items:center; gap:9px; padding:9px 13px;
+      background:white; border-radius:var(--rs); margin-bottom:5px; font-size:12px;
     }
-    .history-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .history-dot.earn   { background: var(--success); }
-    .history-dot.redeem { background: var(--danger); }
-    .history-name   { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .history-pts    { font-weight: 700; flex-shrink: 0; }
-    .history-pts.earn   { color: var(--success); }
-    .history-pts.redeem { color: var(--danger); }
-    .history-date   { color: var(--gray-400); font-size: 11px; flex-shrink: 0; }
+    .hdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .hdot.earn   { background:var(--success); }
+    .hdot.redeem { background:var(--danger); }
+    .hname { flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hpts  { font-weight:700; flex-shrink:0; }
+    .hpts.earn   { color:var(--success); }
+    .hpts.redeem { color:var(--danger); }
+    .hdate { color:var(--g400); font-size:10px; flex-shrink:0; }
+
+    /* ── Section label ── */
+    .slabel {
+      font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.06em; color:var(--g400); margin:16px 2px 8px;
+    }
+    .slabel:first-child { margin-top:4px; }
+
+    /* ── Danger zone ── */
+    .danger-zone {
+      margin-top:24px; padding:16px; background:var(--danger-light);
+      border-radius:var(--r); border:1px solid #fca5a5;
+    }
+    .danger-zone h3 { font-size:13px; font-weight:700; color:var(--danger); margin-bottom:10px; }
 
     /* ── Toast ── */
     .toast {
-      position: fixed;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background: var(--gray-900);
-      color: white;
-      padding: 10px 22px;
-      border-radius: 24px;
-      font-size: 14px;
-      font-weight: 600;
-      z-index: 500;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s, transform .2s;
-      white-space: nowrap;
-      box-shadow: var(--shadow-lg);
+      position:fixed; bottom:88px; left:50%;
+      transform:translateX(-50%) translateY(8px);
+      background:var(--g900); color:white; padding:9px 20px;
+      border-radius:22px; font-size:13px; font-weight:600; z-index:500;
+      opacity:0; pointer-events:none; transition:opacity .2s,transform .2s;
+      white-space:nowrap; box-shadow:var(--shl);
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
     /* ── Confetti ── */
-    #confetti-canvas {
-      position: fixed; inset: 0;
-      pointer-events: none;
-      z-index: 1000;
-    }
+    #confetti-canvas { position:fixed; inset:0; pointer-events:none; z-index:1000; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
   <div class="header">
     <h1>🏠 CleanUp</h1>
-    <div class="points-badge" id="header-points">⭐ 0 pts</div>
+    <div class="pts-badge" id="header-points">⭐ 0 pts</div>
   </div>
 
-  <!-- Dashboard view -->
+  <!-- Dashboard -->
   <div class="view active" id="view-dashboard">
     <div id="dashboard-content"></div>
   </div>
 
-  <!-- Tasks view -->
+  <!-- Tasks management -->
   <div class="view" id="view-tasks">
     <div id="tasks-content"></div>
-    <button class="fab" id="fab-add" title="Add task">+</button>
+    <button class="fab" id="fab-add-task">+</button>
   </div>
 
-  <!-- Rewards view -->
+  <!-- Rewards -->
   <div class="view" id="view-rewards">
     <div id="rewards-content"></div>
+    <button class="fab" id="fab-add-reward" style="display:none">+</button>
   </div>
 
-  <!-- Bottom navigation -->
   <nav class="bottom-nav">
     <button class="nav-item active" data-view="dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
-      Dashboard
+      </svg>Dashboard
     </button>
     <button class="nav-item" data-view="tasks">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="8" y1="6" x2="21" y2="6"/>
-        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
         <line x1="8" y1="18" x2="21" y2="18"/>
-        <circle cx="3" cy="6"  r=".5" fill="currentColor"/>
+        <circle cx="3" cy="6" r=".5" fill="currentColor"/>
         <circle cx="3" cy="12" r=".5" fill="currentColor"/>
         <circle cx="3" cy="18" r=".5" fill="currentColor"/>
-      </svg>
-      Tasks
+      </svg>Tasks
     </button>
     <button class="nav-item" data-view="rewards">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="8" r="7"/>
         <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
-      </svg>
-      Rewards
+      </svg>Rewards
     </button>
   </nav>
 
-  <!-- ── Done bottom sheet ── -->
+  <!-- ── Done sheet ── -->
   <div class="overlay" id="done-overlay">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-title" id="done-task-name">Task name</div>
-      <div class="done-points-display">
+      <div class="sheet-title" id="done-task-name"></div>
+      <div class="done-pts-box">
         <div class="num" id="done-pts">+10</div>
         <div class="sub">points earned! 🎉</div>
       </div>
-      <div class="interval-control">
+      <div class="interval-row">
         <div class="interval-label">Check again in</div>
-        <div class="interval-stepper">
-          <button class="stepper-btn" id="interval-minus">−</button>
-          <div class="interval-value" id="interval-display">7</div>
-          <button class="stepper-btn" id="interval-plus">+</button>
+        <div class="stepper">
+          <button class="stbtn" id="int-minus">−</button>
+          <div class="stval" id="int-val">7</div>
+          <button class="stbtn" id="int-plus">+</button>
         </div>
-        <span class="interval-unit">days</span>
+        <span class="stunit">days</span>
       </div>
       <button class="btn btn-primary btn-full" id="confirm-done">✓ Mark as done</button>
       <button class="btn btn-secondary btn-full" id="cancel-done">Cancel</button>
     </div>
   </div>
 
-  <!-- ── Add / Edit task sheet ── -->
+  <!-- ── Task add/edit sheet ── -->
   <div class="overlay" id="task-form-overlay">
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title" id="task-form-title">Add Task</div>
       <div class="form-group">
         <label class="form-label">Task name</label>
-        <input class="form-input" id="field-name" placeholder="e.g. Take out trash" maxlength="60">
+        <input class="form-input" id="f-name" placeholder="e.g. Take out trash" maxlength="60">
       </div>
       <div class="form-group">
         <label class="form-label">Category</label>
-        <select class="form-select" id="field-category">
+        <select class="form-select" id="f-cat">
           <option value="Kitchen">🍽 Kitchen</option>
           <option value="Bathroom">🚿 Bathroom</option>
           <option value="Bedroom">🛏 Bedroom</option>
@@ -531,524 +389,737 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Interval (days)</label>
-          <input class="form-input" id="field-interval" type="number" min="1" max="365" value="7">
+          <input class="form-input" id="f-interval" type="number" min="1" max="365" value="7">
         </div>
         <div class="form-group">
           <label class="form-label">Points value</label>
-          <input class="form-input" id="field-points" type="number" min="1" max="999" value="10">
+          <input class="form-input" id="f-pts" type="number" min="1" max="999" value="10">
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Next check-in date</label>
-        <input class="form-input" id="field-nextdue" type="date">
+        <input class="form-input" id="f-nextdue" type="date">
       </div>
       <button class="btn btn-primary btn-full" id="save-task-btn">Save Task</button>
       <button class="btn btn-secondary btn-full" id="cancel-task-btn">Cancel</button>
     </div>
   </div>
 
-  <!-- ── Delete confirm sheet ── -->
-  <div class="overlay" id="delete-overlay">
+  <!-- ── Reward add/edit sheet ── -->
+  <div class="overlay" id="reward-form-overlay">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-title">Delete task?</div>
-      <p style="color:var(--gray-500);margin-bottom:22px;font-size:14px;line-height:1.5;">This will permanently remove the task and its completion history.</p>
-      <button class="btn btn-danger btn-full" id="confirm-delete">Delete</button>
-      <button class="btn btn-secondary btn-full" id="cancel-delete">Cancel</button>
+      <div class="sheet-title" id="reward-form-title">Add Reward</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:0 0 80px">
+          <label class="form-label">Emoji</label>
+          <input class="form-input" id="rf-emoji" placeholder="🍬" maxlength="4" style="text-align:center;font-size:22px;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reward name</label>
+          <input class="form-input" id="rf-name" placeholder="e.g. Pack of Gummies" maxlength="40">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Points cost</label>
+        <input class="form-input" id="rf-cost" type="number" min="1" max="9999" value="50">
+      </div>
+      <button class="btn btn-primary btn-full" id="save-reward-btn">Save Reward</button>
+      <button class="btn btn-secondary btn-full" id="cancel-reward-btn">Cancel</button>
     </div>
   </div>
 
-  <!-- Toast notification -->
-  <div class="toast" id="toast"></div>
+  <!-- ── Delete task confirm ── -->
+  <div class="overlay" id="delete-task-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Delete task?</div>
+      <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;">This will permanently remove the task and its history.</p>
+      <button class="btn btn-danger btn-full" id="confirm-delete-task">Delete</button>
+      <button class="btn btn-secondary btn-full" id="cancel-delete-task">Cancel</button>
+    </div>
+  </div>
 
-  <!-- Confetti canvas -->
+  <!-- ── Delete reward confirm ── -->
+  <div class="overlay" id="delete-reward-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Delete reward?</div>
+      <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;">This will permanently remove this reward.</p>
+      <button class="btn btn-danger btn-full" id="confirm-delete-reward">Delete</button>
+      <button class="btn btn-secondary btn-full" id="cancel-delete-reward">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── Clear all confirm ── -->
+  <div class="overlay" id="clear-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">⚠️ Reset everything?</div>
+      <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.6;">
+        This will erase <strong>all progress, points, and history</strong> and reload the default tasks and rewards from <code>data.json</code>. This cannot be undone.
+      </p>
+      <button class="btn btn-danger btn-full" id="confirm-clear">Yes, reset everything</button>
+      <button class="btn btn-secondary btn-full" id="cancel-clear">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── Import tasks confirm ── -->
+  <div class="overlay" id="import-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">📥 Import shared tasks?</div>
+      <p id="import-desc" style="color:var(--g500);margin-bottom:8px;font-size:13px;line-height:1.6;"></p>
+      <div id="import-preview" style="background:var(--g50);border-radius:var(--rs);padding:10px 12px;margin-bottom:16px;max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--g700);"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-full" id="confirm-import-add">Add to my tasks</button>
+        <button class="btn btn-warning btn-full" id="confirm-import-replace">Replace all</button>
+      </div>
+      <button class="btn btn-secondary btn-full" id="cancel-import">Cancel</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
   <canvas id="confetti-canvas"></canvas>
 
-  <script>
-  // ══════════════════════════════════════════
-  //  DEFAULT DATA
-  // ══════════════════════════════════════════
-  const DEFAULT_TASKS = [
-    { name: "Take out trash",        category: "Kitchen",  defaultInterval: 2,  pointValue: 10 },
-    { name: "Wash dishes",           category: "Kitchen",  defaultInterval: 1,  pointValue: 5  },
-    { name: "Wipe kitchen counters", category: "Kitchen",  defaultInterval: 3,  pointValue: 8  },
-    { name: "Take out recycling",    category: "Kitchen",  defaultInterval: 7,  pointValue: 10 },
-    { name: "Clean toilet",          category: "Bathroom", defaultInterval: 7,  pointValue: 15 },
-    { name: "Clean bathroom sink",   category: "Bathroom", defaultInterval: 5,  pointValue: 10 },
-    { name: "Clean shower",          category: "Bathroom", defaultInterval: 14, pointValue: 20 },
-    { name: "Vacuum floors",         category: "General",  defaultInterval: 7,  pointValue: 20 },
-    { name: "Mop floors",            category: "General",  defaultInterval: 14, pointValue: 25 },
-    { name: "Change bed sheets",     category: "Bedroom",  defaultInterval: 14, pointValue: 20 },
-  ];
+<script>
+// ══════════════════════════════════════════
+//  FALLBACK DEFAULT DATA (if data.json unreachable)
+// ══════════════════════════════════════════
+const FALLBACK_TASKS = [
+  {name:"Take out trash",category:"Kitchen",defaultInterval:2,pointValue:10},
+  {name:"Wash dishes",category:"Kitchen",defaultInterval:1,pointValue:5},
+  {name:"Wipe kitchen counters",category:"Kitchen",defaultInterval:3,pointValue:8},
+  {name:"Take out recycling",category:"Kitchen",defaultInterval:7,pointValue:10},
+  {name:"Clean toilet",category:"Bathroom",defaultInterval:7,pointValue:15},
+  {name:"Clean bathroom sink",category:"Bathroom",defaultInterval:5,pointValue:10},
+  {name:"Clean shower",category:"Bathroom",defaultInterval:14,pointValue:20},
+  {name:"Vacuum floors",category:"General",defaultInterval:7,pointValue:20},
+  {name:"Mop floors",category:"General",defaultInterval:14,pointValue:25},
+  {name:"Change bed sheets",category:"Bedroom",defaultInterval:14,pointValue:20},
+];
+const FALLBACK_REWARDS = [
+  {id:"r1",name:"Pack of Gummies",emoji:"🍬",cost:30},
+  {id:"r2",name:"Candy Bar",emoji:"🍭",cost:40},
+  {id:"r3",name:"Chocolate Bar",emoji:"🍫",cost:50},
+  {id:"r4",name:"Bag of Chips",emoji:"🍿",cost:35},
+  {id:"r5",name:"Ice Cream",emoji:"🍦",cost:80},
+  {id:"r6",name:"Big Treat",emoji:"🎂",cost:150},
+];
 
-  const DEFAULT_REWARDS = [
-    { id: "r1", name: "Pack of Gummies",  emoji: "🍬", cost: 30  },
-    { id: "r2", name: "Candy Bar",        emoji: "🍭", cost: 40  },
-    { id: "r3", name: "Chocolate Bar",    emoji: "🍫", cost: 50  },
-    { id: "r4", name: "Bag of Chips",     emoji: "🍿", cost: 35  },
-    { id: "r5", name: "Ice Cream",        emoji: "🍦", cost: 80  },
-    { id: "r6", name: "Big Treat",        emoji: "🎂", cost: 150 },
-  ];
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let state = {
+  tasks:[], totalPoints:0, availablePoints:0, history:[], rewards:[],
+};
+// Which category sections are collapsed — persisted separately
+let collapsed = JSON.parse(localStorage.getItem('cleanup_collapsed') || '{}');
 
-  // ══════════════════════════════════════════
-  //  STATE
-  // ══════════════════════════════════════════
-  let state = {
-    tasks:           [],
-    totalPoints:     0,
-    availablePoints: 0,
-    history:         [],
-    rewards:         DEFAULT_REWARDS,
-  };
+function saveCollapsed() { localStorage.setItem('cleanup_collapsed', JSON.stringify(collapsed)); }
 
-  function loadState() {
-    try {
-      const raw = localStorage.getItem('cleanup_v1');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        state = { ...state, ...parsed };
-        if (!state.rewards || state.rewards.length === 0) state.rewards = DEFAULT_REWARDS;
-      } else {
-        // First run — seed with defaults, all due today
-        const t = today();
-        state.tasks = DEFAULT_TASKS.map(d => ({
-          id: uid(), name: d.name, category: d.category,
-          defaultInterval: d.defaultInterval, pointValue: d.pointValue,
-          nextDue: t, lastDone: null,
-        }));
-        state.rewards = DEFAULT_REWARDS;
-        saveState();
-      }
-    } catch(e) { console.warn('Load error', e); }
-  }
-
-  function saveState() {
-    try { localStorage.setItem('cleanup_v1', JSON.stringify(state)); }
-    catch(e) { console.warn('Save error', e); }
-  }
-
-  // ══════════════════════════════════════════
-  //  UTILS
-  // ══════════════════════════════════════════
-  function today()    { return new Date().toISOString().split('T')[0]; }
-  function uid()      { return Math.random().toString(36).slice(2,9) + Date.now().toString(36); }
-
-  function addDays(dateStr, n) {
-    const d = new Date(dateStr + 'T12:00:00');
-    d.setDate(d.getDate() + n);
-    return d.toISOString().split('T')[0];
-  }
-
-  function diffDays(dateStr) {
-    // positive = future, negative = past
-    const a = new Date(today()   + 'T12:00:00');
-    const b = new Date(dateStr   + 'T12:00:00');
-    return Math.round((b - a) / 86400000);
-  }
-
-  function urgency(nextDue) {
-    const d = diffDays(nextDue);
-    if (d < 0)  return { type: 'overdue',   d };
-    if (d === 0) return { type: 'today',    d };
-    if (d === 1) return { type: 'soon',     d };
-    return               { type: 'upcoming', d };
-  }
-
-  function urgencyLabel(u) {
-    if (u.type === 'overdue')  return `${Math.abs(u.d)}d overdue`;
-    if (u.type === 'today')    return 'Due today';
-    if (u.type === 'soon')     return 'Due tomorrow';
-    return `In ${u.d} days`;
-  }
-
-  const URGENCY_CARD  = { overdue:'overdue', today:'due-today', soon:'due-soon', upcoming:'upcoming' };
-  const URGENCY_BADGE = { overdue:'badge-overdue', today:'badge-today', soon:'badge-soon', upcoming:'badge-upcoming' };
-
-  function fmtDate(s) {
-    if (!s) return 'Never';
-    const [y, m, d] = s.split('-');
-    return `${d}/${m}/${String(y).slice(2)}`;
-  }
-
-  const CAT_EMOJI = { Kitchen:'🍽', Bathroom:'🚿', Bedroom:'🛏', General:'🧹', Laundry:'👕', Other:'📦' };
-  function catEmoji(c) { return CAT_EMOJI[c] || '📦'; }
-
-  // ══════════════════════════════════════════
-  //  NAVIGATION
-  // ══════════════════════════════════════════
-  let currentView = 'dashboard';
-
-  function navigate(view) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('view-' + view).classList.add('active');
-    document.querySelector(`[data-view="${view}"]`).classList.add('active');
-    currentView = view;
-    render();
-  }
-
-  document.querySelectorAll('.nav-item').forEach(btn =>
-    btn.addEventListener('click', () => navigate(btn.dataset.view))
-  );
-
-  // ══════════════════════════════════════════
-  //  RENDER
-  // ══════════════════════════════════════════
-  function render() {
-    updateHeader();
-    if (currentView === 'dashboard') renderDashboard();
-    if (currentView === 'tasks')     renderTasksView();
-    if (currentView === 'rewards')   renderRewards();
-  }
-
-  function updateHeader() {
-    document.getElementById('header-points').textContent = `⭐ ${state.availablePoints} pts`;
-  }
-
-  // ── Dashboard ──
-  function renderDashboard() {
-    const el = document.getElementById('dashboard-content');
-    if (!state.tasks.length) {
-      el.innerHTML = `<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Go to <b>Tasks</b> to add some!</p></div>`;
-      return;
+function loadState() {
+  try {
+    const raw = localStorage.getItem('cleanup_v2');
+    if (raw) {
+      state = {...state, ...JSON.parse(raw)};
+      if (!state.rewards?.length) state.rewards = FALLBACK_REWARDS;
     }
+    // returns true if first-run (needs seeding)
+    return !raw;
+  } catch(e) { return true; }
+}
 
-    const sorted = [...state.tasks].sort((a, b) => diffDays(a.nextDue) - diffDays(b.nextDue));
-    const groups = { overdue: [], today: [], soon: [], upcoming: [] };
-    sorted.forEach(t => groups[urgency(t.nextDue).type].push(t));
+function saveState() {
+  try { localStorage.setItem('cleanup_v2', JSON.stringify(state)); } catch(e) {}
+}
 
-    const LABELS = {
-      overdue:  '🔴 Overdue',
-      today:    '🟡 Due Today',
-      soon:     '🟠 Tomorrow',
-      upcoming: '🟢 Upcoming',
-    };
+async function seedFromJson() {
+  let tasks = FALLBACK_TASKS, rewards = FALLBACK_REWARDS;
+  try {
+    const res = await fetch('data.json');
+    if (res.ok) { const d = await res.json(); tasks = d.tasks || tasks; rewards = d.rewards || rewards; }
+  } catch(e) {}
+  const t = today();
+  state.tasks = tasks.map(d => ({id:uid(), name:d.name, category:d.category,
+    defaultInterval:d.defaultInterval, pointValue:d.pointValue, nextDue:t, lastDone:null}));
+  state.rewards = rewards.map(r => ({...r, id: r.id || uid()}));
+  saveState();
+}
 
-    let html = '';
-    for (const [key, tasks] of Object.entries(groups)) {
-      if (!tasks.length) continue;
-      html += `<div class="section-label">${LABELS[key]} (${tasks.length})</div>`;
-      tasks.forEach(t => { html += taskCard(t); });
-    }
-    el.innerHTML = html;
+async function clearAll() {
+  state = {tasks:[], totalPoints:0, availablePoints:0, history:[], rewards:[]};
+  collapsed = {};
+  localStorage.removeItem('cleanup_v2');
+  localStorage.removeItem('cleanup_collapsed');
+  await seedFromJson();
+  render();
+}
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+function today()  { return new Date().toISOString().split('T')[0]; }
+function uid()    { return Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
+function addDays(s,n) {
+  const d=new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0];
+}
+function diffDays(s) {
+  const a=new Date(today()+'T12:00:00'), b=new Date(s+'T12:00:00');
+  return Math.round((b-a)/86400000);
+}
+function urgency(nextDue) {
+  const d=diffDays(nextDue);
+  if(d<0) return{type:'overdue',d}; if(d===0) return{type:'today',d};
+  if(d===1) return{type:'soon',d}; return{type:'upcoming',d};
+}
+function urgencyLabel(u) {
+  if(u.type==='overdue')  return `${Math.abs(u.d)}d overdue`;
+  if(u.type==='today')    return 'Due today';
+  if(u.type==='soon')     return 'Due tomorrow';
+  return `In ${u.d} days`;
+}
+const UCARD  = {overdue:'overdue',today:'due-today',soon:'due-soon',upcoming:'upcoming'};
+const UBADGE = {overdue:'badge-overdue',today:'badge-today',soon:'badge-soon',upcoming:'badge-upcoming'};
+const CEMOJI = {Kitchen:'🍽',Bathroom:'🚿',Bedroom:'🛏',General:'🧹',Laundry:'👕',Other:'📦'};
+function catEmoji(c){ return CEMOJI[c]||'📦'; }
+function fmtDate(s) {
+  if(!s) return 'Never';
+  const[y,m,d]=s.split('-'); return `${d}/${m}/${String(y).slice(2)}`;
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+let currentView = 'dashboard';
+function navigate(view) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+  document.getElementById('fab-add-reward').style.display = view==='rewards' ? 'flex' : 'none';
+  currentView = view;
+  render();
+}
+document.querySelectorAll('.nav-item').forEach(btn =>
+  btn.addEventListener('click', ()=>navigate(btn.dataset.view))
+);
+
+// ══════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════
+function render() {
+  document.getElementById('header-points').textContent = `⭐ ${state.availablePoints} pts`;
+  if(currentView==='dashboard') renderDashboard();
+  if(currentView==='tasks')     renderTasksView();
+  if(currentView==='rewards')   renderRewards();
+}
+
+// ── Dashboard: grouped by category, collapsible ──
+function renderDashboard() {
+  const el = document.getElementById('dashboard-content');
+  if(!state.tasks.length) {
+    el.innerHTML=`<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Go to <b>Tasks</b> to add some!</p></div>`;
+    return;
   }
 
-  function taskCard(task) {
-    const u = urgency(task.nextDue);
-    const lastStr = task.lastDone ? `Last done ${fmtDate(task.lastDone)}` : 'Never done';
-    return `
-      <div class="task-card ${URGENCY_CARD[u.type]}">
-        <div class="task-card-top">
-          <div>
-            <div class="task-name">${esc(task.name)}</div>
-            <div class="task-meta">${lastStr}</div>
+  // Group by category
+  const cats = {};
+  state.tasks.forEach(t => { (cats[t.category]||(cats[t.category]=[])).push(t); });
+
+  // Sort categories: category with most urgent task first
+  const urgencyRank = {overdue:0,today:1,soon:2,upcoming:3};
+  const catKeys = Object.keys(cats).sort((a,b) => {
+    const ra = Math.min(...cats[a].map(t=>urgencyRank[urgency(t.nextDue).type]));
+    const rb = Math.min(...cats[b].map(t=>urgencyRank[urgency(t.nextDue).type]));
+    return ra - rb;
+  });
+
+  let html = '';
+  catKeys.forEach(cat => {
+    const tasks = cats[cat].sort((a,b)=>diffDays(a.nextDue)-diffDays(b.nextDue));
+    const isOpen = collapsed[cat] !== true; // default open
+    const urgencyCounts = {overdue:0,today:0,soon:0};
+    tasks.forEach(t=>{ const u=urgency(t.nextDue).type; if(u in urgencyCounts) urgencyCounts[u]++; });
+
+    let summaryBadges = '';
+    if(urgencyCounts.overdue) summaryBadges+=`<span class="badge badge-overdue">${urgencyCounts.overdue} overdue</span>`;
+    if(urgencyCounts.today)   summaryBadges+=`<span class="badge badge-today">${urgencyCounts.today} today</span>`;
+    if(urgencyCounts.soon)    summaryBadges+=`<span class="badge badge-soon">${urgencyCounts.soon} tomorrow</span>`;
+
+    html += `
+      <div class="cat-section">
+        <div class="cat-header ${isOpen?'open':''}" onclick="toggleCat('${esc(cat)}')">
+          <span class="cat-title">${catEmoji(cat)} ${esc(cat)} <span style="color:var(--g400);font-weight:500;font-size:12px;">(${tasks.length})</span></span>
+          <div class="cat-summary">${summaryBadges}</div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="cat-body ${isOpen?'open':''}">
+          <div class="cat-body-inner">
+            ${tasks.map(t=>taskCard(t)).join('')}
           </div>
-          <span class="badge badge-category">${catEmoji(task.category)} ${task.category}</span>
-        </div>
-        <div class="badge-row">
-          <span class="badge ${URGENCY_BADGE[u.type]}">${urgencyLabel(u)}</span>
-          <span class="badge badge-points">⭐ ${task.pointValue} pts</span>
-        </div>
-        <div class="task-actions">
-          <button class="btn btn-done"   onclick="openDoneSheet('${task.id}')">✓ Done</button>
-          <button class="btn btn-snooze" onclick="snoozeTask('${task.id}',1)">+1d</button>
-          <button class="btn btn-snooze" onclick="snoozeTask('${task.id}',2)">+2d</button>
         </div>
       </div>`;
-  }
+  });
+  el.innerHTML = html;
+}
 
-  // ── Tasks management ──
-  function renderTasksView() {
-    const el = document.getElementById('tasks-content');
-    if (!state.tasks.length) {
-      el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No tasks yet.<br>Tap <b>+</b> to add your first one!</p></div>`;
-      return;
-    }
-    const sorted = [...state.tasks].sort((a, b) => a.name.localeCompare(b.name));
-    el.innerHTML = sorted.map(t => `
-      <div class="task-item">
-        <div class="task-item-info">
-          <div class="task-item-name">${esc(t.name)}</div>
-          <div class="task-item-sub">${catEmoji(t.category)} ${t.category} · every ${t.defaultInterval}d · ⭐${t.pointValue} pts · next ${fmtDate(t.nextDue)}</div>
+function toggleCat(cat) {
+  collapsed[cat] = collapsed[cat] !== true; // toggle (default was open)
+  saveCollapsed();
+  renderDashboard();
+}
+
+function taskCard(t) {
+  const u=urgency(t.nextDue);
+  const last=t.lastDone?`Last done ${fmtDate(t.lastDone)}`:'Never done';
+  return `
+    <div class="task-card ${UCARD[u.type]}">
+      <div class="task-name">${esc(t.name)}</div>
+      <div class="task-meta">${last}</div>
+      <div class="badge-row">
+        <span class="badge ${UBADGE[u.type]}">${urgencyLabel(u)}</span>
+        <span class="badge badge-pts">⭐ ${t.pointValue} pts</span>
+      </div>
+      <div class="task-actions">
+        <button class="btn btn-done" onclick="openDoneSheet('${t.id}')">✓ Done</button>
+        <button class="btn btn-snooze" onclick="snoozeTask('${t.id}',1)">+1d</button>
+        <button class="btn btn-snooze" onclick="snoozeTask('${t.id}',2)">+2d</button>
+      </div>
+    </div>`;
+}
+
+// ── Tasks management ──
+function renderTasksView() {
+  const el = document.getElementById('tasks-content');
+  if(!state.tasks.length) {
+    el.innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>No tasks yet.<br>Tap <b>+</b> to add one!</p></div>`;
+    return;
+  }
+  const sorted=[...state.tasks].sort((a,b)=>a.name.localeCompare(b.name));
+  el.innerHTML = sorted.map(t=>`
+    <div class="task-item">
+      <div class="task-item-info">
+        <div class="task-item-name">${esc(t.name)}</div>
+        <div class="task-item-sub">${catEmoji(t.category)} ${t.category} · every ${t.defaultInterval}d · ⭐${t.pointValue} pts · next ${fmtDate(t.nextDue)}</div>
+      </div>
+      <div class="task-item-actions">
+        <button class="icon-btn icon-btn-edit"   onclick="openEditTask('${t.id}')">✏️</button>
+        <button class="icon-btn icon-btn-delete" onclick="openDeleteTaskSheet('${t.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── Rewards ──
+function renderRewards() {
+  const el = document.getElementById('rewards-content');
+  let html = `
+    <div class="pts-hero">
+      <div class="pts-num" id="pts-num" onclick="startEditPts()" title="Tap to edit">${state.availablePoints}</div>
+      <div class="pts-label">Available Points <span style="opacity:.5;font-size:10px;">(tap to edit)</span></div>
+      <div class="pts-sub">Total earned all time: ${state.totalPoints} pts</div>
+    </div>
+    <div class="slabel">🍬 Candy Rewards</div>`;
+
+  state.rewards.forEach(r=>{
+    const can=state.availablePoints>=r.cost;
+    html+=`
+      <div class="reward-card">
+        <div class="reward-emoji">${r.emoji}</div>
+        <div class="reward-info">
+          <div class="reward-name">${esc(r.name)}</div>
+          <div class="reward-cost">⭐ ${r.cost} pts</div>
         </div>
-        <div class="task-item-actions">
-          <button class="icon-btn icon-btn-edit"   onclick="openEditTask('${t.id}')">✏️</button>
-          <button class="icon-btn icon-btn-delete" onclick="openDeleteTask('${t.id}')">🗑️</button>
+        <div class="reward-actions">
+          <button class="btn-redeem" ${can?'':'disabled'} onclick="redeemReward('${r.id}')">
+            ${can?'Redeem':`Need ${r.cost-state.availablePoints} more`}
+          </button>
+          <button class="icon-btn icon-btn-edit"   onclick="openEditReward('${r.id}')" style="font-size:13px;">✏️</button>
+          <button class="icon-btn icon-btn-delete" onclick="openDeleteRewardSheet('${r.id}')" style="font-size:13px;">🗑️</button>
         </div>
+      </div>`;
+  });
+
+  // Share tasks
+  html += `
+    <div class="slabel" style="margin-top:20px;">🔗 Share</div>
+    <div style="background:white;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Share your task list</div>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:12px;">Generates a link with your task definitions (no points or progress). Anyone who opens it can import your tasks.</div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="shareTasksUrl()">📋 Copy share link</button>
+    </div>`;
+
+  // History
+  if(state.history.length) {
+    const recent=[...state.history].reverse().slice(0,30);
+    html+=`<div class="slabel" style="margin-top:20px;">📋 Recent Activity</div>`;
+    html+=recent.map(h=>`
+      <div class="history-item">
+        <div class="hdot ${h.type}"></div>
+        <div class="hname">${esc(h.name)}</div>
+        <div class="hpts ${h.type}">${h.type==='redeem'?'−':'+'}${h.pts} pts</div>
+        <div class="hdate">${fmtDate(h.date)}</div>
       </div>`).join('');
   }
 
-  // ── Rewards ──
-  function renderRewards() {
-    const el = document.getElementById('rewards-content');
-    let html = `
-      <div class="points-hero">
-        <div class="total">${state.availablePoints}</div>
-        <div class="label">Available Points</div>
-        <div class="sub">Total earned all time: ${state.totalPoints} pts</div>
-      </div>
-      <div class="section-label">🍬 Candy Rewards</div>`;
+  // Danger zone
+  html += `
+    <div class="danger-zone">
+      <h3>⚠️ Danger Zone</h3>
+      <p style="font-size:12px;color:var(--g700);margin-bottom:12px;">
+        Clears all data and resets to the defaults in <code>data.json</code>.
+      </p>
+      <button class="btn btn-danger" style="width:100%;justify-content:center;padding:10px;" onclick="openClearConfirm()">🗑 Reset all data to defaults</button>
+    </div>`;
 
-    state.rewards.forEach(r => {
-      const can = state.availablePoints >= r.cost;
-      const need = r.cost - state.availablePoints;
-      html += `
-        <div class="reward-card">
-          <div class="reward-emoji">${r.emoji}</div>
-          <div class="reward-info">
-            <div class="reward-name">${r.name}</div>
-            <div class="reward-cost">⭐ ${r.cost} pts</div>
-          </div>
-          <button class="btn-redeem" ${can ? '' : 'disabled'} onclick="redeemReward('${r.id}')">
-            ${can ? 'Redeem' : `Need ${need} more`}
-          </button>
-        </div>`;
-    });
+  el.innerHTML = html;
+}
 
-    if (state.history.length) {
-      const recent = [...state.history].reverse().slice(0, 30);
-      html += `<div class="section-label" style="margin-top:20px;">📋 Recent Activity</div>`;
-      html += recent.map(h => `
-        <div class="history-item">
-          <div class="history-dot ${h.type}"></div>
-          <div class="history-name">${esc(h.name)}</div>
-          <div class="history-pts ${h.type}">${h.type === 'redeem' ? '−' : '+'}${h.pts} pts</div>
-          <div class="history-date">${fmtDate(h.date)}</div>
-        </div>`).join('');
-    }
+// ══════════════════════════════════════════
+//  DONE SHEET
+// ══════════════════════════════════════════
+let doneTaskId=null, doneInt=7;
 
-    el.innerHTML = html;
-  }
-
-  // ══════════════════════════════════════════
-  //  DONE SHEET
-  // ══════════════════════════════════════════
-  let doneTaskId   = null;
-  let doneInterval = 7;
-
-  function openDoneSheet(taskId) {
-    const t = state.tasks.find(x => x.id === taskId);
-    if (!t) return;
-    doneTaskId   = taskId;
-    doneInterval = t.defaultInterval;
-    document.getElementById('done-task-name').textContent = '✓ ' + t.name;
-    document.getElementById('done-pts').textContent       = '+' + t.pointValue;
-    document.getElementById('interval-display').textContent = doneInterval;
-    document.getElementById('done-overlay').classList.add('open');
-  }
-
-  document.getElementById('interval-minus').addEventListener('click', () => {
-    if (doneInterval > 1) { doneInterval--; document.getElementById('interval-display').textContent = doneInterval; }
-  });
-  document.getElementById('interval-plus').addEventListener('click', () => {
-    doneInterval++; document.getElementById('interval-display').textContent = doneInterval;
-  });
-
-  document.getElementById('confirm-done').addEventListener('click', () => {
-    const t = state.tasks.find(x => x.id === doneTaskId);
-    if (!t) return;
-    t.lastDone = today();
-    t.nextDue  = addDays(today(), doneInterval);
-    state.totalPoints     += t.pointValue;
-    state.availablePoints += t.pointValue;
-    state.history.push({ name: t.name, pts: t.pointValue, date: today(), type: 'earn' });
-    saveState();
-    closeSheets();
-    showToast(`✓ Done! +${t.pointValue} pts`);
-    bumpPoints();
-    // Confetti every time available pts crosses a 50-pt milestone
-    const prev = state.availablePoints - t.pointValue;
-    if (Math.floor(state.availablePoints / 50) > Math.floor(prev / 50)) triggerConfetti();
-    render();
-  });
-
-  document.getElementById('cancel-done').addEventListener('click', closeSheets);
-  document.getElementById('done-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
-
-  // ══════════════════════════════════════════
-  //  SNOOZE
-  // ══════════════════════════════════════════
-  function snoozeTask(taskId, days) {
-    const t = state.tasks.find(x => x.id === taskId);
-    if (!t) return;
-    t.nextDue = addDays(t.nextDue, days);
-    saveState();
-    showToast(`Snoozed +${days} day${days > 1 ? 's' : ''}`);
-    render();
-  }
-
-  // ══════════════════════════════════════════
-  //  TASK FORM
-  // ══════════════════════════════════════════
-  let editTaskId = null;
-
-  document.getElementById('fab-add').addEventListener('click', openAddTask);
-
-  function openAddTask() {
-    editTaskId = null;
-    document.getElementById('task-form-title').textContent = 'Add Task';
-    document.getElementById('field-name').value     = '';
-    document.getElementById('field-category').value = 'Kitchen';
-    document.getElementById('field-interval').value = '7';
-    document.getElementById('field-points').value   = '10';
-    document.getElementById('field-nextdue').value  = today();
-    document.getElementById('task-form-overlay').classList.add('open');
-    setTimeout(() => document.getElementById('field-name').focus(), 300);
-  }
-
-  function openEditTask(taskId) {
-    const t = state.tasks.find(x => x.id === taskId);
-    if (!t) return;
-    editTaskId = taskId;
-    document.getElementById('task-form-title').textContent = 'Edit Task';
-    document.getElementById('field-name').value     = t.name;
-    document.getElementById('field-category').value = t.category;
-    document.getElementById('field-interval').value = t.defaultInterval;
-    document.getElementById('field-points').value   = t.pointValue;
-    document.getElementById('field-nextdue').value  = t.nextDue;
-    document.getElementById('task-form-overlay').classList.add('open');
-  }
-
-  document.getElementById('save-task-btn').addEventListener('click', () => {
-    const name = document.getElementById('field-name').value.trim();
-    if (!name) { showToast('Please enter a task name'); return; }
-    const data = {
-      name,
-      category:        document.getElementById('field-category').value,
-      defaultInterval: Math.max(1, parseInt(document.getElementById('field-interval').value) || 7),
-      pointValue:      Math.max(1, parseInt(document.getElementById('field-points').value)   || 10),
-      nextDue:         document.getElementById('field-nextdue').value || today(),
-    };
-    if (editTaskId) {
-      const t = state.tasks.find(x => x.id === editTaskId);
-      if (t) Object.assign(t, data);
-      showToast('Task updated!');
-    } else {
-      state.tasks.push({ id: uid(), lastDone: null, ...data });
-      showToast('Task added!');
-    }
-    saveState(); closeSheets(); render();
-  });
-
-  document.getElementById('cancel-task-btn').addEventListener('click', closeSheets);
-  document.getElementById('task-form-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
-
-  // ══════════════════════════════════════════
-  //  DELETE
-  // ══════════════════════════════════════════
-  let deleteTaskId = null;
-
-  function openDeleteTask(taskId) {
-    deleteTaskId = taskId;
-    document.getElementById('delete-overlay').classList.add('open');
-  }
-
-  document.getElementById('confirm-delete').addEventListener('click', () => {
-    state.tasks = state.tasks.filter(t => t.id !== deleteTaskId);
-    saveState(); closeSheets(); showToast('Task deleted'); render();
-  });
-  document.getElementById('cancel-delete').addEventListener('click', closeSheets);
-  document.getElementById('delete-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
-
-  // ══════════════════════════════════════════
-  //  REDEEM
-  // ══════════════════════════════════════════
-  function redeemReward(rewardId) {
-    const r = state.rewards.find(x => x.id === rewardId);
-    if (!r || state.availablePoints < r.cost) return;
-    state.availablePoints -= r.cost;
-    state.history.push({ name: r.name, pts: r.cost, date: today(), type: 'redeem' });
-    saveState();
-    triggerConfetti();
-    showToast(`🎉 Enjoy your ${r.name}!`);
-    render();
-  }
-
-  // ══════════════════════════════════════════
-  //  HELPERS
-  // ══════════════════════════════════════════
-  function closeSheets() {
-    document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open'));
-    doneTaskId = null; deleteTaskId = null;
-  }
-
-  let toastTimer;
-  function showToast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
-  }
-
-  function bumpPoints() {
-    const el = document.getElementById('header-points');
-    el.classList.remove('bump');
-    void el.offsetWidth; // reflow
-    el.classList.add('bump');
-  }
-
-  function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // ══════════════════════════════════════════
-  //  CONFETTI
-  // ══════════════════════════════════════════
-  function triggerConfetti() {
-    const canvas = document.getElementById('confetti-canvas');
-    const ctx    = canvas.getContext('2d');
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const COLORS = ['#4f46e5','#7c3aed','#10b981','#f59e0b','#ef4444','#ec4899','#06b6d4'];
-    const pieces = Array.from({ length: 90 }, () => ({
-      x:   Math.random() * canvas.width,
-      y:   -10 - Math.random() * 40,
-      w:   Math.random() * 8 + 5,
-      h:   Math.random() * 5 + 3,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      vx:  (Math.random() - 0.5) * 5,
-      vy:  Math.random() * 3 + 2,
-      rot: Math.random() * 360,
-      rv:  (Math.random() - 0.5) * 12,
-    }));
-    let frame = 0;
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pieces.forEach(p => {
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot * Math.PI / 180);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0, 1 - frame / 110);
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-        ctx.restore();
-        p.x  += p.vx;
-        p.y  += p.vy;
-        p.vy += 0.06;
-        p.rot += p.rv;
-      });
-      frame++;
-      if (frame < 130) requestAnimationFrame(draw);
-      else ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    draw();
-  }
-
-  // ══════════════════════════════════════════
-  //  SERVICE WORKER (PWA)
-  // ══════════════════════════════════════════
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () =>
-      navigator.serviceWorker.register('sw.js').catch(() => {})
-    );
-  }
-
-  // ══════════════════════════════════════════
-  //  INIT
-  // ══════════════════════════════════════════
-  loadState();
+function openDoneSheet(id) {
+  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+  doneTaskId=id; doneInt=t.defaultInterval;
+  document.getElementById('done-task-name').textContent='✓ '+t.name;
+  document.getElementById('done-pts').textContent='+'+t.pointValue;
+  document.getElementById('int-val').textContent=doneInt;
+  document.getElementById('done-overlay').classList.add('open');
+}
+document.getElementById('int-minus').addEventListener('click',()=>{ if(doneInt>1){doneInt--;document.getElementById('int-val').textContent=doneInt;} });
+document.getElementById('int-plus').addEventListener('click',()=>{ doneInt++;document.getElementById('int-val').textContent=doneInt; });
+document.getElementById('confirm-done').addEventListener('click',()=>{
+  const t=state.tasks.find(x=>x.id===doneTaskId); if(!t) return;
+  const prev=state.availablePoints;
+  t.lastDone=today(); t.nextDue=addDays(today(),doneInt);
+  state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
+  state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn'});
+  saveState(); closeSheets();
+  showToast(`✓ Done! +${t.pointValue} pts`); bumpPts();
+  if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
   render();
-  </script>
+});
+document.getElementById('cancel-done').addEventListener('click',closeSheets);
+document.getElementById('done-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
+
+// ══════════════════════════════════════════
+//  SNOOZE
+// ══════════════════════════════════════════
+function snoozeTask(id,days) {
+  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+  t.nextDue=addDays(t.nextDue,days);
+  saveState(); showToast(`Snoozed +${days} day${days>1?'s':''}`); render();
+}
+
+// ══════════════════════════════════════════
+//  TASK FORM
+// ══════════════════════════════════════════
+let editTaskId=null;
+document.getElementById('fab-add-task').addEventListener('click',openAddTask);
+
+function openAddTask() {
+  editTaskId=null;
+  document.getElementById('task-form-title').textContent='Add Task';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-cat').value='Kitchen';
+  document.getElementById('f-interval').value='7';
+  document.getElementById('f-pts').value='10';
+  document.getElementById('f-nextdue').value=today();
+  document.getElementById('task-form-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),300);
+}
+
+function openEditTask(id) {
+  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+  editTaskId=id;
+  document.getElementById('task-form-title').textContent='Edit Task';
+  document.getElementById('f-name').value=t.name;
+  document.getElementById('f-cat').value=t.category;
+  document.getElementById('f-interval').value=t.defaultInterval;
+  document.getElementById('f-pts').value=t.pointValue;
+  document.getElementById('f-nextdue').value=t.nextDue;
+  document.getElementById('task-form-overlay').classList.add('open');
+}
+
+document.getElementById('save-task-btn').addEventListener('click',()=>{
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('Please enter a task name');return;}
+  const data={
+    name, category:document.getElementById('f-cat').value,
+    defaultInterval:Math.max(1,parseInt(document.getElementById('f-interval').value)||7),
+    pointValue:Math.max(1,parseInt(document.getElementById('f-pts').value)||10),
+    nextDue:document.getElementById('f-nextdue').value||today(),
+  };
+  if(editTaskId) {
+    const t=state.tasks.find(x=>x.id===editTaskId);
+    if(t) Object.assign(t,data);
+    showToast('Task updated!');
+  } else {
+    state.tasks.push({id:uid(),lastDone:null,...data});
+    showToast('Task added!');
+  }
+  saveState(); closeSheets(); render();
+});
+document.getElementById('cancel-task-btn').addEventListener('click',closeSheets);
+document.getElementById('task-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
+
+// ══════════════════════════════════════════
+//  REWARD FORM
+// ══════════════════════════════════════════
+let editRewardId=null;
+document.getElementById('fab-add-reward').addEventListener('click',openAddReward);
+
+function openAddReward() {
+  editRewardId=null;
+  document.getElementById('reward-form-title').textContent='Add Reward';
+  document.getElementById('rf-emoji').value='🎁';
+  document.getElementById('rf-name').value='';
+  document.getElementById('rf-cost').value='50';
+  document.getElementById('reward-form-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('rf-name').focus(),300);
+}
+
+function openEditReward(id) {
+  const r=state.rewards.find(x=>x.id===id); if(!r) return;
+  editRewardId=id;
+  document.getElementById('reward-form-title').textContent='Edit Reward';
+  document.getElementById('rf-emoji').value=r.emoji;
+  document.getElementById('rf-name').value=r.name;
+  document.getElementById('rf-cost').value=r.cost;
+  document.getElementById('reward-form-overlay').classList.add('open');
+}
+
+document.getElementById('save-reward-btn').addEventListener('click',()=>{
+  const name=document.getElementById('rf-name').value.trim();
+  if(!name){showToast('Please enter a reward name');return;}
+  const data={
+    emoji:document.getElementById('rf-emoji').value.trim()||'🎁',
+    name,
+    cost:Math.max(1,parseInt(document.getElementById('rf-cost').value)||50),
+  };
+  if(editRewardId) {
+    const r=state.rewards.find(x=>x.id===editRewardId);
+    if(r) Object.assign(r,data);
+    showToast('Reward updated!');
+  } else {
+    state.rewards.push({id:uid(),...data});
+    showToast('Reward added!');
+  }
+  saveState(); closeSheets(); render();
+});
+document.getElementById('cancel-reward-btn').addEventListener('click',closeSheets);
+document.getElementById('reward-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
+
+// ══════════════════════════════════════════
+//  DELETE TASK
+// ══════════════════════════════════════════
+let deleteTaskId=null;
+function openDeleteTaskSheet(id){ deleteTaskId=id; document.getElementById('delete-task-overlay').classList.add('open'); }
+document.getElementById('confirm-delete-task').addEventListener('click',()=>{
+  state.tasks=state.tasks.filter(t=>t.id!==deleteTaskId);
+  saveState(); closeSheets(); showToast('Task deleted'); render();
+});
+document.getElementById('cancel-delete-task').addEventListener('click',closeSheets);
+document.getElementById('delete-task-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
+
+// ══════════════════════════════════════════
+//  DELETE REWARD
+// ══════════════════════════════════════════
+let deleteRewardId=null;
+function openDeleteRewardSheet(id){ deleteRewardId=id; document.getElementById('delete-reward-overlay').classList.add('open'); }
+document.getElementById('confirm-delete-reward').addEventListener('click',()=>{
+  state.rewards=state.rewards.filter(r=>r.id!==deleteRewardId);
+  saveState(); closeSheets(); showToast('Reward deleted'); render();
+});
+document.getElementById('cancel-delete-reward').addEventListener('click',closeSheets);
+document.getElementById('delete-reward-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
+
+// ══════════════════════════════════════════
+//  REDEEM
+// ══════════════════════════════════════════
+function redeemReward(id) {
+  const r=state.rewards.find(x=>x.id===id);
+  if(!r||state.availablePoints<r.cost) return;
+  state.availablePoints-=r.cost;
+  state.history.push({name:r.name,pts:r.cost,date:today(),type:'redeem'});
+  saveState(); triggerConfetti(); showToast(`🎉 Enjoy your ${r.name}!`); render();
+}
+
+// ══════════════════════════════════════════
+//  EDIT POINTS (click to edit)
+// ══════════════════════════════════════════
+function startEditPts() {
+  const hero = document.querySelector('.pts-hero');
+  const numEl = document.getElementById('pts-num');
+  if (!numEl) return;
+  const input = document.createElement('input');
+  input.className = 'pts-edit';
+  input.type = 'number';
+  input.value = state.availablePoints;
+  input.min = '0';
+  numEl.replaceWith(input);
+  input.focus(); input.select();
+
+  function commit() {
+    const val = Math.max(0, parseInt(input.value) || 0);
+    const diff = val - state.availablePoints;
+    state.availablePoints = val;
+    if (diff !== 0) {
+      state.history.push({name:'Manual adjustment',pts:Math.abs(diff),date:today(),type:diff>=0?'earn':'redeem'});
+    }
+    saveState(); render();
+  }
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') commit(); if(e.key==='Escape'){render();} });
+  input.addEventListener('blur', commit);
+}
+
+// ══════════════════════════════════════════
+//  CLEAR ALL
+// ══════════════════════════════════════════
+function openClearConfirm() { document.getElementById('clear-overlay').classList.add('open'); }
+document.getElementById('confirm-clear').addEventListener('click',async()=>{
+  closeSheets();
+  showToast('Resetting…');
+  await clearAll();
+  showToast('✓ Reset to defaults');
+});
+document.getElementById('cancel-clear').addEventListener('click',closeSheets);
+document.getElementById('clear-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
+
+// ══════════════════════════════════════════
+//  SHARE TASKS VIA URL
+// ══════════════════════════════════════════
+function shareTasksUrl() {
+  const defs = state.tasks.map(t=>({
+    name:t.name, category:t.category,
+    defaultInterval:t.defaultInterval, pointValue:t.pointValue,
+  }));
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(defs))));
+  const url = window.location.origin + window.location.pathname + '?import=' + encoded;
+  navigator.clipboard.writeText(url).then(()=>{
+    showToast('✓ Share link copied to clipboard!');
+  }).catch(()=>{
+    // Fallback: prompt
+    prompt('Copy this link:', url);
+  });
+}
+
+// ── Detect import on load ──
+function checkImportParam() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get('import');
+  if (!encoded) return;
+  try {
+    const tasks = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if (!Array.isArray(tasks) || !tasks.length) return;
+
+    document.getElementById('import-desc').textContent =
+      `Someone shared ${tasks.length} task${tasks.length>1?'s':''} with you. Choose how to import them:`;
+    document.getElementById('import-preview').innerHTML =
+      tasks.map(t=>`• ${t.name} <span style="color:var(--g400)">(${t.category}, every ${t.defaultInterval}d, ⭐${t.pointValue}pts)</span>`).join('<br>');
+
+    document.getElementById('confirm-import-add').onclick = () => {
+      const t = today();
+      tasks.forEach(d=>{
+        if (!state.tasks.find(x=>x.name===d.name)) {
+          state.tasks.push({id:uid(),name:d.name,category:d.category,
+            defaultInterval:d.defaultInterval,pointValue:d.pointValue,nextDue:t,lastDone:null});
+        }
+      });
+      saveState(); closeSheets();
+      showToast(`✓ ${tasks.length} tasks imported!`);
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      render();
+    };
+    document.getElementById('confirm-import-replace').onclick = () => {
+      const t = today();
+      state.tasks = tasks.map(d=>({id:uid(),name:d.name,category:d.category,
+        defaultInterval:d.defaultInterval,pointValue:d.pointValue,nextDue:t,lastDone:null}));
+      saveState(); closeSheets();
+      showToast(`✓ Tasks replaced!`);
+      window.history.replaceState({}, '', window.location.pathname);
+      render();
+    };
+    document.getElementById('cancel-import').onclick = () => {
+      closeSheets();
+      window.history.replaceState({}, '', window.location.pathname);
+    };
+    document.getElementById('import-overlay').classList.add('open');
+  } catch(e) { console.warn('Import parse error', e); }
+}
+
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
+function closeSheets() {
+  document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));
+  doneTaskId=null; deleteTaskId=null; deleteRewardId=null;
+}
+let toastTimer;
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+function bumpPts() {
+  const el=document.getElementById('header-points');
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
+
+// ══════════════════════════════════════════
+//  CONFETTI
+// ══════════════════════════════════════════
+function triggerConfetti() {
+  const canvas=document.getElementById('confetti-canvas'),ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const COLS=['#4f46e5','#7c3aed','#10b981','#f59e0b','#ef4444','#ec4899','#06b6d4'];
+  const p=Array.from({length:90},()=>({
+    x:Math.random()*canvas.width,y:-10-Math.random()*40,
+    w:Math.random()*8+5,h:Math.random()*5+3,
+    color:COLS[Math.floor(Math.random()*COLS.length)],
+    vx:(Math.random()-.5)*5,vy:Math.random()*3+2,
+    rot:Math.random()*360,rv:(Math.random()-.5)*12,
+  }));
+  let f=0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    p.forEach(p=>{
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color;ctx.globalAlpha=Math.max(0,1-f/110);
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
+      p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.rot+=p.rv;
+    });
+    f++;
+    if(f<130) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  draw();
+}
+
+// ══════════════════════════════════════════
+//  SERVICE WORKER
+// ══════════════════════════════════════════
+if('serviceWorker' in navigator) {
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+async function init() {
+  const firstRun = loadState();
+  if (firstRun) await seedFromJson();
+  checkImportParam();
+  render();
+}
+init();
+</script>
 </body>
 </html>

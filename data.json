@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    { "name": "Take out trash",        "category": "Kitchen",  "defaultInterval": 2,  "pointValue": 10 },
+    { "name": "Wash dishes",           "category": "Kitchen",  "defaultInterval": 1,  "pointValue": 5  },
+    { "name": "Wipe kitchen counters", "category": "Kitchen",  "defaultInterval": 3,  "pointValue": 8  },
+    { "name": "Take out recycling",    "category": "Kitchen",  "defaultInterval": 7,  "pointValue": 10 },
+    { "name": "Clean toilet",          "category": "Bathroom", "defaultInterval": 7,  "pointValue": 15 },
+    { "name": "Clean bathroom sink",   "category": "Bathroom", "defaultInterval": 5,  "pointValue": 10 },
+    { "name": "Clean shower",          "category": "Bathroom", "defaultInterval": 14, "pointValue": 20 },
+    { "name": "Vacuum floors",         "category": "General",  "defaultInterval": 7,  "pointValue": 20 },
+    { "name": "Mop floors",            "category": "General",  "defaultInterval": 14, "pointValue": 25 },
+    { "name": "Change bed sheets",     "category": "Bedroom",  "defaultInterval": 14, "pointValue": 20 }
+  ],
+  "rewards": [
+    { "id": "r1", "name": "Pack of Gummies",  "emoji": "🍬", "cost": 30  },
+    { "id": "r2", "name": "Candy Bar",        "emoji": "🍭", "cost": 40  },
+    { "id": "r3", "name": "Chocolate Bar",    "emoji": "🍫", "cost": 50  },
+    { "id": "r4", "name": "Bag of Chips",     "emoji": "🍿", "cost": 35  },
+    { "id": "r5", "name": "Ice Cream",        "emoji": "🍦", "cost": 80  },
+    { "id": "r6", "name": "Big Treat",        "emoji": "🎂", "cost": 150 }
+  ]
+}
