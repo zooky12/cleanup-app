@@ -1,4 +1,12 @@
 {
+  "categories": [
+    { "name": "Kitchen",  "emoji": "🍽" },
+    { "name": "Bathroom", "emoji": "🚿" },
+    { "name": "Bedroom",  "emoji": "🛏" },
+    { "name": "General",  "emoji": "🧹" },
+    { "name": "Laundry",  "emoji": "👕" },
+    { "name": "Other",    "emoji": "📦" }
+  ],
   "tasks": [
     { "name": "Take out trash",        "category": "Kitchen",  "defaultInterval": 2,  "pointValue": 10 },
     { "name": "Wash dishes",           "category": "Kitchen",  "defaultInterval": 1,  "pointValue": 5  },

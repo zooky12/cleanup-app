@@ -19,7 +19,7 @@
       --warning: #d97706; --warning-light: #fef3c7;
       --orange: #f97316;  --orange-light: #fff7ed;
       --success: #10b981; --success-light: #d1fae5;
-      --g50:#f9fafb; --g100:#f3f4f6; --g200:#e5e7eb; --g300:#d1d5db;
+      --g50:#f9fafb; --g100:#f3f4f6; --g200:#e5e7eb;
       --g400:#9ca3af; --g500:#6b7280; --g700:#374151; --g900:#111827;
       --r:16px; --rs:10px;
       --sh: 0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
@@ -40,7 +40,7 @@
     .header h1 { font-size:19px; font-weight:800; color:var(--primary); letter-spacing:-.3px; }
     .pts-badge {
       background:var(--primary-light); color:var(--primary); font-size:13px;
-      font-weight:700; padding:6px 13px; border-radius:20px; cursor:default;
+      font-weight:700; padding:6px 13px; border-radius:20px;
     }
     .pts-badge.bump { animation:bump .3s ease; }
     @keyframes bump{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
@@ -64,13 +64,12 @@
     .nav-item.active { color:var(--primary); }
     .nav-item svg { width:22px; height:22px; }
 
-    /* ── Category sections ── */
+    /* ── Category sections (dashboard) ── */
     .cat-section { margin-bottom:6px; }
     .cat-header {
       display:flex; align-items:center; gap:8px; padding:10px 12px;
       background:white; border-radius:var(--r); box-shadow:var(--sh);
-      cursor:pointer; user-select:none; margin-bottom:0;
-      transition:border-radius .2s;
+      cursor:pointer; user-select:none; transition:border-radius .2s;
     }
     .cat-header.open { border-radius:var(--r) var(--r) 0 0; }
     .cat-title { flex:1; font-size:14px; font-weight:700; }
@@ -101,8 +100,7 @@
     .task-meta { font-size:11px; color:var(--g400); margin-top:1px; }
     .badge-row { display:flex; gap:4px; flex-wrap:wrap; margin:7px 0; }
     .badge {
-      font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px;
-      white-space:nowrap;
+      font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px; white-space:nowrap;
     }
     .badge-overdue  { background:var(--danger-light);  color:var(--danger);  }
     .badge-today    { background:var(--warning-light); color:var(--warning); }
@@ -139,10 +137,7 @@
       max-height:90vh; overflow-y:auto;
     }
     @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-    .sheet-handle {
-      width:40px; height:4px; background:var(--g200);
-      border-radius:2px; margin:4px auto 16px;
-    }
+    .sheet-handle { width:40px; height:4px; background:var(--g200); border-radius:2px; margin:4px auto 16px; }
     .sheet-title { font-size:17px; font-weight:700; margin-bottom:16px; }
 
     /* ── Done sheet ── */
@@ -175,34 +170,41 @@
 
     /* ── Forms ── */
     .form-group { margin-bottom:13px; }
-    .form-label {
-      display:block; font-size:11px; font-weight:700; color:var(--g500);
-      margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em;
-    }
+    .form-label { display:block; font-size:11px; font-weight:700; color:var(--g500); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em; }
     .form-input,.form-select {
       width:100%; padding:11px 13px; border:1.5px solid var(--g200);
       border-radius:var(--rs); font-size:15px; font-family:inherit;
-      color:var(--g900); background:white; outline:none; transition:border-color .15s;
+      color:var(--g900); background:white; outline:none; transition:border-color .15s; appearance:auto;
     }
     .form-input:focus,.form-select:focus { border-color:var(--primary); }
     .form-row { display:flex; gap:10px; }
     .form-row .form-group { flex:1; }
 
-    /* ── Task list (manage tab) ── */
-    .task-item {
+    /* ── Task/Category list items ── */
+    .list-item {
       background:white; border-radius:var(--rs); padding:12px 14px; margin-bottom:7px;
       box-shadow:var(--sh); display:flex; align-items:center; gap:10px;
     }
-    .task-item-info { flex:1; min-width:0; }
-    .task-item-name { font-size:14px; font-weight:600; }
-    .task-item-sub  { font-size:11px; color:var(--g400); margin-top:2px; }
-    .task-item-actions { display:flex; gap:6px; flex-shrink:0; }
+    .list-item-info { flex:1; min-width:0; }
+    .list-item-name { font-size:14px; font-weight:600; }
+    .list-item-sub  { font-size:11px; color:var(--g400); margin-top:2px; }
+    .list-item-actions { display:flex; gap:6px; flex-shrink:0; }
     .icon-btn {
       width:34px; height:34px; border-radius:var(--rs); border:none; cursor:pointer;
       display:flex; align-items:center; justify-content:center; font-size:14px;
     }
     .icon-btn-edit   { background:var(--primary-light); }
     .icon-btn-delete { background:var(--danger-light); }
+
+    /* ── Manage categories button in tasks view ── */
+    .manage-cats-btn {
+      display:flex; align-items:center; gap:10px; background:white;
+      border:none; border-radius:var(--rs); padding:11px 14px; margin-bottom:14px;
+      box-shadow:var(--sh); cursor:pointer; font-family:inherit; width:100%;
+      font-size:13px; font-weight:600; color:var(--primary); transition:opacity .15s;
+    }
+    .manage-cats-btn:active { opacity:.75; }
+    .manage-cats-btn span { flex:1; text-align:left; }
 
     /* ── FAB ── */
     .fab {
@@ -222,18 +224,14 @@
     .pts-hero .pts-num {
       font-size:50px; font-weight:800; letter-spacing:-2px; cursor:pointer;
       border-bottom:2px dashed rgba(255,255,255,.4); display:inline-block;
-      transition:border-color .15s;
     }
-    .pts-hero .pts-num:hover { border-color:rgba(255,255,255,.8); }
     .pts-hero .pts-edit {
       font-size:40px; font-weight:800; width:160px; text-align:center;
       background:transparent; border:2px solid rgba(255,255,255,.6);
-      color:white; border-radius:12px; outline:none; font-family:inherit;
-      padding:4px 8px;
+      color:white; border-radius:12px; outline:none; font-family:inherit; padding:4px 8px;
     }
     .pts-hero .pts-label { font-size:13px; opacity:.8; margin-top:3px; font-weight:500; }
     .pts-hero .pts-sub   { font-size:11px; opacity:.6; margin-top:6px; }
-    .pts-hero .pts-hint  { font-size:10px; opacity:.5; margin-top:4px; }
 
     .reward-card {
       background:white; border-radius:var(--r); padding:13px 15px; margin-bottom:8px;
@@ -267,27 +265,19 @@
     .hdate { color:var(--g400); font-size:10px; flex-shrink:0; }
 
     /* ── Section label ── */
-    .slabel {
-      font-size:11px; font-weight:700; text-transform:uppercase;
-      letter-spacing:.06em; color:var(--g400); margin:16px 2px 8px;
-    }
+    .slabel { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--g400); margin:16px 2px 8px; }
     .slabel:first-child { margin-top:4px; }
 
     /* ── Danger zone ── */
-    .danger-zone {
-      margin-top:24px; padding:16px; background:var(--danger-light);
-      border-radius:var(--r); border:1px solid #fca5a5;
-    }
+    .danger-zone { margin-top:24px; padding:16px; background:var(--danger-light); border-radius:var(--r); border:1px solid #fca5a5; }
     .danger-zone h3 { font-size:13px; font-weight:700; color:var(--danger); margin-bottom:10px; }
 
     /* ── Toast ── */
     .toast {
-      position:fixed; bottom:88px; left:50%;
-      transform:translateX(-50%) translateY(8px);
-      background:var(--g900); color:white; padding:9px 20px;
-      border-radius:22px; font-size:13px; font-weight:600; z-index:500;
-      opacity:0; pointer-events:none; transition:opacity .2s,transform .2s;
-      white-space:nowrap; box-shadow:var(--shl);
+      position:fixed; bottom:88px; left:50%; transform:translateX(-50%) translateY(8px);
+      background:var(--g900); color:white; padding:9px 20px; border-radius:22px;
+      font-size:13px; font-weight:600; z-index:500; opacity:0; pointer-events:none;
+      transition:opacity .2s,transform .2s; white-space:nowrap; box-shadow:var(--shl);
     }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
@@ -309,6 +299,10 @@
 
   <!-- Tasks management -->
   <div class="view" id="view-tasks">
+    <button class="manage-cats-btn" id="open-cats-btn">
+      <span>📁 Manage Categories</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
     <div id="tasks-content"></div>
     <button class="fab" id="fab-add-task">+</button>
   </div>
@@ -328,11 +322,8 @@
     </button>
     <button class="nav-item" data-view="tasks">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-        <line x1="8" y1="18" x2="21" y2="18"/>
-        <circle cx="3" cy="6" r=".5" fill="currentColor"/>
-        <circle cx="3" cy="12" r=".5" fill="currentColor"/>
-        <circle cx="3" cy="18" r=".5" fill="currentColor"/>
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+        <circle cx="3" cy="6" r=".5" fill="currentColor"/><circle cx="3" cy="12" r=".5" fill="currentColor"/><circle cx="3" cy="18" r=".5" fill="currentColor"/>
       </svg>Tasks
     </button>
     <button class="nav-item" data-view="rewards">
@@ -377,14 +368,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Category</label>
-        <select class="form-select" id="f-cat">
-          <option value="Kitchen">🍽 Kitchen</option>
-          <option value="Bathroom">🚿 Bathroom</option>
-          <option value="Bedroom">🛏 Bedroom</option>
-          <option value="General">🧹 General</option>
-          <option value="Laundry">👕 Laundry</option>
-          <option value="Other">📦 Other</option>
-        </select>
+        <select class="form-select" id="f-cat"></select>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -402,6 +386,48 @@
       </div>
       <button class="btn btn-primary btn-full" id="save-task-btn">Save Task</button>
       <button class="btn btn-secondary btn-full" id="cancel-task-btn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── Categories management sheet ── -->
+  <div class="overlay" id="cats-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">📁 Categories</div>
+      <div id="cats-list"></div>
+      <button class="btn btn-primary btn-full" id="add-cat-btn" style="margin-top:8px;">+ Add Category</button>
+      <button class="btn btn-secondary btn-full" id="close-cats-btn">Done</button>
+    </div>
+  </div>
+
+  <!-- ── Category add/edit sheet ── -->
+  <div class="overlay" id="cat-form-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="cat-form-title">Add Category</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:0 0 80px">
+          <label class="form-label">Emoji</label>
+          <input class="form-input" id="cf-emoji" placeholder="📦" maxlength="4" style="text-align:center;font-size:22px;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category name</label>
+          <input class="form-input" id="cf-name" placeholder="e.g. Garden" maxlength="30">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" id="save-cat-btn">Save Category</button>
+      <button class="btn btn-secondary btn-full" id="cancel-cat-btn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── Delete category confirm ── -->
+  <div class="overlay" id="delete-cat-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Delete category?</div>
+      <p id="delete-cat-desc" style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;"></p>
+      <button class="btn btn-danger btn-full" id="confirm-delete-cat">Delete</button>
+      <button class="btn btn-secondary btn-full" id="cancel-delete-cat">Cancel</button>
     </div>
   </div>
 
@@ -457,7 +483,7 @@
       <div class="sheet-handle"></div>
       <div class="sheet-title">⚠️ Reset everything?</div>
       <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.6;">
-        This will erase <strong>all progress, points, and history</strong> and reload the default tasks and rewards from <code>data.json</code>. This cannot be undone.
+        This will erase <strong>all progress, points, and history</strong> and reload the default tasks, categories and rewards from <code>data.json</code>. This cannot be undone.
       </p>
       <button class="btn btn-danger btn-full" id="confirm-clear">Yes, reset everything</button>
       <button class="btn btn-secondary btn-full" id="cancel-clear">Cancel</button>
@@ -484,76 +510,67 @@
 
 <script>
 // ══════════════════════════════════════════
-//  FALLBACK DEFAULT DATA (if data.json unreachable)
+//  FALLBACK DATA
 // ══════════════════════════════════════════
+const FALLBACK_CATS = [
+  {name:'Kitchen',emoji:'🍽'},{name:'Bathroom',emoji:'🚿'},
+  {name:'Bedroom',emoji:'🛏'},{name:'General',emoji:'🧹'},
+  {name:'Laundry',emoji:'👕'},{name:'Other',emoji:'📦'},
+];
 const FALLBACK_TASKS = [
-  {name:"Take out trash",category:"Kitchen",defaultInterval:2,pointValue:10},
-  {name:"Wash dishes",category:"Kitchen",defaultInterval:1,pointValue:5},
-  {name:"Wipe kitchen counters",category:"Kitchen",defaultInterval:3,pointValue:8},
-  {name:"Take out recycling",category:"Kitchen",defaultInterval:7,pointValue:10},
-  {name:"Clean toilet",category:"Bathroom",defaultInterval:7,pointValue:15},
-  {name:"Clean bathroom sink",category:"Bathroom",defaultInterval:5,pointValue:10},
-  {name:"Clean shower",category:"Bathroom",defaultInterval:14,pointValue:20},
-  {name:"Vacuum floors",category:"General",defaultInterval:7,pointValue:20},
-  {name:"Mop floors",category:"General",defaultInterval:14,pointValue:25},
-  {name:"Change bed sheets",category:"Bedroom",defaultInterval:14,pointValue:20},
+  {name:'Take out trash',category:'Kitchen',defaultInterval:2,pointValue:10},
+  {name:'Wash dishes',category:'Kitchen',defaultInterval:1,pointValue:5},
+  {name:'Wipe kitchen counters',category:'Kitchen',defaultInterval:3,pointValue:8},
+  {name:'Take out recycling',category:'Kitchen',defaultInterval:7,pointValue:10},
+  {name:'Clean toilet',category:'Bathroom',defaultInterval:7,pointValue:15},
+  {name:'Clean bathroom sink',category:'Bathroom',defaultInterval:5,pointValue:10},
+  {name:'Clean shower',category:'Bathroom',defaultInterval:14,pointValue:20},
+  {name:'Vacuum floors',category:'General',defaultInterval:7,pointValue:20},
+  {name:'Mop floors',category:'General',defaultInterval:14,pointValue:25},
+  {name:'Change bed sheets',category:'Bedroom',defaultInterval:14,pointValue:20},
 ];
 const FALLBACK_REWARDS = [
-  {id:"r1",name:"Pack of Gummies",emoji:"🍬",cost:30},
-  {id:"r2",name:"Candy Bar",emoji:"🍭",cost:40},
-  {id:"r3",name:"Chocolate Bar",emoji:"🍫",cost:50},
-  {id:"r4",name:"Bag of Chips",emoji:"🍿",cost:35},
-  {id:"r5",name:"Ice Cream",emoji:"🍦",cost:80},
-  {id:"r6",name:"Big Treat",emoji:"🎂",cost:150},
+  {id:'r1',name:'Pack of Gummies',emoji:'🍬',cost:30},
+  {id:'r2',name:'Candy Bar',emoji:'🍭',cost:40},
+  {id:'r3',name:'Chocolate Bar',emoji:'🍫',cost:50},
+  {id:'r4',name:'Bag of Chips',emoji:'🍿',cost:35},
+  {id:'r5',name:'Ice Cream',emoji:'🍦',cost:80},
+  {id:'r6',name:'Big Treat',emoji:'🎂',cost:150},
 ];
 
 // ══════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════
-let state = {
-  tasks:[], totalPoints:0, availablePoints:0, history:[], rewards:[],
-};
-// Which category sections are collapsed — persisted separately
-let collapsed = JSON.parse(localStorage.getItem('cleanup_collapsed') || '{}');
-
-function saveCollapsed() { localStorage.setItem('cleanup_collapsed', JSON.stringify(collapsed)); }
+let state = { tasks:[], categories:[], totalPoints:0, availablePoints:0, history:[], rewards:[] };
+let collapsed = JSON.parse(localStorage.getItem('cleanup_collapsed')||'{}');
+function saveCollapsed(){ localStorage.setItem('cleanup_collapsed',JSON.stringify(collapsed)); }
 
 function loadState() {
   try {
     const raw = localStorage.getItem('cleanup_v2');
-    if (raw) {
-      state = {...state, ...JSON.parse(raw)};
-      if (!state.rewards?.length) state.rewards = FALLBACK_REWARDS;
-    }
-    // returns true if first-run (needs seeding)
+    if(raw){ state={...state,...JSON.parse(raw)}; if(!state.rewards?.length) state.rewards=FALLBACK_REWARDS; if(!state.categories?.length) state.categories=FALLBACK_CATS; }
     return !raw;
-  } catch(e) { return true; }
+  } catch(e){ return true; }
 }
-
-function saveState() {
-  try { localStorage.setItem('cleanup_v2', JSON.stringify(state)); } catch(e) {}
-}
+function saveState(){ try{ localStorage.setItem('cleanup_v2',JSON.stringify(state)); }catch(e){} }
 
 async function seedFromJson() {
-  let tasks = FALLBACK_TASKS, rewards = FALLBACK_REWARDS;
+  let cats=FALLBACK_CATS, tasks=FALLBACK_TASKS, rewards=FALLBACK_REWARDS;
   try {
-    const res = await fetch('data.json');
-    if (res.ok) { const d = await res.json(); tasks = d.tasks || tasks; rewards = d.rewards || rewards; }
-  } catch(e) {}
-  const t = today();
-  state.tasks = tasks.map(d => ({id:uid(), name:d.name, category:d.category,
-    defaultInterval:d.defaultInterval, pointValue:d.pointValue, nextDue:t, lastDone:null}));
-  state.rewards = rewards.map(r => ({...r, id: r.id || uid()}));
+    const res=await fetch('data.json');
+    if(res.ok){ const d=await res.json(); cats=d.categories||cats; tasks=d.tasks||tasks; rewards=d.rewards||rewards; }
+  } catch(e){}
+  const t=today();
+  state.categories = cats;
+  state.tasks = tasks.map(d=>({id:uid(),name:d.name,category:d.category,defaultInterval:d.defaultInterval,pointValue:d.pointValue,nextDue:t,lastDone:null}));
+  state.rewards = rewards.map(r=>({...r,id:r.id||uid()}));
   saveState();
 }
 
 async function clearAll() {
-  state = {tasks:[], totalPoints:0, availablePoints:0, history:[], rewards:[]};
-  collapsed = {};
-  localStorage.removeItem('cleanup_v2');
-  localStorage.removeItem('cleanup_collapsed');
-  await seedFromJson();
-  render();
+  state={tasks:[],categories:[],totalPoints:0,availablePoints:0,history:[],rewards:[]};
+  collapsed={}; localStorage.removeItem('cleanup_v2'); localStorage.removeItem('cleanup_collapsed');
+  await seedFromJson(); render();
 }
 
 // ══════════════════════════════════════════
@@ -561,119 +578,93 @@ async function clearAll() {
 // ══════════════════════════════════════════
 function today()  { return new Date().toISOString().split('T')[0]; }
 function uid()    { return Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
-function addDays(s,n) {
-  const d=new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0];
-}
-function diffDays(s) {
-  const a=new Date(today()+'T12:00:00'), b=new Date(s+'T12:00:00');
-  return Math.round((b-a)/86400000);
-}
-function urgency(nextDue) {
-  const d=diffDays(nextDue);
-  if(d<0) return{type:'overdue',d}; if(d===0) return{type:'today',d};
-  if(d===1) return{type:'soon',d}; return{type:'upcoming',d};
-}
-function urgencyLabel(u) {
-  if(u.type==='overdue')  return `${Math.abs(u.d)}d overdue`;
-  if(u.type==='today')    return 'Due today';
-  if(u.type==='soon')     return 'Due tomorrow';
-  return `In ${u.d} days`;
-}
+function addDays(s,n){ const d=new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
+function diffDays(s){ const a=new Date(today()+'T12:00:00'),b=new Date(s+'T12:00:00'); return Math.round((b-a)/86400000); }
+function urgency(nextDue){ const d=diffDays(nextDue); if(d<0)return{type:'overdue',d}; if(d===0)return{type:'today',d}; if(d===1)return{type:'soon',d}; return{type:'upcoming',d}; }
+function urgencyLabel(u){ if(u.type==='overdue')return`${Math.abs(u.d)}d overdue`; if(u.type==='today')return'Due today'; if(u.type==='soon')return'Due tomorrow'; return`In ${u.d} days`; }
 const UCARD  = {overdue:'overdue',today:'due-today',soon:'due-soon',upcoming:'upcoming'};
 const UBADGE = {overdue:'badge-overdue',today:'badge-today',soon:'badge-soon',upcoming:'badge-upcoming'};
-const CEMOJI = {Kitchen:'🍽',Bathroom:'🚿',Bedroom:'🛏',General:'🧹',Laundry:'👕',Other:'📦'};
-function catEmoji(c){ return CEMOJI[c]||'📦'; }
-function fmtDate(s) {
-  if(!s) return 'Never';
-  const[y,m,d]=s.split('-'); return `${d}/${m}/${String(y).slice(2)}`;
-}
+
+function catEmoji(name){ const c=state.categories.find(x=>x.name===name); return c?c.emoji:'📦'; }
+function fmtDate(s){ if(!s)return'Never'; const[y,m,d]=s.split('-'); return`${d}/${m}/${String(y).slice(2)}`; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Populate the category <select> in task form ──
+function populateCatSelect(selectedVal) {
+  const sel = document.getElementById('f-cat');
+  sel.innerHTML = state.categories.map(c =>
+    `<option value="${esc(c.name)}" ${c.name===selectedVal?'selected':''}>${c.emoji} ${esc(c.name)}</option>`
+  ).join('');
+}
 
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-let currentView = 'dashboard';
-function navigate(view) {
+let currentView='dashboard';
+function navigate(view){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('view-'+view).classList.add('active');
   document.querySelector(`[data-view="${view}"]`).classList.add('active');
-  document.getElementById('fab-add-reward').style.display = view==='rewards' ? 'flex' : 'none';
-  currentView = view;
-  render();
+  document.getElementById('fab-add-reward').style.display=view==='rewards'?'flex':'none';
+  currentView=view; render();
 }
-document.querySelectorAll('.nav-item').forEach(btn =>
-  btn.addEventListener('click', ()=>navigate(btn.dataset.view))
-);
+document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>navigate(btn.dataset.view)));
 
 // ══════════════════════════════════════════
 //  RENDER
 // ══════════════════════════════════════════
-function render() {
-  document.getElementById('header-points').textContent = `⭐ ${state.availablePoints} pts`;
+function render(){
+  document.getElementById('header-points').textContent=`⭐ ${state.availablePoints} pts`;
   if(currentView==='dashboard') renderDashboard();
   if(currentView==='tasks')     renderTasksView();
   if(currentView==='rewards')   renderRewards();
 }
 
 // ── Dashboard: grouped by category, collapsible ──
-function renderDashboard() {
-  const el = document.getElementById('dashboard-content');
-  if(!state.tasks.length) {
-    el.innerHTML=`<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Go to <b>Tasks</b> to add some!</p></div>`;
-    return;
-  }
+function renderDashboard(){
+  const el=document.getElementById('dashboard-content');
+  if(!state.tasks.length){ el.innerHTML=`<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Go to <b>Tasks</b> to add some!</p></div>`; return; }
 
-  // Group by category
-  const cats = {};
-  state.tasks.forEach(t => { (cats[t.category]||(cats[t.category]=[])).push(t); });
+  const cats={};
+  state.tasks.forEach(t=>{ (cats[t.category]||(cats[t.category]=[])).push(t); });
 
-  // Sort categories: category with most urgent task first
-  const urgencyRank = {overdue:0,today:1,soon:2,upcoming:3};
-  const catKeys = Object.keys(cats).sort((a,b) => {
-    const ra = Math.min(...cats[a].map(t=>urgencyRank[urgency(t.nextDue).type]));
-    const rb = Math.min(...cats[b].map(t=>urgencyRank[urgency(t.nextDue).type]));
-    return ra - rb;
+  const uRank={overdue:0,today:1,soon:2,upcoming:3};
+  const catKeys=Object.keys(cats).sort((a,b)=>{
+    const ra=Math.min(...cats[a].map(t=>uRank[urgency(t.nextDue).type]));
+    const rb=Math.min(...cats[b].map(t=>uRank[urgency(t.nextDue).type]));
+    return ra-rb;
   });
 
-  let html = '';
-  catKeys.forEach(cat => {
-    const tasks = cats[cat].sort((a,b)=>diffDays(a.nextDue)-diffDays(b.nextDue));
-    const isOpen = collapsed[cat] !== true; // default open
-    const urgencyCounts = {overdue:0,today:0,soon:0};
-    tasks.forEach(t=>{ const u=urgency(t.nextDue).type; if(u in urgencyCounts) urgencyCounts[u]++; });
+  let html='';
+  catKeys.forEach(cat=>{
+    const tasks=cats[cat].sort((a,b)=>diffDays(a.nextDue)-diffDays(b.nextDue));
+    const isOpen=collapsed[cat]!==true; // default open
+    const uc={overdue:0,today:0,soon:0};
+    tasks.forEach(t=>{ const u=urgency(t.nextDue).type; if(u in uc)uc[u]++; });
+    let badges='';
+    if(uc.overdue) badges+=`<span class="badge badge-overdue">${uc.overdue} overdue</span>`;
+    if(uc.today)   badges+=`<span class="badge badge-today">${uc.today} today</span>`;
+    if(uc.soon)    badges+=`<span class="badge badge-soon">${uc.soon} tomorrow</span>`;
 
-    let summaryBadges = '';
-    if(urgencyCounts.overdue) summaryBadges+=`<span class="badge badge-overdue">${urgencyCounts.overdue} overdue</span>`;
-    if(urgencyCounts.today)   summaryBadges+=`<span class="badge badge-today">${urgencyCounts.today} today</span>`;
-    if(urgencyCounts.soon)    summaryBadges+=`<span class="badge badge-soon">${urgencyCounts.soon} tomorrow</span>`;
-
-    html += `
+    html+=`
       <div class="cat-section">
         <div class="cat-header ${isOpen?'open':''}" onclick="toggleCat('${esc(cat)}')">
           <span class="cat-title">${catEmoji(cat)} ${esc(cat)} <span style="color:var(--g400);font-weight:500;font-size:12px;">(${tasks.length})</span></span>
-          <div class="cat-summary">${summaryBadges}</div>
-          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
+          <div class="cat-summary">${badges}</div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="cat-body ${isOpen?'open':''}">
-          <div class="cat-body-inner">
-            ${tasks.map(t=>taskCard(t)).join('')}
-          </div>
+          <div class="cat-body-inner">${tasks.map(t=>taskCard(t)).join('')}</div>
         </div>
       </div>`;
   });
-  el.innerHTML = html;
+  el.innerHTML=html;
 }
 
-function toggleCat(cat) {
-  collapsed[cat] = collapsed[cat] !== true; // toggle (default was open)
-  saveCollapsed();
-  renderDashboard();
-}
+function toggleCat(cat){ collapsed[cat]=collapsed[cat]!==true; saveCollapsed(); renderDashboard(); }
 
-function taskCard(t) {
+function taskCard(t){
   const u=urgency(t.nextDue);
   const last=t.lastDone?`Last done ${fmtDate(t.lastDone)}`:'Never done';
   return `
@@ -693,20 +684,17 @@ function taskCard(t) {
 }
 
 // ── Tasks management ──
-function renderTasksView() {
-  const el = document.getElementById('tasks-content');
-  if(!state.tasks.length) {
-    el.innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>No tasks yet.<br>Tap <b>+</b> to add one!</p></div>`;
-    return;
-  }
+function renderTasksView(){
+  const el=document.getElementById('tasks-content');
+  if(!state.tasks.length){ el.innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>No tasks yet.<br>Tap <b>+</b> to add one!</p></div>`; return; }
   const sorted=[...state.tasks].sort((a,b)=>a.name.localeCompare(b.name));
-  el.innerHTML = sorted.map(t=>`
-    <div class="task-item">
-      <div class="task-item-info">
-        <div class="task-item-name">${esc(t.name)}</div>
-        <div class="task-item-sub">${catEmoji(t.category)} ${t.category} · every ${t.defaultInterval}d · ⭐${t.pointValue} pts · next ${fmtDate(t.nextDue)}</div>
+  el.innerHTML=sorted.map(t=>`
+    <div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-name">${esc(t.name)}</div>
+        <div class="list-item-sub">${catEmoji(t.category)} ${esc(t.category)} · every ${t.defaultInterval}d · ⭐${t.pointValue} pts · next ${fmtDate(t.nextDue)}</div>
       </div>
-      <div class="task-item-actions">
+      <div class="list-item-actions">
         <button class="icon-btn icon-btn-edit"   onclick="openEditTask('${t.id}')">✏️</button>
         <button class="icon-btn icon-btn-delete" onclick="openDeleteTaskSheet('${t.id}')">🗑️</button>
       </div>
@@ -714,9 +702,9 @@ function renderTasksView() {
 }
 
 // ── Rewards ──
-function renderRewards() {
-  const el = document.getElementById('rewards-content');
-  let html = `
+function renderRewards(){
+  const el=document.getElementById('rewards-content');
+  let html=`
     <div class="pts-hero">
       <div class="pts-num" id="pts-num" onclick="startEditPts()" title="Tap to edit">${state.availablePoints}</div>
       <div class="pts-label">Available Points <span style="opacity:.5;font-size:10px;">(tap to edit)</span></div>
@@ -729,22 +717,16 @@ function renderRewards() {
     html+=`
       <div class="reward-card">
         <div class="reward-emoji">${r.emoji}</div>
-        <div class="reward-info">
-          <div class="reward-name">${esc(r.name)}</div>
-          <div class="reward-cost">⭐ ${r.cost} pts</div>
-        </div>
+        <div class="reward-info"><div class="reward-name">${esc(r.name)}</div><div class="reward-cost">⭐ ${r.cost} pts</div></div>
         <div class="reward-actions">
-          <button class="btn-redeem" ${can?'':'disabled'} onclick="redeemReward('${r.id}')">
-            ${can?'Redeem':`Need ${r.cost-state.availablePoints} more`}
-          </button>
+          <button class="btn-redeem" ${can?'':'disabled'} onclick="redeemReward('${r.id}')">${can?'Redeem':`Need ${r.cost-state.availablePoints} more`}</button>
           <button class="icon-btn icon-btn-edit"   onclick="openEditReward('${r.id}')" style="font-size:13px;">✏️</button>
           <button class="icon-btn icon-btn-delete" onclick="openDeleteRewardSheet('${r.id}')" style="font-size:13px;">🗑️</button>
         </div>
       </div>`;
   });
 
-  // Share tasks
-  html += `
+  html+=`
     <div class="slabel" style="margin-top:20px;">🔗 Share</div>
     <div style="background:white;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Share your task list</div>
@@ -752,8 +734,7 @@ function renderRewards() {
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="shareTasksUrl()">📋 Copy share link</button>
     </div>`;
 
-  // History
-  if(state.history.length) {
+  if(state.history.length){
     const recent=[...state.history].reverse().slice(0,30);
     html+=`<div class="slabel" style="margin-top:20px;">📋 Recent Activity</div>`;
     html+=recent.map(h=>`
@@ -765,26 +746,22 @@ function renderRewards() {
       </div>`).join('');
   }
 
-  // Danger zone
-  html += `
+  html+=`
     <div class="danger-zone">
       <h3>⚠️ Danger Zone</h3>
-      <p style="font-size:12px;color:var(--g700);margin-bottom:12px;">
-        Clears all data and resets to the defaults in <code>data.json</code>.
-      </p>
+      <p style="font-size:12px;color:var(--g700);margin-bottom:12px;">Clears all data and resets to the defaults in <code>data.json</code>.</p>
       <button class="btn btn-danger" style="width:100%;justify-content:center;padding:10px;" onclick="openClearConfirm()">🗑 Reset all data to defaults</button>
     </div>`;
 
-  el.innerHTML = html;
+  el.innerHTML=html;
 }
 
 // ══════════════════════════════════════════
 //  DONE SHEET
 // ══════════════════════════════════════════
 let doneTaskId=null, doneInt=7;
-
-function openDoneSheet(id) {
-  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+function openDoneSheet(id){
+  const t=state.tasks.find(x=>x.id===id); if(!t)return;
   doneTaskId=id; doneInt=t.defaultInterval;
   document.getElementById('done-task-name').textContent='✓ '+t.name;
   document.getElementById('done-pts').textContent='+'+t.pointValue;
@@ -794,13 +771,12 @@ function openDoneSheet(id) {
 document.getElementById('int-minus').addEventListener('click',()=>{ if(doneInt>1){doneInt--;document.getElementById('int-val').textContent=doneInt;} });
 document.getElementById('int-plus').addEventListener('click',()=>{ doneInt++;document.getElementById('int-val').textContent=doneInt; });
 document.getElementById('confirm-done').addEventListener('click',()=>{
-  const t=state.tasks.find(x=>x.id===doneTaskId); if(!t) return;
+  const t=state.tasks.find(x=>x.id===doneTaskId); if(!t)return;
   const prev=state.availablePoints;
   t.lastDone=today(); t.nextDue=addDays(today(),doneInt);
   state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
   state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn'});
-  saveState(); closeSheets();
-  showToast(`✓ Done! +${t.pointValue} pts`); bumpPts();
+  saveState(); closeSheets(); showToast(`✓ Done! +${t.pointValue} pts`); bumpPts();
   if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
   render();
 });
@@ -810,8 +786,8 @@ document.getElementById('done-overlay').addEventListener('click',e=>{ if(e.targe
 // ══════════════════════════════════════════
 //  SNOOZE
 // ══════════════════════════════════════════
-function snoozeTask(id,days) {
-  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+function snoozeTask(id,days){
+  const t=state.tasks.find(x=>x.id===id); if(!t)return;
   t.nextDue=addDays(t.nextDue,days);
   saveState(); showToast(`Snoozed +${days} day${days>1?'s':''}`); render();
 }
@@ -822,59 +798,157 @@ function snoozeTask(id,days) {
 let editTaskId=null;
 document.getElementById('fab-add-task').addEventListener('click',openAddTask);
 
-function openAddTask() {
+function openAddTask(){
   editTaskId=null;
   document.getElementById('task-form-title').textContent='Add Task';
+  populateCatSelect(state.categories[0]?.name||'');
   document.getElementById('f-name').value='';
-  document.getElementById('f-cat').value='Kitchen';
   document.getElementById('f-interval').value='7';
   document.getElementById('f-pts').value='10';
   document.getElementById('f-nextdue').value=today();
   document.getElementById('task-form-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('f-name').focus(),300);
 }
-
-function openEditTask(id) {
-  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+function openEditTask(id){
+  const t=state.tasks.find(x=>x.id===id); if(!t)return;
   editTaskId=id;
   document.getElementById('task-form-title').textContent='Edit Task';
+  populateCatSelect(t.category);
   document.getElementById('f-name').value=t.name;
-  document.getElementById('f-cat').value=t.category;
   document.getElementById('f-interval').value=t.defaultInterval;
   document.getElementById('f-pts').value=t.pointValue;
   document.getElementById('f-nextdue').value=t.nextDue;
   document.getElementById('task-form-overlay').classList.add('open');
 }
-
 document.getElementById('save-task-btn').addEventListener('click',()=>{
   const name=document.getElementById('f-name').value.trim();
   if(!name){showToast('Please enter a task name');return;}
   const data={
-    name, category:document.getElementById('f-cat').value,
+    name,category:document.getElementById('f-cat').value,
     defaultInterval:Math.max(1,parseInt(document.getElementById('f-interval').value)||7),
     pointValue:Math.max(1,parseInt(document.getElementById('f-pts').value)||10),
     nextDue:document.getElementById('f-nextdue').value||today(),
   };
-  if(editTaskId) {
-    const t=state.tasks.find(x=>x.id===editTaskId);
-    if(t) Object.assign(t,data);
-    showToast('Task updated!');
-  } else {
-    state.tasks.push({id:uid(),lastDone:null,...data});
-    showToast('Task added!');
-  }
+  if(editTaskId){ const t=state.tasks.find(x=>x.id===editTaskId); if(t)Object.assign(t,data); showToast('Task updated!'); }
+  else{ state.tasks.push({id:uid(),lastDone:null,...data}); showToast('Task added!'); }
   saveState(); closeSheets(); render();
 });
 document.getElementById('cancel-task-btn').addEventListener('click',closeSheets);
 document.getElementById('task-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
 
 // ══════════════════════════════════════════
+//  CATEGORIES MANAGEMENT
+// ══════════════════════════════════════════
+let editCatName=null; // original name of category being edited
+let deleteCatName=null;
+
+document.getElementById('open-cats-btn').addEventListener('click',openCatsSheet);
+
+function openCatsSheet(){
+  renderCatsList();
+  document.getElementById('cats-overlay').classList.add('open');
+}
+
+function renderCatsList(){
+  const el=document.getElementById('cats-list');
+  if(!state.categories.length){ el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No categories yet.</div>`; return; }
+  el.innerHTML=state.categories.map(c=>{
+    const taskCount=state.tasks.filter(t=>t.category===c.name).length;
+    return `
+      <div class="list-item">
+        <div style="font-size:24px;flex-shrink:0;">${c.emoji}</div>
+        <div class="list-item-info">
+          <div class="list-item-name">${esc(c.name)}</div>
+          <div class="list-item-sub">${taskCount} task${taskCount!==1?'s':''}</div>
+        </div>
+        <div class="list-item-actions">
+          <button class="icon-btn icon-btn-edit"   onclick="openEditCat('${esc(c.name)}')">✏️</button>
+          <button class="icon-btn icon-btn-delete" onclick="openDeleteCatSheet('${esc(c.name)}')">🗑️</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+document.getElementById('add-cat-btn').addEventListener('click',openAddCat);
+document.getElementById('close-cats-btn').addEventListener('click',closeSheets);
+document.getElementById('cats-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
+
+function openAddCat(){
+  editCatName=null;
+  document.getElementById('cat-form-title').textContent='Add Category';
+  document.getElementById('cf-emoji').value='📦';
+  document.getElementById('cf-name').value='';
+  document.getElementById('cat-form-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('cf-name').focus(),300);
+}
+function openEditCat(name){
+  const c=state.categories.find(x=>x.name===name); if(!c)return;
+  editCatName=name;
+  document.getElementById('cat-form-title').textContent='Edit Category';
+  document.getElementById('cf-emoji').value=c.emoji;
+  document.getElementById('cf-name').value=c.name;
+  document.getElementById('cat-form-overlay').classList.add('open');
+}
+document.getElementById('save-cat-btn').addEventListener('click',()=>{
+  const name=document.getElementById('cf-name').value.trim();
+  if(!name){showToast('Please enter a category name');return;}
+  const emoji=document.getElementById('cf-emoji').value.trim()||'📦';
+
+  if(editCatName){
+    // Rename category in all tasks too
+    state.tasks.forEach(t=>{ if(t.category===editCatName) t.category=name; });
+    const c=state.categories.find(x=>x.name===editCatName);
+    if(c){ c.name=name; c.emoji=emoji; }
+    // Update collapse key
+    if(collapsed[editCatName]!==undefined){ collapsed[name]=collapsed[editCatName]; delete collapsed[editCatName]; saveCollapsed(); }
+    showToast('Category updated!');
+  } else {
+    if(state.categories.find(x=>x.name===name)){showToast('Category already exists');return;}
+    state.categories.push({name,emoji});
+    showToast('Category added!');
+  }
+  saveState();
+  document.getElementById('cat-form-overlay').classList.remove('open');
+  renderCatsList(); // refresh the cats sheet (keep it open)
+  render();
+});
+document.getElementById('cancel-cat-btn').addEventListener('click',()=>{ document.getElementById('cat-form-overlay').classList.remove('open'); });
+document.getElementById('cat-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget) document.getElementById('cat-form-overlay').classList.remove('open'); });
+
+function openDeleteCatSheet(name){
+  deleteCatName=name;
+  const taskCount=state.tasks.filter(t=>t.category===name).length;
+  document.getElementById('delete-cat-desc').textContent =
+    taskCount>0
+      ? `"${name}" has ${taskCount} task${taskCount>1?'s':''} assigned to it. Those tasks will be moved to "Other".`
+      : `"${name}" has no tasks assigned. It will be permanently removed.`;
+  document.getElementById('delete-cat-overlay').classList.add('open');
+}
+document.getElementById('confirm-delete-cat').addEventListener('click',()=>{
+  // Move orphaned tasks to "Other" (or first available category)
+  const fallback = state.categories.find(c=>c.name!==deleteCatName)?.name || 'Other';
+  state.tasks.forEach(t=>{ if(t.category===deleteCatName) t.category=fallback; });
+  state.categories=state.categories.filter(c=>c.name!==deleteCatName);
+  // Ensure "Other" exists if we used it as fallback
+  if(fallback==='Other' && !state.categories.find(c=>c.name==='Other')){
+    state.categories.push({name:'Other',emoji:'📦'});
+  }
+  delete collapsed[deleteCatName]; saveCollapsed();
+  saveState();
+  document.getElementById('delete-cat-overlay').classList.remove('open');
+  renderCatsList();
+  showToast('Category deleted');
+  render();
+});
+document.getElementById('cancel-delete-cat').addEventListener('click',()=>{ document.getElementById('delete-cat-overlay').classList.remove('open'); });
+document.getElementById('delete-cat-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget) document.getElementById('delete-cat-overlay').classList.remove('open'); });
+
+// ══════════════════════════════════════════
 //  REWARD FORM
 // ══════════════════════════════════════════
 let editRewardId=null;
 document.getElementById('fab-add-reward').addEventListener('click',openAddReward);
-
-function openAddReward() {
+function openAddReward(){
   editRewardId=null;
   document.getElementById('reward-form-title').textContent='Add Reward';
   document.getElementById('rf-emoji').value='🎁';
@@ -883,9 +957,8 @@ function openAddReward() {
   document.getElementById('reward-form-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('rf-name').focus(),300);
 }
-
-function openEditReward(id) {
-  const r=state.rewards.find(x=>x.id===id); if(!r) return;
+function openEditReward(id){
+  const r=state.rewards.find(x=>x.id===id); if(!r)return;
   editRewardId=id;
   document.getElementById('reward-form-title').textContent='Edit Reward';
   document.getElementById('rf-emoji').value=r.emoji;
@@ -893,23 +966,12 @@ function openEditReward(id) {
   document.getElementById('rf-cost').value=r.cost;
   document.getElementById('reward-form-overlay').classList.add('open');
 }
-
 document.getElementById('save-reward-btn').addEventListener('click',()=>{
   const name=document.getElementById('rf-name').value.trim();
   if(!name){showToast('Please enter a reward name');return;}
-  const data={
-    emoji:document.getElementById('rf-emoji').value.trim()||'🎁',
-    name,
-    cost:Math.max(1,parseInt(document.getElementById('rf-cost').value)||50),
-  };
-  if(editRewardId) {
-    const r=state.rewards.find(x=>x.id===editRewardId);
-    if(r) Object.assign(r,data);
-    showToast('Reward updated!');
-  } else {
-    state.rewards.push({id:uid(),...data});
-    showToast('Reward added!');
-  }
+  const data={emoji:document.getElementById('rf-emoji').value.trim()||'🎁',name,cost:Math.max(1,parseInt(document.getElementById('rf-cost').value)||50)};
+  if(editRewardId){ const r=state.rewards.find(x=>x.id===editRewardId); if(r)Object.assign(r,data); showToast('Reward updated!'); }
+  else{ state.rewards.push({id:uid(),...data}); showToast('Reward added!'); }
   saveState(); closeSheets(); render();
 });
 document.getElementById('cancel-reward-btn').addEventListener('click',closeSheets);
@@ -920,10 +982,7 @@ document.getElementById('reward-form-overlay').addEventListener('click',e=>{ if(
 // ══════════════════════════════════════════
 let deleteTaskId=null;
 function openDeleteTaskSheet(id){ deleteTaskId=id; document.getElementById('delete-task-overlay').classList.add('open'); }
-document.getElementById('confirm-delete-task').addEventListener('click',()=>{
-  state.tasks=state.tasks.filter(t=>t.id!==deleteTaskId);
-  saveState(); closeSheets(); showToast('Task deleted'); render();
-});
+document.getElementById('confirm-delete-task').addEventListener('click',()=>{ state.tasks=state.tasks.filter(t=>t.id!==deleteTaskId); saveState(); closeSheets(); showToast('Task deleted'); render(); });
 document.getElementById('cancel-delete-task').addEventListener('click',closeSheets);
 document.getElementById('delete-task-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
 
@@ -932,193 +991,109 @@ document.getElementById('delete-task-overlay').addEventListener('click',e=>{ if(
 // ══════════════════════════════════════════
 let deleteRewardId=null;
 function openDeleteRewardSheet(id){ deleteRewardId=id; document.getElementById('delete-reward-overlay').classList.add('open'); }
-document.getElementById('confirm-delete-reward').addEventListener('click',()=>{
-  state.rewards=state.rewards.filter(r=>r.id!==deleteRewardId);
-  saveState(); closeSheets(); showToast('Reward deleted'); render();
-});
+document.getElementById('confirm-delete-reward').addEventListener('click',()=>{ state.rewards=state.rewards.filter(r=>r.id!==deleteRewardId); saveState(); closeSheets(); showToast('Reward deleted'); render(); });
 document.getElementById('cancel-delete-reward').addEventListener('click',closeSheets);
 document.getElementById('delete-reward-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
 
 // ══════════════════════════════════════════
 //  REDEEM
 // ══════════════════════════════════════════
-function redeemReward(id) {
-  const r=state.rewards.find(x=>x.id===id);
-  if(!r||state.availablePoints<r.cost) return;
+function redeemReward(id){
+  const r=state.rewards.find(x=>x.id===id); if(!r||state.availablePoints<r.cost)return;
   state.availablePoints-=r.cost;
   state.history.push({name:r.name,pts:r.cost,date:today(),type:'redeem'});
   saveState(); triggerConfetti(); showToast(`🎉 Enjoy your ${r.name}!`); render();
 }
 
 // ══════════════════════════════════════════
-//  EDIT POINTS (click to edit)
+//  EDIT POINTS
 // ══════════════════════════════════════════
-function startEditPts() {
-  const hero = document.querySelector('.pts-hero');
-  const numEl = document.getElementById('pts-num');
-  if (!numEl) return;
-  const input = document.createElement('input');
-  input.className = 'pts-edit';
-  input.type = 'number';
-  input.value = state.availablePoints;
-  input.min = '0';
-  numEl.replaceWith(input);
-  input.focus(); input.select();
-
-  function commit() {
-    const val = Math.max(0, parseInt(input.value) || 0);
-    const diff = val - state.availablePoints;
-    state.availablePoints = val;
-    if (diff !== 0) {
-      state.history.push({name:'Manual adjustment',pts:Math.abs(diff),date:today(),type:diff>=0?'earn':'redeem'});
-    }
+function startEditPts(){
+  const numEl=document.getElementById('pts-num'); if(!numEl)return;
+  const input=document.createElement('input');
+  input.className='pts-edit'; input.type='number'; input.value=state.availablePoints; input.min='0';
+  numEl.replaceWith(input); input.focus(); input.select();
+  function commit(){
+    const val=Math.max(0,parseInt(input.value)||0);
+    const diff=val-state.availablePoints;
+    state.availablePoints=val;
+    if(diff!==0) state.history.push({name:'Manual adjustment',pts:Math.abs(diff),date:today(),type:diff>=0?'earn':'redeem'});
     saveState(); render();
   }
-  input.addEventListener('keydown', e=>{ if(e.key==='Enter') commit(); if(e.key==='Escape'){render();} });
-  input.addEventListener('blur', commit);
+  input.addEventListener('keydown',e=>{ if(e.key==='Enter')commit(); if(e.key==='Escape')render(); });
+  input.addEventListener('blur',commit);
 }
 
 // ══════════════════════════════════════════
 //  CLEAR ALL
 // ══════════════════════════════════════════
-function openClearConfirm() { document.getElementById('clear-overlay').classList.add('open'); }
-document.getElementById('confirm-clear').addEventListener('click',async()=>{
-  closeSheets();
-  showToast('Resetting…');
-  await clearAll();
-  showToast('✓ Reset to defaults');
-});
+function openClearConfirm(){ document.getElementById('clear-overlay').classList.add('open'); }
+document.getElementById('confirm-clear').addEventListener('click',async()=>{ closeSheets(); showToast('Resetting…'); await clearAll(); showToast('✓ Reset to defaults'); });
 document.getElementById('cancel-clear').addEventListener('click',closeSheets);
 document.getElementById('clear-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
 
 // ══════════════════════════════════════════
-//  SHARE TASKS VIA URL
+//  SHARE TASKS
 // ══════════════════════════════════════════
-function shareTasksUrl() {
-  const defs = state.tasks.map(t=>({
-    name:t.name, category:t.category,
-    defaultInterval:t.defaultInterval, pointValue:t.pointValue,
-  }));
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(defs))));
-  const url = window.location.origin + window.location.pathname + '?import=' + encoded;
-  navigator.clipboard.writeText(url).then(()=>{
-    showToast('✓ Share link copied to clipboard!');
-  }).catch(()=>{
-    // Fallback: prompt
-    prompt('Copy this link:', url);
-  });
+function shareTasksUrl(){
+  const defs=state.tasks.map(t=>({name:t.name,category:t.category,defaultInterval:t.defaultInterval,pointValue:t.pointValue}));
+  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(defs))));
+  const url=window.location.origin+window.location.pathname+'?import='+encoded;
+  navigator.clipboard.writeText(url).then(()=>showToast('✓ Share link copied!')).catch(()=>prompt('Copy this link:',url));
 }
 
-// ── Detect import on load ──
-function checkImportParam() {
-  const params = new URLSearchParams(window.location.search);
-  const encoded = params.get('import');
-  if (!encoded) return;
-  try {
-    const tasks = JSON.parse(decodeURIComponent(escape(atob(encoded))));
-    if (!Array.isArray(tasks) || !tasks.length) return;
-
-    document.getElementById('import-desc').textContent =
-      `Someone shared ${tasks.length} task${tasks.length>1?'s':''} with you. Choose how to import them:`;
-    document.getElementById('import-preview').innerHTML =
-      tasks.map(t=>`• ${t.name} <span style="color:var(--g400)">(${t.category}, every ${t.defaultInterval}d, ⭐${t.pointValue}pts)</span>`).join('<br>');
-
-    document.getElementById('confirm-import-add').onclick = () => {
-      const t = today();
-      tasks.forEach(d=>{
-        if (!state.tasks.find(x=>x.name===d.name)) {
-          state.tasks.push({id:uid(),name:d.name,category:d.category,
-            defaultInterval:d.defaultInterval,pointValue:d.pointValue,nextDue:t,lastDone:null});
-        }
-      });
-      saveState(); closeSheets();
-      showToast(`✓ ${tasks.length} tasks imported!`);
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
-      render();
+function checkImportParam(){
+  const params=new URLSearchParams(window.location.search);
+  const encoded=params.get('import'); if(!encoded)return;
+  try{
+    const tasks=JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if(!Array.isArray(tasks)||!tasks.length)return;
+    document.getElementById('import-desc').textContent=`Someone shared ${tasks.length} task${tasks.length>1?'s':''} with you. Choose how to import them:`;
+    document.getElementById('import-preview').innerHTML=tasks.map(t=>`• ${esc(t.name)} <span style="color:var(--g400)">(${esc(t.category)}, every ${t.defaultInterval}d, ⭐${t.pointValue}pts)</span>`).join('<br>');
+    const doImport=(replace)=>{
+      const t=today();
+      if(replace) state.tasks=[];
+      tasks.forEach(d=>{ if(!state.tasks.find(x=>x.name===d.name)) state.tasks.push({id:uid(),name:d.name,category:d.category,defaultInterval:d.defaultInterval,pointValue:d.pointValue,nextDue:t,lastDone:null}); });
+      saveState(); closeSheets(); showToast(`✓ ${tasks.length} tasks imported!`);
+      window.history.replaceState({},'',window.location.pathname); render();
     };
-    document.getElementById('confirm-import-replace').onclick = () => {
-      const t = today();
-      state.tasks = tasks.map(d=>({id:uid(),name:d.name,category:d.category,
-        defaultInterval:d.defaultInterval,pointValue:d.pointValue,nextDue:t,lastDone:null}));
-      saveState(); closeSheets();
-      showToast(`✓ Tasks replaced!`);
-      window.history.replaceState({}, '', window.location.pathname);
-      render();
-    };
-    document.getElementById('cancel-import').onclick = () => {
-      closeSheets();
-      window.history.replaceState({}, '', window.location.pathname);
-    };
+    document.getElementById('confirm-import-add').onclick=()=>doImport(false);
+    document.getElementById('confirm-import-replace').onclick=()=>doImport(true);
+    document.getElementById('cancel-import').onclick=()=>{ closeSheets(); window.history.replaceState({},'',window.location.pathname); };
     document.getElementById('import-overlay').classList.add('open');
-  } catch(e) { console.warn('Import parse error', e); }
+  }catch(e){ console.warn('Import error',e); }
 }
 
 // ══════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════
-function closeSheets() {
-  document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));
-  doneTaskId=null; deleteTaskId=null; deleteRewardId=null;
-}
+function closeSheets(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); doneTaskId=null; deleteTaskId=null; deleteRewardId=null; deleteCatName=null; }
 let toastTimer;
-function showToast(msg) {
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
-}
-function bumpPts() {
-  const el=document.getElementById('header-points');
-  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
-}
+function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
+function bumpPts(){ const el=document.getElementById('header-points'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 
 // ══════════════════════════════════════════
 //  CONFETTI
 // ══════════════════════════════════════════
-function triggerConfetti() {
+function triggerConfetti(){
   const canvas=document.getElementById('confetti-canvas'),ctx=canvas.getContext('2d');
   canvas.width=window.innerWidth; canvas.height=window.innerHeight;
   const COLS=['#4f46e5','#7c3aed','#10b981','#f59e0b','#ef4444','#ec4899','#06b6d4'];
-  const p=Array.from({length:90},()=>({
-    x:Math.random()*canvas.width,y:-10-Math.random()*40,
-    w:Math.random()*8+5,h:Math.random()*5+3,
-    color:COLS[Math.floor(Math.random()*COLS.length)],
-    vx:(Math.random()-.5)*5,vy:Math.random()*3+2,
-    rot:Math.random()*360,rv:(Math.random()-.5)*12,
-  }));
+  const p=Array.from({length:90},()=>({x:Math.random()*canvas.width,y:-10-Math.random()*40,w:Math.random()*8+5,h:Math.random()*5+3,color:COLS[Math.floor(Math.random()*COLS.length)],vx:(Math.random()-.5)*5,vy:Math.random()*3+2,rot:Math.random()*360,rv:(Math.random()-.5)*12}));
   let f=0;
-  function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    p.forEach(p=>{
-      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);
-      ctx.fillStyle=p.color;ctx.globalAlpha=Math.max(0,1-f/110);
-      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
-      p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.rot+=p.rv;
-    });
-    f++;
-    if(f<130) requestAnimationFrame(draw);
-    else ctx.clearRect(0,0,canvas.width,canvas.height);
-  }
+  function draw(){ ctx.clearRect(0,0,canvas.width,canvas.height); p.forEach(p=>{ ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.color;ctx.globalAlpha=Math.max(0,1-f/110);ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.rot+=p.rv; }); f++; if(f<130)requestAnimationFrame(draw); else ctx.clearRect(0,0,canvas.width,canvas.height); }
   draw();
 }
 
 // ══════════════════════════════════════════
 //  SERVICE WORKER
 // ══════════════════════════════════════════
-if('serviceWorker' in navigator) {
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-}
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-async function init() {
-  const firstRun = loadState();
-  if (firstRun) await seedFromJson();
-  checkImportParam();
-  render();
-}
+async function init(){ const firstRun=loadState(); if(firstRun)await seedFromJson(); checkImportParam(); render(); }
 init();
 </script>
 </body>
