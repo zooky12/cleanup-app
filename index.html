@@ -571,7 +571,8 @@ function saveState(){ try{ localStorage.setItem('cleanup_v2',JSON.stringify(stat
 async function seedFromJson() {
   let cats=FALLBACK_CATS, tasks=FALLBACK_TASKS, rewards=FALLBACK_REWARDS;
   try {
-    const res=await fetch('data.json');
+    // cache:'reload' bypasses the service worker cache so edits to data.json are always picked up on reset
+    const res=await fetch('data.json', {cache:'reload'});
     if(res.ok){ const d=await res.json(); cats=d.categories||cats; tasks=d.tasks||tasks; rewards=d.rewards||rewards; }
   } catch(e){}
   const t=today();

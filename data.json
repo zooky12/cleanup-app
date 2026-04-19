@@ -33,7 +33,7 @@
   ],
   "rewards": [
     { "id": "r1", "name": "Kinder",    "emoji": "🍫", "cost": 10  },
-    { "id": "r1", "name": "Croasants",    "emoji": "🥐", "cost": 60  },
-    { "id": "r1", "name": "Kinder",    "emoji": "🍪", "cost": 60  }
+    { "id": "r2", "name": "Croasants", "emoji": "🥐", "cost": 60  },
+    { "id": "r3", "name": "Galetes",   "emoji": "🍪", "cost": 60  }
   ]
 }
