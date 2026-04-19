@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CleanUp">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="manifest" href="manifest.json">
+  <title>CleanUp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:       #4f46e5;
+      --primary-light: #e0e7ff;
+      --danger:        #ef4444;
+      --danger-light:  #fee2e2;
+      --warning:       #d97706;
+      --warning-light: #fef3c7;
+      --orange:        #f97316;
+      --orange-light:  #fff7ed;
+      --success:       #10b981;
+      --success-light: #d1fae5;
+      --gray-50:  #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-900: #111827;
+      --radius:    16px;
+      --radius-sm: 10px;
+      --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,.12);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: white;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .header h1 { font-size: 20px; font-weight: 700; color: var(--primary); letter-spacing: -0.3px; }
+    .points-badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 13px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: transform .2s;
+    }
+    .points-badge.bump { animation: bump .3s ease; }
+    @keyframes bump { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+
+    /* ── Views ── */
+    .view { display: none; padding: 14px 14px 88px; }
+    .view.active { display: block; }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: white;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      z-index: 20;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0 12px;
+      cursor: pointer;
+      color: var(--gray-400);
+      font-size: 11px;
+      font-weight: 600;
+      gap: 3px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      transition: color .15s;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item svg { width: 22px; height: 22px; }
+
+    /* ── Section labels ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-400);
+      margin: 18px 2px 8px;
+    }
+    .section-label:first-child { margin-top: 4px; }
+
+    /* ── Task cards (dashboard) ── */
+    .task-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--gray-200);
+    }
+    .task-card.overdue   { border-left-color: var(--danger); }
+    .task-card.due-today { border-left-color: var(--warning); }
+    .task-card.due-soon  { border-left-color: var(--orange); }
+    .task-card.upcoming  { border-left-color: var(--success); }
+
+    .task-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .task-name { font-size: 15px; font-weight: 700; color: var(--gray-900); line-height: 1.3; }
+    .task-meta { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+    .badge-row { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-category { background: var(--gray-100); color: var(--gray-500); }
+    .badge-overdue  { background: var(--danger-light);  color: var(--danger);  }
+    .badge-today    { background: var(--warning-light); color: var(--warning); }
+    .badge-soon     { background: var(--orange-light);  color: var(--orange);  }
+    .badge-upcoming { background: var(--success-light); color: var(--success); }
+    .badge-points   { background: var(--primary-light); color: var(--primary); }
+
+    .task-actions { display: flex; gap: 7px; }
+    .btn {
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity .1s, transform .1s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: scale(0.95); opacity: .85; }
+    .btn-done   { background: var(--primary); color: white; flex: 1; justify-content: center; }
+    .btn-snooze { background: var(--gray-100); color: var(--gray-600); }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 56px 24px; color: var(--gray-400); }
+    .empty-state .icon { font-size: 52px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; line-height: 1.5; }
+
+    /* ── Overlay / Bottom sheet ── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; animation: fadeIn .2s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .sheet {
+      background: white;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 12px 20px 36px;
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp .25s cubic-bezier(.25,.46,.45,.94);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+    .sheet-handle {
+      width: 40px; height: 4px;
+      background: var(--gray-200);
+      border-radius: 2px;
+      margin: 6px auto 18px;
+    }
+    .sheet-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; }
+
+    /* Done sheet specifics */
+    .done-points-display {
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(135deg, var(--primary-light), #ede9fe);
+      border-radius: var(--radius);
+      margin-bottom: 18px;
+    }
+    .done-points-display .num  { font-size: 40px; font-weight: 800; color: var(--primary); }
+    .done-points-display .sub  { color: var(--primary); font-size: 13px; margin-top: 2px; font-weight: 500; }
+
+    .interval-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--gray-50);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+    .interval-label { flex: 1; font-size: 14px; font-weight: 600; color: var(--gray-700); }
+    .interval-stepper { display: flex; align-items: center; gap: 10px; }
+    .stepper-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: white;
+      box-shadow: var(--shadow);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--gray-700);
+      transition: transform .1s;
+    }
+    .stepper-btn:active { transform: scale(0.9); }
+    .interval-value {
+      font-size: 20px; font-weight: 800;
+      min-width: 32px; text-align: center;
+      color: var(--primary);
+    }
+    .interval-unit { font-size: 13px; color: var(--gray-400); font-weight: 500; }
+
+    .btn-full { width: 100%; justify-content: center; padding: 14px; font-size: 15px; border-radius: var(--radius); }
+    .btn-primary   { background: var(--primary); color: white; }
+    .btn-danger    { background: var(--danger); color: white; }
+    .btn-secondary { background: var(--gray-100); color: var(--gray-700); margin-top: 10px; }
+
+    /* ── Task form ── */
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--gray-500); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--gray-900);
+      background: white;
+      outline: none;
+      transition: border-color .15s;
+      appearance: auto;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--primary); }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+
+    /* ── Tasks management ── */
+    .task-item {
+      background: white;
+      border-radius: var(--radius-sm);
+      padding: 13px 15px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .task-item-info { flex: 1; min-width: 0; }
+    .task-item-name { font-size: 15px; font-weight: 600; }
+    .task-item-sub  { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+    .task-item-actions { display: flex; gap: 7px; flex-shrink: 0; }
+    .icon-btn {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+    .icon-btn-edit   { background: var(--primary-light); }
+    .icon-btn-delete { background: var(--danger-light); }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: 76px;
+      right: 20px;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      font-size: 26px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(79,70,229,.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10;
+      transition: transform .15s;
+      font-family: inherit;
+    }
+    .fab:active { transform: scale(0.9); }
+
+    /* ── Rewards ── */
+    .points-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+      color: white;
+      border-radius: var(--radius);
+      padding: 26px 24px;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    .points-hero .total  { font-size: 52px; font-weight: 800; letter-spacing: -2px; }
+    .points-hero .label  { font-size: 14px; opacity: .85; margin-top: 2px; font-weight: 500; }
+    .points-hero .sub    { font-size: 12px; opacity: .65; margin-top: 8px; }
+
+    .reward-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .reward-emoji { font-size: 34px; flex-shrink: 0; }
+    .reward-info  { flex: 1; min-width: 0; }
+    .reward-name  { font-size: 15px; font-weight: 700; }
+    .reward-cost  { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
+
+    .btn-redeem {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 9px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: opacity .15s, transform .1s;
+      flex-shrink: 0;
+    }
+    .btn-redeem:active { transform: scale(0.95); }
+    .btn-redeem:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; transform: none; }
+
+    /* ── History ── */
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: white;
+      border-radius: var(--radius-sm);
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .history-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .history-dot.earn   { background: var(--success); }
+    .history-dot.redeem { background: var(--danger); }
+    .history-name   { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-pts    { font-weight: 700; flex-shrink: 0; }
+    .history-pts.earn   { color: var(--success); }
+    .history-pts.redeem { color: var(--danger); }
+    .history-date   { color: var(--gray-400); font-size: 11px; flex-shrink: 0; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--gray-900);
+      color: white;
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      white-space: nowrap;
+      box-shadow: var(--shadow-lg);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Confetti ── */
+    #confetti-canvas {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🏠 CleanUp</h1>
+    <div class="points-badge" id="header-points">⭐ 0 pts</div>
+  </div>
+
+  <!-- Dashboard view -->
+  <div class="view active" id="view-dashboard">
+    <div id="dashboard-content"></div>
+  </div>
+
+  <!-- Tasks view -->
+  <div class="view" id="view-tasks">
+    <div id="tasks-content"></div>
+    <button class="fab" id="fab-add" title="Add task">+</button>
+  </div>
+
+  <!-- Rewards view -->
+  <div class="view" id="view-rewards">
+    <div id="rewards-content"></div>
+  </div>
+
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-view="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      Dashboard
+    </button>
+    <button class="nav-item" data-view="tasks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <circle cx="3" cy="6"  r=".5" fill="currentColor"/>
+        <circle cx="3" cy="12" r=".5" fill="currentColor"/>
+        <circle cx="3" cy="18" r=".5" fill="currentColor"/>
+      </svg>
+      Tasks
+    </button>
+    <button class="nav-item" data-view="rewards">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="7"/>
+        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+      </svg>
+      Rewards
+    </button>
+  </nav>
+
+  <!-- ── Done bottom sheet ── -->
+  <div class="overlay" id="done-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="done-task-name">Task name</div>
+      <div class="done-points-display">
+        <div class="num" id="done-pts">+10</div>
+        <div class="sub">points earned! 🎉</div>
+      </div>
+      <div class="interval-control">
+        <div class="interval-label">Check again in</div>
+        <div class="interval-stepper">
+          <button class="stepper-btn" id="interval-minus">−</button>
+          <div class="interval-value" id="interval-display">7</div>
+          <button class="stepper-btn" id="interval-plus">+</button>
+        </div>
+        <span class="interval-unit">days</span>
+      </div>
+      <button class="btn btn-primary btn-full" id="confirm-done">✓ Mark as done</button>
+      <button class="btn btn-secondary btn-full" id="cancel-done">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── Add / Edit task sheet ── -->
+  <div class="overlay" id="task-form-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="task-form-title">Add Task</div>
+      <div class="form-group">
+        <label class="form-label">Task name</label>
+        <input class="form-input" id="field-name" placeholder="e.g. Take out trash" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="field-category">
+          <option value="Kitchen">🍽 Kitchen</option>
+          <option value="Bathroom">🚿 Bathroom</option>
+          <option value="Bedroom">🛏 Bedroom</option>
+          <option value="General">🧹 General</option>
+          <option value="Laundry">👕 Laundry</option>
+          <option value="Other">📦 Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Interval (days)</label>
+          <input class="form-input" id="field-interval" type="number" min="1" max="365" value="7">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Points value</label>
+          <input class="form-input" id="field-points" type="number" min="1" max="999" value="10">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Next check-in date</label>
+        <input class="form-input" id="field-nextdue" type="date">
+      </div>
+      <button class="btn btn-primary btn-full" id="save-task-btn">Save Task</button>
+      <button class="btn btn-secondary btn-full" id="cancel-task-btn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── Delete confirm sheet ── -->
+  <div class="overlay" id="delete-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Delete task?</div>
+      <p style="color:var(--gray-500);margin-bottom:22px;font-size:14px;line-height:1.5;">This will permanently remove the task and its completion history.</p>
+      <button class="btn btn-danger btn-full" id="confirm-delete">Delete</button>
+      <button class="btn btn-secondary btn-full" id="cancel-delete">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Confetti canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <script>
+  // ══════════════════════════════════════════
+  //  DEFAULT DATA
+  // ══════════════════════════════════════════
+  const DEFAULT_TASKS = [
+    { name: "Take out trash",        category: "Kitchen",  defaultInterval: 2,  pointValue: 10 },
+    { name: "Wash dishes",           category: "Kitchen",  defaultInterval: 1,  pointValue: 5  },
+    { name: "Wipe kitchen counters", category: "Kitchen",  defaultInterval: 3,  pointValue: 8  },
+    { name: "Take out recycling",    category: "Kitchen",  defaultInterval: 7,  pointValue: 10 },
+    { name: "Clean toilet",          category: "Bathroom", defaultInterval: 7,  pointValue: 15 },
+    { name: "Clean bathroom sink",   category: "Bathroom", defaultInterval: 5,  pointValue: 10 },
+    { name: "Clean shower",          category: "Bathroom", defaultInterval: 14, pointValue: 20 },
+    { name: "Vacuum floors",         category: "General",  defaultInterval: 7,  pointValue: 20 },
+    { name: "Mop floors",            category: "General",  defaultInterval: 14, pointValue: 25 },
+    { name: "Change bed sheets",     category: "Bedroom",  defaultInterval: 14, pointValue: 20 },
+  ];
+
+  const DEFAULT_REWARDS = [
+    { id: "r1", name: "Pack of Gummies",  emoji: "🍬", cost: 30  },
+    { id: "r2", name: "Candy Bar",        emoji: "🍭", cost: 40  },
+    { id: "r3", name: "Chocolate Bar",    emoji: "🍫", cost: 50  },
+    { id: "r4", name: "Bag of Chips",     emoji: "🍿", cost: 35  },
+    { id: "r5", name: "Ice Cream",        emoji: "🍦", cost: 80  },
+    { id: "r6", name: "Big Treat",        emoji: "🎂", cost: 150 },
+  ];
+
+  // ══════════════════════════════════════════
+  //  STATE
+  // ══════════════════════════════════════════
+  let state = {
+    tasks:           [],
+    totalPoints:     0,
+    availablePoints: 0,
+    history:         [],
+    rewards:         DEFAULT_REWARDS,
+  };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem('cleanup_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state = { ...state, ...parsed };
+        if (!state.rewards || state.rewards.length === 0) state.rewards = DEFAULT_REWARDS;
+      } else {
+        // First run — seed with defaults, all due today
+        const t = today();
+        state.tasks = DEFAULT_TASKS.map(d => ({
+          id: uid(), name: d.name, category: d.category,
+          defaultInterval: d.defaultInterval, pointValue: d.pointValue,
+          nextDue: t, lastDone: null,
+        }));
+        state.rewards = DEFAULT_REWARDS;
+        saveState();
+      }
+    } catch(e) { console.warn('Load error', e); }
+  }
+
+  function saveState() {
+    try { localStorage.setItem('cleanup_v1', JSON.stringify(state)); }
+    catch(e) { console.warn('Save error', e); }
+  }
+
+  // ══════════════════════════════════════════
+  //  UTILS
+  // ══════════════════════════════════════════
+  function today()    { return new Date().toISOString().split('T')[0]; }
+  function uid()      { return Math.random().toString(36).slice(2,9) + Date.now().toString(36); }
+
+  function addDays(dateStr, n) {
+    const d = new Date(dateStr + 'T12:00:00');
+    d.setDate(d.getDate() + n);
+    return d.toISOString().split('T')[0];
+  }
+
+  function diffDays(dateStr) {
+    // positive = future, negative = past
+    const a = new Date(today()   + 'T12:00:00');
+    const b = new Date(dateStr   + 'T12:00:00');
+    return Math.round((b - a) / 86400000);
+  }
+
+  function urgency(nextDue) {
+    const d = diffDays(nextDue);
+    if (d < 0)  return { type: 'overdue',   d };
+    if (d === 0) return { type: 'today',    d };
+    if (d === 1) return { type: 'soon',     d };
+    return               { type: 'upcoming', d };
+  }
+
+  function urgencyLabel(u) {
+    if (u.type === 'overdue')  return `${Math.abs(u.d)}d overdue`;
+    if (u.type === 'today')    return 'Due today';
+    if (u.type === 'soon')     return 'Due tomorrow';
+    return `In ${u.d} days`;
+  }
+
+  const URGENCY_CARD  = { overdue:'overdue', today:'due-today', soon:'due-soon', upcoming:'upcoming' };
+  const URGENCY_BADGE = { overdue:'badge-overdue', today:'badge-today', soon:'badge-soon', upcoming:'badge-upcoming' };
+
+  function fmtDate(s) {
+    if (!s) return 'Never';
+    const [y, m, d] = s.split('-');
+    return `${d}/${m}/${String(y).slice(2)}`;
+  }
+
+  const CAT_EMOJI = { Kitchen:'🍽', Bathroom:'🚿', Bedroom:'🛏', General:'🧹', Laundry:'👕', Other:'📦' };
+  function catEmoji(c) { return CAT_EMOJI[c] || '📦'; }
+
+  // ══════════════════════════════════════════
+  //  NAVIGATION
+  // ══════════════════════════════════════════
+  let currentView = 'dashboard';
+
+  function navigate(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+    document.querySelector(`[data-view="${view}"]`).classList.add('active');
+    currentView = view;
+    render();
+  }
+
+  document.querySelectorAll('.nav-item').forEach(btn =>
+    btn.addEventListener('click', () => navigate(btn.dataset.view))
+  );
+
+  // ══════════════════════════════════════════
+  //  RENDER
+  // ══════════════════════════════════════════
+  function render() {
+    updateHeader();
+    if (currentView === 'dashboard') renderDashboard();
+    if (currentView === 'tasks')     renderTasksView();
+    if (currentView === 'rewards')   renderRewards();
+  }
+
+  function updateHeader() {
+    document.getElementById('header-points').textContent = `⭐ ${state.availablePoints} pts`;
+  }
+
+  // ── Dashboard ──
+  function renderDashboard() {
+    const el = document.getElementById('dashboard-content');
+    if (!state.tasks.length) {
+      el.innerHTML = `<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Go to <b>Tasks</b> to add some!</p></div>`;
+      return;
+    }
+
+    const sorted = [...state.tasks].sort((a, b) => diffDays(a.nextDue) - diffDays(b.nextDue));
+    const groups = { overdue: [], today: [], soon: [], upcoming: [] };
+    sorted.forEach(t => groups[urgency(t.nextDue).type].push(t));
+
+    const LABELS = {
+      overdue:  '🔴 Overdue',
+      today:    '🟡 Due Today',
+      soon:     '🟠 Tomorrow',
+      upcoming: '🟢 Upcoming',
+    };
+
+    let html = '';
+    for (const [key, tasks] of Object.entries(groups)) {
+      if (!tasks.length) continue;
+      html += `<div class="section-label">${LABELS[key]} (${tasks.length})</div>`;
+      tasks.forEach(t => { html += taskCard(t); });
+    }
+    el.innerHTML = html;
+  }
+
+  function taskCard(task) {
+    const u = urgency(task.nextDue);
+    const lastStr = task.lastDone ? `Last done ${fmtDate(task.lastDone)}` : 'Never done';
+    return `
+      <div class="task-card ${URGENCY_CARD[u.type]}">
+        <div class="task-card-top">
+          <div>
+            <div class="task-name">${esc(task.name)}</div>
+            <div class="task-meta">${lastStr}</div>
+          </div>
+          <span class="badge badge-category">${catEmoji(task.category)} ${task.category}</span>
+        </div>
+        <div class="badge-row">
+          <span class="badge ${URGENCY_BADGE[u.type]}">${urgencyLabel(u)}</span>
+          <span class="badge badge-points">⭐ ${task.pointValue} pts</span>
+        </div>
+        <div class="task-actions">
+          <button class="btn btn-done"   onclick="openDoneSheet('${task.id}')">✓ Done</button>
+          <button class="btn btn-snooze" onclick="snoozeTask('${task.id}',1)">+1d</button>
+          <button class="btn btn-snooze" onclick="snoozeTask('${task.id}',2)">+2d</button>
+        </div>
+      </div>`;
+  }
+
+  // ── Tasks management ──
+  function renderTasksView() {
+    const el = document.getElementById('tasks-content');
+    if (!state.tasks.length) {
+      el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No tasks yet.<br>Tap <b>+</b> to add your first one!</p></div>`;
+      return;
+    }
+    const sorted = [...state.tasks].sort((a, b) => a.name.localeCompare(b.name));
+    el.innerHTML = sorted.map(t => `
+      <div class="task-item">
+        <div class="task-item-info">
+          <div class="task-item-name">${esc(t.name)}</div>
+          <div class="task-item-sub">${catEmoji(t.category)} ${t.category} · every ${t.defaultInterval}d · ⭐${t.pointValue} pts · next ${fmtDate(t.nextDue)}</div>
+        </div>
+        <div class="task-item-actions">
+          <button class="icon-btn icon-btn-edit"   onclick="openEditTask('${t.id}')">✏️</button>
+          <button class="icon-btn icon-btn-delete" onclick="openDeleteTask('${t.id}')">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Rewards ──
+  function renderRewards() {
+    const el = document.getElementById('rewards-content');
+    let html = `
+      <div class="points-hero">
+        <div class="total">${state.availablePoints}</div>
+        <div class="label">Available Points</div>
+        <div class="sub">Total earned all time: ${state.totalPoints} pts</div>
+      </div>
+      <div class="section-label">🍬 Candy Rewards</div>`;
+
+    state.rewards.forEach(r => {
+      const can = state.availablePoints >= r.cost;
+      const need = r.cost - state.availablePoints;
+      html += `
+        <div class="reward-card">
+          <div class="reward-emoji">${r.emoji}</div>
+          <div class="reward-info">
+            <div class="reward-name">${r.name}</div>
+            <div class="reward-cost">⭐ ${r.cost} pts</div>
+          </div>
+          <button class="btn-redeem" ${can ? '' : 'disabled'} onclick="redeemReward('${r.id}')">
+            ${can ? 'Redeem' : `Need ${need} more`}
+          </button>
+        </div>`;
+    });
+
+    if (state.history.length) {
+      const recent = [...state.history].reverse().slice(0, 30);
+      html += `<div class="section-label" style="margin-top:20px;">📋 Recent Activity</div>`;
+      html += recent.map(h => `
+        <div class="history-item">
+          <div class="history-dot ${h.type}"></div>
+          <div class="history-name">${esc(h.name)}</div>
+          <div class="history-pts ${h.type}">${h.type === 'redeem' ? '−' : '+'}${h.pts} pts</div>
+          <div class="history-date">${fmtDate(h.date)}</div>
+        </div>`).join('');
+    }
+
+    el.innerHTML = html;
+  }
+
+  // ══════════════════════════════════════════
+  //  DONE SHEET
+  // ══════════════════════════════════════════
+  let doneTaskId   = null;
+  let doneInterval = 7;
+
+  function openDoneSheet(taskId) {
+    const t = state.tasks.find(x => x.id === taskId);
+    if (!t) return;
+    doneTaskId   = taskId;
+    doneInterval = t.defaultInterval;
+    document.getElementById('done-task-name').textContent = '✓ ' + t.name;
+    document.getElementById('done-pts').textContent       = '+' + t.pointValue;
+    document.getElementById('interval-display').textContent = doneInterval;
+    document.getElementById('done-overlay').classList.add('open');
+  }
+
+  document.getElementById('interval-minus').addEventListener('click', () => {
+    if (doneInterval > 1) { doneInterval--; document.getElementById('interval-display').textContent = doneInterval; }
+  });
+  document.getElementById('interval-plus').addEventListener('click', () => {
+    doneInterval++; document.getElementById('interval-display').textContent = doneInterval;
+  });
+
+  document.getElementById('confirm-done').addEventListener('click', () => {
+    const t = state.tasks.find(x => x.id === doneTaskId);
+    if (!t) return;
+    t.lastDone = today();
+    t.nextDue  = addDays(today(), doneInterval);
+    state.totalPoints     += t.pointValue;
+    state.availablePoints += t.pointValue;
+    state.history.push({ name: t.name, pts: t.pointValue, date: today(), type: 'earn' });
+    saveState();
+    closeSheets();
+    showToast(`✓ Done! +${t.pointValue} pts`);
+    bumpPoints();
+    // Confetti every time available pts crosses a 50-pt milestone
+    const prev = state.availablePoints - t.pointValue;
+    if (Math.floor(state.availablePoints / 50) > Math.floor(prev / 50)) triggerConfetti();
+    render();
+  });
+
+  document.getElementById('cancel-done').addEventListener('click', closeSheets);
+  document.getElementById('done-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
+
+  // ══════════════════════════════════════════
+  //  SNOOZE
+  // ══════════════════════════════════════════
+  function snoozeTask(taskId, days) {
+    const t = state.tasks.find(x => x.id === taskId);
+    if (!t) return;
+    t.nextDue = addDays(t.nextDue, days);
+    saveState();
+    showToast(`Snoozed +${days} day${days > 1 ? 's' : ''}`);
+    render();
+  }
+
+  // ══════════════════════════════════════════
+  //  TASK FORM
+  // ══════════════════════════════════════════
+  let editTaskId = null;
+
+  document.getElementById('fab-add').addEventListener('click', openAddTask);
+
+  function openAddTask() {
+    editTaskId = null;
+    document.getElementById('task-form-title').textContent = 'Add Task';
+    document.getElementById('field-name').value     = '';
+    document.getElementById('field-category').value = 'Kitchen';
+    document.getElementById('field-interval').value = '7';
+    document.getElementById('field-points').value   = '10';
+    document.getElementById('field-nextdue').value  = today();
+    document.getElementById('task-form-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('field-name').focus(), 300);
+  }
+
+  function openEditTask(taskId) {
+    const t = state.tasks.find(x => x.id === taskId);
+    if (!t) return;
+    editTaskId = taskId;
+    document.getElementById('task-form-title').textContent = 'Edit Task';
+    document.getElementById('field-name').value     = t.name;
+    document.getElementById('field-category').value = t.category;
+    document.getElementById('field-interval').value = t.defaultInterval;
+    document.getElementById('field-points').value   = t.pointValue;
+    document.getElementById('field-nextdue').value  = t.nextDue;
+    document.getElementById('task-form-overlay').classList.add('open');
+  }
+
+  document.getElementById('save-task-btn').addEventListener('click', () => {
+    const name = document.getElementById('field-name').value.trim();
+    if (!name) { showToast('Please enter a task name'); return; }
+    const data = {
+      name,
+      category:        document.getElementById('field-category').value,
+      defaultInterval: Math.max(1, parseInt(document.getElementById('field-interval').value) || 7),
+      pointValue:      Math.max(1, parseInt(document.getElementById('field-points').value)   || 10),
+      nextDue:         document.getElementById('field-nextdue').value || today(),
+    };
+    if (editTaskId) {
+      const t = state.tasks.find(x => x.id === editTaskId);
+      if (t) Object.assign(t, data);
+      showToast('Task updated!');
+    } else {
+      state.tasks.push({ id: uid(), lastDone: null, ...data });
+      showToast('Task added!');
+    }
+    saveState(); closeSheets(); render();
+  });
+
+  document.getElementById('cancel-task-btn').addEventListener('click', closeSheets);
+  document.getElementById('task-form-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
+
+  // ══════════════════════════════════════════
+  //  DELETE
+  // ══════════════════════════════════════════
+  let deleteTaskId = null;
+
+  function openDeleteTask(taskId) {
+    deleteTaskId = taskId;
+    document.getElementById('delete-overlay').classList.add('open');
+  }
+
+  document.getElementById('confirm-delete').addEventListener('click', () => {
+    state.tasks = state.tasks.filter(t => t.id !== deleteTaskId);
+    saveState(); closeSheets(); showToast('Task deleted'); render();
+  });
+  document.getElementById('cancel-delete').addEventListener('click', closeSheets);
+  document.getElementById('delete-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
+
+  // ══════════════════════════════════════════
+  //  REDEEM
+  // ══════════════════════════════════════════
+  function redeemReward(rewardId) {
+    const r = state.rewards.find(x => x.id === rewardId);
+    if (!r || state.availablePoints < r.cost) return;
+    state.availablePoints -= r.cost;
+    state.history.push({ name: r.name, pts: r.cost, date: today(), type: 'redeem' });
+    saveState();
+    triggerConfetti();
+    showToast(`🎉 Enjoy your ${r.name}!`);
+    render();
+  }
+
+  // ══════════════════════════════════════════
+  //  HELPERS
+  // ══════════════════════════════════════════
+  function closeSheets() {
+    document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open'));
+    doneTaskId = null; deleteTaskId = null;
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  function bumpPoints() {
+    const el = document.getElementById('header-points');
+    el.classList.remove('bump');
+    void el.offsetWidth; // reflow
+    el.classList.add('bump');
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ══════════════════════════════════════════
+  //  CONFETTI
+  // ══════════════════════════════════════════
+  function triggerConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx    = canvas.getContext('2d');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const COLORS = ['#4f46e5','#7c3aed','#10b981','#f59e0b','#ef4444','#ec4899','#06b6d4'];
+    const pieces = Array.from({ length: 90 }, () => ({
+      x:   Math.random() * canvas.width,
+      y:   -10 - Math.random() * 40,
+      w:   Math.random() * 8 + 5,
+      h:   Math.random() * 5 + 3,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      vx:  (Math.random() - 0.5) * 5,
+      vy:  Math.random() * 3 + 2,
+      rot: Math.random() * 360,
+      rv:  (Math.random() - 0.5) * 12,
+    }));
+    let frame = 0;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, 1 - frame / 110);
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.vy += 0.06;
+        p.rot += p.rv;
+      });
+      frame++;
+      if (frame < 130) requestAnimationFrame(draw);
+      else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    draw();
+  }
+
+  // ══════════════════════════════════════════
+  //  SERVICE WORKER (PWA)
+  // ══════════════════════════════════════════
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () =>
+      navigator.serviceWorker.register('sw.js').catch(() => {})
+    );
+  }
+
+  // ══════════════════════════════════════════
+  //  INIT
+  // ══════════════════════════════════════════
+  loadState();
+  render();
+  </script>
+</body>
+</html>
