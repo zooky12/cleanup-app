@@ -1,30 +1,39 @@
 {
   "categories": [
-    { "name": "Kitchen",  "emoji": "🍽" },
-    { "name": "Bathroom", "emoji": "🚿" },
-    { "name": "Bedroom",  "emoji": "🛏" },
+    { "name": "Manteniment",  "emoji": "💪" },
+    { "name": "Cuina",  "emoji": "🍽" },
+    { "name": "Bany", "emoji": "🚿" },
+    { "name": "Habitacio",  "emoji": "🛏" },
     { "name": "General",  "emoji": "🧹" },
-    { "name": "Laundry",  "emoji": "👕" },
-    { "name": "Other",    "emoji": "📦" }
+    { "name": "Roba",  "emoji": "👕" },
+    { "name": "Altres",    "emoji": "📦" }
   ],
   "tasks": [
-    { "name": "Take out trash",        "category": "Kitchen",  "defaultInterval": 2,  "pointValue": 10 },
-    { "name": "Wash dishes",           "category": "Kitchen",  "defaultInterval": 1,  "pointValue": 5  },
-    { "name": "Wipe kitchen counters", "category": "Kitchen",  "defaultInterval": 3,  "pointValue": 8  },
-    { "name": "Take out recycling",    "category": "Kitchen",  "defaultInterval": 7,  "pointValue": 10 },
-    { "name": "Clean toilet",          "category": "Bathroom", "defaultInterval": 7,  "pointValue": 15 },
-    { "name": "Clean bathroom sink",   "category": "Bathroom", "defaultInterval": 5,  "pointValue": 10 },
-    { "name": "Clean shower",          "category": "Bathroom", "defaultInterval": 14, "pointValue": 20 },
-    { "name": "Vacuum floors",         "category": "General",  "defaultInterval": 7,  "pointValue": 20 },
-    { "name": "Mop floors",            "category": "General",  "defaultInterval": 14, "pointValue": 25 },
-    { "name": "Change bed sheets",     "category": "Bedroom",  "defaultInterval": 14, "pointValue": 20 }
+    { "name": "Treure basura",        "category": "Cuina",  "defaultInterval": 2,  "pointValue": 5 },
+    { "name": "Rentar plats",           "category": "Cuina",  "defaultInterval": 1,  "pointValue": 5  },
+    { "name": "Repas general (cuina)",           "category": "Cuina",  "defaultInterval": 7,  "pointValue": 10  },
+    { "name": "Netejar marbre", "category": "Cuina",  "defaultInterval": 3,  "pointValue": 5  },
+    { "name": "Ordenar nevera", "category": "Cuina",  "defaultInterval": 14,  "pointValue": 10  },
+    { "name": "Ordenar estanteries", "category": "Cuina",  "defaultInterval": 14,  "pointValue": 5  },
+    { "name": "Netejar bater",          "category": "Bany", "defaultInterval": 7,  "pointValue": 5 },
+    { "name": "Netejar pica",   "category": "Bany", "defaultInterval": 7,  "pointValue": 5 },
+    { "name": "Netejar dutxa",          "category": "Bany", "defaultInterval": 14, "pointValue": 10 },
+    { "name": "Posar/Estendre rentadora",          "category": "Roba", "defaultInterval": 4, "pointValue": 10 },
+    { "name": "Ordenar Armari",          "category": "Roba", "defaultInterval": 14, "pointValue": 10 },
+    { "name": "Fregar terra",         "category": "General",  "defaultInterval": 7,  "pointValue": 10 },
+    { "name": "Netejar Rumi",         "category": "General",  "defaultInterval": 2,  "pointValue": 5 },
+    { "name": "Canviar llençols",     "category": "Habitacio",  "defaultInterval": 14, "pointValue": 10 },
+    { "name": "Netejar escriptori",     "category": "Habitacio",  "defaultInterval": 7, "pointValue": 5 },
+    { "name": "Treure la pols",     "category": "Habitacio",  "defaultInterval": 14, "pointValue": 10 },
+    { "name": "Fer exercici",     "category": "Manteniment",  "defaultInterval": 1, "pointValue": 10 },
+    { "name": "Programar",     "category": "Manteniment",  "defaultInterval": 1, "pointValue": 10 },
+    { "name": "Dents",     "category": "Manteniment",  "defaultInterval": 1, "pointValue": 5 },
+    { "name": "Dutxa",     "category": "Manteniment",  "defaultInterval": 2, "pointValue": 5 },
+    { "name": "Fer tasca pendent",     "category": "Manteniment",  "defaultInterval": 1, "pointValue": 5 }
   ],
   "rewards": [
-    { "id": "r1", "name": "Pack of Gummies",  "emoji": "🍬", "cost": 30  },
-    { "id": "r2", "name": "Candy Bar",        "emoji": "🍭", "cost": 40  },
-    { "id": "r3", "name": "Chocolate Bar",    "emoji": "🍫", "cost": 50  },
-    { "id": "r4", "name": "Bag of Chips",     "emoji": "🍿", "cost": 35  },
-    { "id": "r5", "name": "Ice Cream",        "emoji": "🍦", "cost": 80  },
-    { "id": "r6", "name": "Big Treat",        "emoji": "🎂", "cost": 150 }
+    { "id": "r1", "name": "Kinder",    "emoji": "🍫", "cost": 10  },
+    { "id": "r1", "name": "Croasants",    "emoji": "🥐", "cost": 60  },
+    { "id": "r1", "name": "Kinder",    "emoji": "🍪", "cost": 60  }
   ]
 }
