@@ -283,6 +283,44 @@
 
     /* ── Confetti ── */
     #confetti-canvas { position:fixed; inset:0; pointer-events:none; z-index:1000; }
+
+    /* ── Calendar ── */
+    .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .cal-title  { font-size:17px; font-weight:700; }
+    .cal-arrow  { background:white; border:none; border-radius:var(--rs); width:36px; height:36px; font-size:22px; cursor:pointer; box-shadow:var(--sh); display:flex; align-items:center; justify-content:center; color:var(--g700); font-weight:700; }
+    .cal-arrow:active { transform:scale(0.88); }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+    .cal-dh   { text-align:center; font-size:10px; font-weight:700; color:var(--g400); padding:4px 0 6px; }
+    .cal-day  {
+      aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; user-select:none;
+      transition:transform .1s; -webkit-tap-highlight-color:transparent;
+    }
+    .cal-day.empty { cursor:default; pointer-events:none; }
+    .cal-day:not(.empty):not(.c0):active { transform:scale(0.88); }
+    .cal-day.today { box-shadow:0 0 0 2px var(--primary); }
+    .cal-day.c0 { background:var(--g100); color:var(--g400); cursor:default; pointer-events:none; }
+    .cal-day.c1 { background:#dcfce7; color:#15803d; }
+    .cal-day.c2 { background:#86efac; color:#15803d; }
+    .cal-day.c3 { background:#22c55e; color:white; }
+    .cal-day.c4 { background:#15803d; color:white; }
+    .cal-day.ct { background:var(--primary-light); color:var(--primary); }
+    .cal-count  { font-size:8px; font-weight:800; line-height:1; margin-top:1px; opacity:.75; }
+    .cal-legend { display:flex; align-items:center; justify-content:center; gap:8px; margin:14px 0 4px; flex-wrap:wrap; }
+    .cal-legend-item   { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--g500); }
+    .cal-legend-swatch { width:16px; height:16px; border-radius:4px; flex-shrink:0; }
+    .cal-back { background:var(--g100); border:none; border-radius:var(--rs); padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; color:var(--g700); font-family:inherit; display:flex; align-items:center; gap:6px; margin-bottom:12px; width:100%; }
+    .cal-task-name { font-size:15px; font-weight:700; margin-bottom:12px; color:var(--primary); }
+    .cal-day-task { display:flex; align-items:center; gap:10px; padding:11px 13px; background:white; border-radius:var(--rs); margin-bottom:6px; cursor:pointer; box-shadow:var(--sh); -webkit-tap-highlight-color:transparent; }
+    .cal-day-task:active { opacity:.7; }
+    .cal-day-task-name  { flex:1; font-size:14px; font-weight:600; }
+    .cal-day-task-pts   { font-size:12px; color:var(--success); font-weight:700; }
+    .cal-day-task-arrow { font-size:15px; }
+
+    /* ── Category drag-and-drop ── */
+    .drag-handle { font-size:18px; color:var(--g300); padding:0 6px 0 0; cursor:grab; flex-shrink:0; touch-action:none; line-height:1; user-select:none; }
+    .list-item.dragging  { opacity:.25; }
+    .list-item.drag-over { box-shadow:0 -3px 0 var(--primary), var(--sh); }
   </style>
 </head>
 <body>
@@ -313,6 +351,11 @@
     <button class="fab" id="fab-add-reward" style="display:none">+</button>
   </div>
 
+  <!-- Calendar -->
+  <div class="view" id="view-calendar">
+    <div id="calendar-content"></div>
+  </div>
+
   <nav class="bottom-nav">
     <button class="nav-item active" data-view="dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -325,6 +368,12 @@
         <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
         <circle cx="3" cy="6" r=".5" fill="currentColor"/><circle cx="3" cy="12" r=".5" fill="currentColor"/><circle cx="3" cy="18" r=".5" fill="currentColor"/>
       </svg>Tasks
+    </button>
+    <button class="nav-item" data-view="calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>Calendar
     </button>
     <button class="nav-item" data-view="rewards">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -519,6 +568,31 @@
     </div>
   </div>
 
+  <!-- ── Calendar day detail ── -->
+  <div class="overlay" id="cal-day-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">📅 <span id="cal-day-date"></span></div>
+      <div id="cal-day-tasks"></div>
+      <button class="btn btn-secondary btn-full" style="margin-top:8px;" onclick="closeSheets()">Close</button>
+    </div>
+  </div>
+
+  <!-- ── JSON import confirm ── -->
+  <div class="overlay" id="json-import-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">📥 Import data?</div>
+      <p style="color:var(--g500);margin-bottom:12px;font-size:13px;line-height:1.6;">
+        This will <strong>completely replace</strong> your current data — tasks, categories, rewards, points and history.
+      </p>
+      <div id="json-import-summary" style="background:var(--primary-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--primary);font-weight:600;line-height:1.8;"></div>
+      <button class="btn btn-primary btn-full" id="confirm-json-import">Import</button>
+      <button class="btn btn-secondary btn-full" id="cancel-json-import">Cancel</button>
+    </div>
+  </div>
+
+  <input type="file" id="json-import-input" accept=".json" style="display:none">
   <div class="toast" id="toast"></div>
   <canvas id="confetti-canvas"></canvas>
 
@@ -526,30 +600,40 @@
 // ══════════════════════════════════════════
 //  FALLBACK DATA
 // ══════════════════════════════════════════
+// Default data — keep in sync with data.json
 const FALLBACK_CATS = [
-  {name:'Kitchen',emoji:'🍽'},{name:'Bathroom',emoji:'🚿'},
-  {name:'Bedroom',emoji:'🛏'},{name:'General',emoji:'🧹'},
-  {name:'Laundry',emoji:'👕'},{name:'Other',emoji:'📦'},
+  {name:'Manteniment',emoji:'💪'},{name:'Cuina',emoji:'🍽'},
+  {name:'Bany',emoji:'🚿'},{name:'Habitacio',emoji:'🛏'},
+  {name:'General',emoji:'🧹'},{name:'Roba',emoji:'👕'},
+  {name:'Altres',emoji:'📦'},
 ];
 const FALLBACK_TASKS = [
-  {name:'Take out trash',category:'Kitchen',defaultInterval:2,pointValue:10},
-  {name:'Wash dishes',category:'Kitchen',defaultInterval:1,pointValue:5},
-  {name:'Wipe kitchen counters',category:'Kitchen',defaultInterval:3,pointValue:8},
-  {name:'Take out recycling',category:'Kitchen',defaultInterval:7,pointValue:10},
-  {name:'Clean toilet',category:'Bathroom',defaultInterval:7,pointValue:15},
-  {name:'Clean bathroom sink',category:'Bathroom',defaultInterval:5,pointValue:10},
-  {name:'Clean shower',category:'Bathroom',defaultInterval:14,pointValue:20},
-  {name:'Vacuum floors',category:'General',defaultInterval:7,pointValue:20},
-  {name:'Mop floors',category:'General',defaultInterval:14,pointValue:25},
-  {name:'Change bed sheets',category:'Bedroom',defaultInterval:14,pointValue:20},
+  {name:'Treure basura',category:'Cuina',defaultInterval:2,pointValue:5},
+  {name:'Rentar plats',category:'Cuina',defaultInterval:1,pointValue:5},
+  {name:'Repas general (cuina)',category:'Cuina',defaultInterval:7,pointValue:10},
+  {name:'Netejar marbre',category:'Cuina',defaultInterval:3,pointValue:5},
+  {name:'Ordenar nevera',category:'Cuina',defaultInterval:14,pointValue:10},
+  {name:'Ordenar estanteries',category:'Cuina',defaultInterval:14,pointValue:5},
+  {name:'Netejar bater',category:'Bany',defaultInterval:7,pointValue:5},
+  {name:'Netejar pica',category:'Bany',defaultInterval:7,pointValue:5},
+  {name:'Netejar dutxa',category:'Bany',defaultInterval:14,pointValue:10},
+  {name:'Posar/Estendre rentadora',category:'Roba',defaultInterval:4,pointValue:10},
+  {name:'Ordenar Armari',category:'Roba',defaultInterval:14,pointValue:10},
+  {name:'Fregar terra',category:'General',defaultInterval:7,pointValue:10},
+  {name:'Netejar Rumi',category:'General',defaultInterval:2,pointValue:5},
+  {name:'Canviar llençols',category:'Habitacio',defaultInterval:14,pointValue:10},
+  {name:'Netejar escriptori',category:'Habitacio',defaultInterval:7,pointValue:5},
+  {name:'Treure la pols',category:'Habitacio',defaultInterval:14,pointValue:10},
+  {name:'Fer exercici',category:'Manteniment',defaultInterval:1,pointValue:10},
+  {name:'Programar',category:'Manteniment',defaultInterval:1,pointValue:10},
+  {name:'Dents',category:'Manteniment',defaultInterval:1,pointValue:5},
+  {name:'Dutxa',category:'Manteniment',defaultInterval:2,pointValue:5},
+  {name:'Fer tasca pendent',category:'Manteniment',defaultInterval:1,pointValue:5},
 ];
 const FALLBACK_REWARDS = [
-  {id:'r1',name:'Pack of Gummies',emoji:'🍬',cost:30},
-  {id:'r2',name:'Candy Bar',emoji:'🍭',cost:40},
-  {id:'r3',name:'Chocolate Bar',emoji:'🍫',cost:50},
-  {id:'r4',name:'Bag of Chips',emoji:'🍿',cost:35},
-  {id:'r5',name:'Ice Cream',emoji:'🍦',cost:80},
-  {id:'r6',name:'Big Treat',emoji:'🎂',cost:150},
+  {id:'r1',name:'Kinder',emoji:'🍫',cost:10},
+  {id:'r2',name:'Croissants',emoji:'🥐',cost:60},
+  {id:'r3',name:'Galetes',emoji:'🍪',cost:60},
 ];
 
 // ══════════════════════════════════════════
@@ -572,7 +656,7 @@ async function seedFromJson() {
   let cats=FALLBACK_CATS, tasks=FALLBACK_TASKS, rewards=FALLBACK_REWARDS;
   try {
     // cache:'reload' bypasses the service worker cache so edits to data.json are always picked up on reset
-    const res=await fetch('data.json', {cache:'reload'});
+    const res=await fetch('data.json?t='+Date.now(), {cache:'no-store'});
     if(res.ok){ const d=await res.json(); cats=d.categories||cats; tasks=d.tasks||tasks; rewards=d.rewards||rewards; }
   } catch(e){}
   const t=today();
@@ -634,6 +718,7 @@ function render(){
   if(currentView==='dashboard') renderDashboard();
   if(currentView==='tasks')     renderTasksView();
   if(currentView==='rewards')   renderRewards();
+  if(currentView==='calendar')  renderCalendar();
 }
 
 // ── Dashboard: grouped by category, collapsible ──
@@ -644,12 +729,8 @@ function renderDashboard(){
   const cats={};
   state.tasks.forEach(t=>{ (cats[t.category]||(cats[t.category]=[])).push(t); });
 
-  const uRank={overdue:0,today:1,soon:2,upcoming:3};
-  const catKeys=Object.keys(cats).sort((a,b)=>{
-    const ra=Math.min(...cats[a].map(t=>uRank[urgency(t.nextDue).type]));
-    const rb=Math.min(...cats[b].map(t=>uRank[urgency(t.nextDue).type]));
-    return ra-rb;
-  });
+  const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
+  const catKeys=Object.keys(cats).sort((a,b)=>(catOrder[a]??999)-(catOrder[b]??999));
 
   let html='';
   catKeys.forEach(cat=>{
@@ -742,16 +823,16 @@ function renderRewards(){
   });
 
   html+=`
-    <div class="slabel" style="margin-top:20px;">🔗 Share</div>
+    <div class="slabel" style="margin-top:20px;">💾 Backup</div>
     <div style="background:white;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📋 Share task list</div>
-      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Tasks + categories, no points or history. Recipient can add or replace their tasks.</div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="shareTasksUrl()">Copy task list link</button>
+      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📤 Export data</div>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Save everything — tasks, rewards, points and history — to a JSON file.</div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="exportJson()">Download JSON backup</button>
     </div>
     <div style="background:white;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">👤 Share full profile</div>
-      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Everything — tasks, categories, rewards, points, and history. Replaces the recipient's data entirely.</div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="shareProfileUrl()">Copy full profile link</button>
+      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📥 Import data</div>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Restore from a previously exported JSON file. Replaces all current data.</div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="triggerFileImport()">Choose JSON file</button>
     </div>`;
 
   if(state.history.length){
@@ -872,10 +953,11 @@ function openCatsSheet(){
 function renderCatsList(){
   const el=document.getElementById('cats-list');
   if(!state.categories.length){ el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No categories yet.</div>`; return; }
-  el.innerHTML=state.categories.map(c=>{
+  el.innerHTML=state.categories.map((c,i)=>{
     const taskCount=state.tasks.filter(t=>t.category===c.name).length;
     return `
-      <div class="list-item">
+      <div class="list-item" data-cat-idx="${i}">
+        <div class="drag-handle">⠿</div>
         <div style="font-size:24px;flex-shrink:0;">${c.emoji}</div>
         <div class="list-item-info">
           <div class="list-item-name">${esc(c.name)}</div>
@@ -887,6 +969,78 @@ function renderCatsList(){
         </div>
       </div>`;
   }).join('');
+  initCatDrag(el);
+}
+
+function initCatDrag(container){
+  let dragIdx=-1, clone=null, startY=0;
+
+  function items(){ return [...container.querySelectorAll('[data-cat-idx]')]; }
+  function py(e){ return (e.touches?e.touches[0]:e).clientY; }
+  function others(){ return items().filter(el=>parseInt(el.dataset.catIdx)!==dragIdx); }
+
+  function start(e, item){
+    dragIdx=parseInt(item.dataset.catIdx);
+    startY=py(e);
+    item.classList.add('dragging');
+    const r=item.getBoundingClientRect();
+    clone=item.cloneNode(true);
+    Object.assign(clone.style,{position:'fixed',top:r.top+'px',left:r.left+'px',
+      width:r.width+'px',zIndex:9999,opacity:.9,margin:'0',
+      boxShadow:'0 8px 28px rgba(0,0,0,.22)',pointerEvents:'none'});
+    document.body.appendChild(clone);
+  }
+
+  function move(e){
+    if(!clone)return;
+    e.preventDefault();
+    const dy=py(e)-startY;
+    const r=items()[dragIdx].getBoundingClientRect();
+    clone.style.top=(r.top+dy)+'px';
+    others().forEach(el=>el.classList.remove('drag-over'));
+    const y=py(e);
+    for(const el of others()){
+      const br=el.getBoundingClientRect();
+      if(y<br.top+br.height*0.5){ el.classList.add('drag-over'); break; }
+    }
+  }
+
+  function end(e){
+    if(!clone)return;
+    const y=(e.changedTouches?e.changedTouches[0]:e).clientY;
+    let insertOrigIdx=null;
+    for(const el of others()){
+      const br=el.getBoundingClientRect();
+      if(y<br.top+br.height*0.5){ insertOrigIdx=parseInt(el.dataset.catIdx); break; }
+    }
+    const cats=[...state.categories];
+    const [moved]=cats.splice(dragIdx,1);
+    if(insertOrigIdx===null){ cats.push(moved); }
+    else{ cats.splice(insertOrigIdx>dragIdx?insertOrigIdx-1:insertOrigIdx,0,moved); }
+    state.categories=cats;
+    clone.remove(); clone=null;
+    items().forEach(el=>el.classList.remove('dragging','drag-over'));
+    document.removeEventListener('mousemove',move);
+    document.removeEventListener('mouseup',end);
+    saveState(); renderCatsList(); render();
+  }
+
+  container.addEventListener('touchstart',e=>{
+    const item=e.target.closest('.drag-handle')?.closest('[data-cat-idx]');
+    if(!item)return;
+    e.preventDefault();
+    start(e,item);
+  },{passive:false});
+  container.addEventListener('touchmove',move,{passive:false});
+  container.addEventListener('touchend',end);
+
+  container.addEventListener('mousedown',e=>{
+    const item=e.target.closest('.drag-handle')?.closest('[data-cat-idx]');
+    if(!item)return;
+    start(e,item);
+    document.addEventListener('mousemove',move);
+    document.addEventListener('mouseup',end);
+  });
 }
 
 document.getElementById('add-cat-btn').addEventListener('click',openAddCat);
@@ -1128,6 +1282,155 @@ function checkImportParam(){
     document.getElementById('import-overlay').classList.add('open');
   }catch(e){ console.warn('Import error',e); }
 }
+
+// ══════════════════════════════════════════
+//  CALENDAR
+// ══════════════════════════════════════════
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let calTaskFilter = null; // null = all tasks, string = specific task name
+
+const CAL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CAL_DAYS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function buildDayMap(taskName) {
+  const map = {};
+  state.history
+    .filter(h => h.type === 'earn' && (!taskName || h.name === taskName))
+    .forEach(h => { (map[h.date] = map[h.date] || []).push(h); });
+  return map;
+}
+
+function renderCalendar() {
+  const el = document.getElementById('calendar-content');
+  const dayMap  = buildDayMap(calTaskFilter);
+  const todayStr = today();
+  const firstDay = new Date(calYear, calMonth, 1);
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  let startDow = firstDay.getDay(); // 0 = Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // Mon = 0
+
+  let html = '';
+
+  if (calTaskFilter) {
+    html += `<button class="cal-back" onclick="calTaskFilter=null;renderCalendar()">← All tasks</button>`;
+    html += `<div class="cal-task-name">📅 ${esc(calTaskFilter)}</div>`;
+  }
+
+  html += `
+    <div class="cal-header">
+      <button class="cal-arrow" onclick="calPrev()">‹</button>
+      <div class="cal-title">${CAL_MONTHS[calMonth]} ${calYear}</div>
+      <button class="cal-arrow" onclick="calNext()">›</button>
+    </div>
+    <div class="cal-grid">`;
+
+  CAL_DAYS.forEach(d => { html += `<div class="cal-dh">${d}</div>`; });
+  for (let i = 0; i < startDow; i++) html += `<div class="cal-day empty"></div>`;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const entries = dayMap[dateStr] || [];
+    const count   = entries.length;
+    const isToday = dateStr === todayStr;
+    let cls = calTaskFilter
+      ? (count > 0 ? 'ct' : 'c0')
+      : (count === 0 ? 'c0' : count === 1 ? 'c1' : count === 2 ? 'c2' : count === 3 ? 'c3' : 'c4');
+    if (isToday) cls += ' today';
+    const click = count > 0 ? `onclick="openCalDay('${dateStr}')"` : '';
+    html += `<div class="cal-day ${cls}" ${click}>${day}${count > 0 ? `<span class="cal-count">${count}</span>` : ''}</div>`;
+  }
+
+  html += `</div>`;
+
+  if (!calTaskFilter) {
+    html += `
+      <div class="cal-legend">
+        <span style="font-size:11px;color:var(--g500);margin-right:2px;">Tasks done:</span>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:var(--g100);"></div>0</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#dcfce7;"></div>1</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#86efac;"></div>2</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#22c55e;"></div>3</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#15803d;"></div>4+</div>
+      </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function calPrev() { if(calMonth===0){calMonth=11;calYear--;}else calMonth--; renderCalendar(); }
+function calNext() { if(calMonth===11){calMonth=0;calYear++;}else calMonth++; renderCalendar(); }
+
+function openCalDay(dateStr) {
+  const entries = state.history.filter(h => h.type === 'earn' && h.date === dateStr);
+  if (!entries.length) return;
+  const [y, m, d] = dateStr.split('-');
+  document.getElementById('cal-day-date').textContent = `${d}/${m}/${y.slice(2)}`;
+  document.getElementById('cal-day-tasks').innerHTML = entries.map(h => `
+    <div class="cal-day-task" onclick="openTaskCalendar('${esc(h.name).replace(/'/g,"\\'")}')">
+      <div class="cal-day-task-name">${esc(h.name)}</div>
+      <div class="cal-day-task-pts">+${h.pts} pts</div>
+      <div class="cal-day-task-arrow">📅</div>
+    </div>`).join('');
+  document.getElementById('cal-day-overlay').classList.add('open');
+}
+
+function openTaskCalendar(name) {
+  calTaskFilter = name;
+  closeSheets();
+  if (currentView !== 'calendar') navigate('calendar');
+  else renderCalendar();
+}
+
+// ══════════════════════════════════════════
+//  JSON EXPORT / IMPORT
+// ══════════════════════════════════════════
+function exportJson() {
+  const payload = { tasks:state.tasks, categories:state.categories, rewards:state.rewards, availablePoints:state.availablePoints, totalPoints:state.totalPoints, history:state.history };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `cleanup-backup-${today()}.json`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Backup downloaded!');
+}
+
+function triggerFileImport() { document.getElementById('json-import-input').click(); }
+
+let pendingImport = null;
+document.getElementById('json-import-input').addEventListener('change', function() {
+  const file = this.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.tasks || !Array.isArray(data.tasks)) { showToast('Invalid backup file'); return; }
+      pendingImport = data;
+      document.getElementById('json-import-summary').innerHTML =
+        `📋 ${data.tasks.length} tasks<br>`+
+        `📁 ${(data.categories||[]).length} categories<br>`+
+        `🍬 ${(data.rewards||[]).length} rewards<br>`+
+        `⭐ ${data.availablePoints||0} available points<br>`+
+        `📜 ${(data.history||[]).length} history entries`;
+      document.getElementById('json-import-overlay').classList.add('open');
+    } catch(err) { showToast('Could not read file'); }
+    this.value = '';
+  };
+  reader.readAsText(file);
+});
+document.getElementById('confirm-json-import').addEventListener('click', () => {
+  if(!pendingImport) return;
+  state.tasks           = pendingImport.tasks           || [];
+  state.categories      = pendingImport.categories      || FALLBACK_CATS;
+  state.rewards         = pendingImport.rewards         || FALLBACK_REWARDS;
+  state.availablePoints = pendingImport.availablePoints || 0;
+  state.totalPoints     = pendingImport.totalPoints     || 0;
+  state.history         = pendingImport.history         || [];
+  pendingImport = null;
+  saveState(); closeSheets(); showToast('✓ Data imported!'); render();
+});
+document.getElementById('cancel-json-import').addEventListener('click', closeSheets);
+document.getElementById('json-import-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeSheets(); });
 
 // ══════════════════════════════════════════
 //  HELPERS
