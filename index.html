@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="CleanUp">
-  <meta name="theme-color" content="#4f46e5">
+  <meta name="theme-color" content="#1f2937">
   <link rel="manifest" href="manifest.json">
   <title>CleanUp</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,16 +14,16 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --primary: #4f46e5; --primary-light: #e0e7ff;
-      --danger: #ef4444;  --danger-light: #fee2e2;
-      --warning: #d97706; --warning-light: #fef3c7;
-      --orange: #f97316;  --orange-light: #fff7ed;
-      --success: #10b981; --success-light: #d1fae5;
-      --g50:#f9fafb; --g100:#f3f4f6; --g200:#e5e7eb;
-      --g400:#9ca3af; --g500:#6b7280; --g700:#374151; --g900:#111827;
+      --primary: #818cf8;  --primary-light: #1e1b4b;
+      --danger: #f87171;   --danger-light: #3b0a0a;
+      --warning: #fbbf24;  --warning-light: #3b2000;
+      --orange: #fb923c;   --orange-light: #3b1500;
+      --success: #34d399;  --success-light: #022c1a;
+      --g50:#111827; --g100:#1f2937; --g200:#374151;
+      --g400:#9ca3af; --g500:#9ca3af; --g700:#d1d5db; --g900:#f9fafb;
       --r:16px; --rs:10px;
-      --sh: 0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
-      --shl: 0 10px 25px rgba(0,0,0,.12);
+      --sh: 0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
+      --shl: 0 10px 25px rgba(0,0,0,.4);
     }
     body {
       font-family:'Inter',-apple-system,sans-serif; background:var(--g50);
@@ -33,7 +33,7 @@
 
     /* ── Header ── */
     .header {
-      background:white; padding:13px 18px; border-bottom:1px solid var(--g200);
+      background:var(--g100); padding:13px 18px; border-bottom:1px solid var(--g200);
       display:flex; align-items:center; justify-content:space-between;
       position:sticky; top:0; z-index:20;
     }
@@ -52,7 +52,7 @@
     /* ── Bottom nav ── */
     .bottom-nav {
       position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-      width:100%; max-width:480px; background:white; border-top:1px solid var(--g200);
+      width:100%; max-width:480px; background:var(--g100); border-top:1px solid var(--g200);
       display:flex; z-index:20; padding-bottom:env(safe-area-inset-bottom);
     }
     .nav-item {
@@ -68,7 +68,7 @@
     .cat-section { margin-bottom:6px; }
     .cat-header {
       display:flex; align-items:center; gap:8px; padding:10px 12px;
-      background:white; border-radius:var(--r); box-shadow:var(--sh);
+      background:var(--g100); border-radius:var(--r); box-shadow:var(--sh);
       cursor:pointer; user-select:none; transition:border-radius .2s;
     }
     .cat-header.open { border-radius:var(--r) var(--r) 0 0; }
@@ -80,8 +80,8 @@
     }
     .cat-header.open .chevron { transform:rotate(180deg); }
     .cat-body {
-      background:white; border-radius:0 0 var(--r) var(--r);
-      border-top:1px solid var(--g100); overflow:hidden;
+      background:var(--g100); border-radius:0 0 var(--r) var(--r);
+      border-top:1px solid var(--g200); overflow:hidden;
       max-height:0; transition:max-height .25s ease;
     }
     .cat-body.open { max-height:2000px; }
@@ -92,10 +92,10 @@
       border-radius:var(--rs); padding:12px 14px;
       border-left:4px solid var(--g200); background:var(--g50);
     }
-    .task-card.overdue   { border-left-color:var(--danger);  background:#fff5f5; }
-    .task-card.due-today { border-left-color:var(--warning); background:#fffbeb; }
-    .task-card.due-soon  { border-left-color:var(--orange);  background:#fff7ed; }
-    .task-card.upcoming  { border-left-color:var(--success); background:#f0fdf9; }
+    .task-card.overdue   { border-left-color:var(--danger);  background:#2d0f0f; }
+    .task-card.due-today { border-left-color:var(--warning); background:#2d1f00; }
+    .task-card.due-soon  { border-left-color:var(--orange);  background:#2d1500; }
+    .task-card.upcoming  { border-left-color:var(--success); background:#022c1a; }
     .task-name { font-size:14px; font-weight:700; }
     .task-meta { font-size:11px; color:var(--g400); margin-top:1px; }
     .badge-row { display:flex; gap:4px; flex-wrap:wrap; margin:7px 0; }
@@ -131,7 +131,7 @@
     .overlay.open { display:flex; animation:fadeIn .2s; }
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     .sheet {
-      background:white; border-radius:var(--r) var(--r) 0 0;
+      background:var(--g100); border-radius:var(--r) var(--r) 0 0;
       padding:10px 18px 34px; width:100%; max-width:480px;
       animation:slideUp .24s cubic-bezier(.25,.46,.45,.94);
       max-height:90vh; overflow-y:auto;
@@ -143,7 +143,7 @@
     /* ── Done sheet ── */
     .done-pts-box {
       text-align:center; padding:18px; border-radius:var(--r); margin-bottom:16px;
-      background:linear-gradient(135deg,var(--primary-light),#ede9fe);
+      background:linear-gradient(135deg,var(--primary-light),#2e1065);
     }
     .done-pts-box .num { font-size:38px; font-weight:800; color:var(--primary); }
     .done-pts-box .sub { color:var(--primary); font-size:12px; margin-top:2px; font-weight:500; }
@@ -154,7 +154,7 @@
     .interval-label { flex:1; font-size:14px; font-weight:600; color:var(--g700); }
     .stepper { display:flex; align-items:center; gap:10px; }
     .stbtn {
-      width:32px; height:32px; border-radius:50%; border:none; background:white;
+      width:32px; height:32px; border-radius:50%; border:none; background:var(--g200);
       box-shadow:var(--sh); font-size:19px; cursor:pointer; display:flex;
       align-items:center; justify-content:center; font-weight:700; color:var(--g700);
       transition:transform .1s;
@@ -174,7 +174,7 @@
     .form-input,.form-select {
       width:100%; padding:11px 13px; border:1.5px solid var(--g200);
       border-radius:var(--rs); font-size:15px; font-family:inherit;
-      color:var(--g900); background:white; outline:none; transition:border-color .15s; appearance:auto;
+      color:var(--g900); background:var(--g50); outline:none; transition:border-color .15s; appearance:auto;
     }
     .form-input:focus,.form-select:focus { border-color:var(--primary); }
     .form-row { display:flex; gap:10px; }
@@ -182,7 +182,7 @@
 
     /* ── Task/Category list items ── */
     .list-item {
-      background:white; border-radius:var(--rs); padding:12px 14px; margin-bottom:7px;
+      background:var(--g100); border-radius:var(--rs); padding:12px 14px; margin-bottom:7px;
       box-shadow:var(--sh); display:flex; align-items:center; gap:10px;
     }
     .list-item-info { flex:1; min-width:0; }
@@ -198,7 +198,7 @@
 
     /* ── Manage categories button in tasks view ── */
     .manage-cats-btn {
-      display:flex; align-items:center; gap:10px; background:white;
+      display:flex; align-items:center; gap:10px; background:var(--g100);
       border:none; border-radius:var(--rs); padding:11px 14px; margin-bottom:14px;
       box-shadow:var(--sh); cursor:pointer; font-family:inherit; width:100%;
       font-size:13px; font-weight:600; color:var(--primary); transition:opacity .15s;
@@ -234,7 +234,7 @@
     .pts-hero .pts-sub   { font-size:11px; opacity:.6; margin-top:6px; }
 
     .reward-card {
-      background:white; border-radius:var(--r); padding:13px 15px; margin-bottom:8px;
+      background:var(--g100); border-radius:var(--r); padding:13px 15px; margin-bottom:8px;
       box-shadow:var(--sh); display:flex; align-items:center; gap:12px;
     }
     .reward-emoji { font-size:30px; flex-shrink:0; }
@@ -253,7 +253,7 @@
     /* ── History ── */
     .history-item {
       display:flex; align-items:center; gap:9px; padding:9px 13px;
-      background:white; border-radius:var(--rs); margin-bottom:5px; font-size:12px;
+      background:var(--g100); border-radius:var(--rs); margin-bottom:5px; font-size:12px;
     }
     .hdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
     .hdot.earn   { background:var(--success); }
@@ -269,7 +269,7 @@
     .slabel:first-child { margin-top:4px; }
 
     /* ── Danger zone ── */
-    .danger-zone { margin-top:24px; padding:16px; background:var(--danger-light); border-radius:var(--r); border:1px solid #fca5a5; }
+    .danger-zone { margin-top:24px; padding:16px; background:var(--danger-light); border-radius:var(--r); border:1px solid rgba(248,113,113,.25); }
     .danger-zone h3 { font-size:13px; font-weight:700; color:var(--danger); margin-bottom:10px; }
 
     /* ── Toast ── */
@@ -287,7 +287,7 @@
     /* ── Calendar ── */
     .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
     .cal-title  { font-size:17px; font-weight:700; }
-    .cal-arrow  { background:white; border:none; border-radius:var(--rs); width:36px; height:36px; font-size:22px; cursor:pointer; box-shadow:var(--sh); display:flex; align-items:center; justify-content:center; color:var(--g700); font-weight:700; }
+    .cal-arrow  { background:var(--g100); border:none; border-radius:var(--rs); width:36px; height:36px; font-size:22px; cursor:pointer; box-shadow:var(--sh); display:flex; align-items:center; justify-content:center; color:var(--g700); font-weight:700; }
     .cal-arrow:active { transform:scale(0.88); }
     .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
     .cal-dh   { text-align:center; font-size:10px; font-weight:700; color:var(--g400); padding:4px 0 6px; }
@@ -300,10 +300,10 @@
     .cal-day:not(.empty):not(.c0):active { transform:scale(0.88); }
     .cal-day.today { box-shadow:0 0 0 2px var(--primary); }
     .cal-day.c0 { background:var(--g100); color:var(--g400); cursor:default; pointer-events:none; }
-    .cal-day.c1 { background:#dcfce7; color:#15803d; }
-    .cal-day.c2 { background:#86efac; color:#15803d; }
-    .cal-day.c3 { background:#22c55e; color:white; }
-    .cal-day.c4 { background:#15803d; color:white; }
+    .cal-day.c1 { background:#0a2e1c; color:#6ee7b7; }
+    .cal-day.c2 { background:#14532d; color:#a7f3d0; }
+    .cal-day.c3 { background:#15803d; color:#d1fae5; }
+    .cal-day.c4 { background:#22c55e; color:#052e16; }
     .cal-day.ct { background:var(--primary-light); color:var(--primary); }
     .cal-count  { font-size:8px; font-weight:800; line-height:1; margin-top:1px; opacity:.75; }
     .cal-legend { display:flex; align-items:center; justify-content:center; gap:8px; margin:14px 0 4px; flex-wrap:wrap; }
@@ -311,14 +311,18 @@
     .cal-legend-swatch { width:16px; height:16px; border-radius:4px; flex-shrink:0; }
     .cal-back { background:var(--g100); border:none; border-radius:var(--rs); padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; color:var(--g700); font-family:inherit; display:flex; align-items:center; gap:6px; margin-bottom:12px; width:100%; }
     .cal-task-name { font-size:15px; font-weight:700; margin-bottom:12px; color:var(--primary); }
-    .cal-day-task { display:flex; align-items:center; gap:10px; padding:11px 13px; background:white; border-radius:var(--rs); margin-bottom:6px; cursor:pointer; box-shadow:var(--sh); -webkit-tap-highlight-color:transparent; }
+    .cal-day-task { display:flex; align-items:center; gap:10px; padding:11px 13px; background:var(--g100); border-radius:var(--rs); margin-bottom:6px; cursor:pointer; box-shadow:var(--sh); -webkit-tap-highlight-color:transparent; }
     .cal-day-task:active { opacity:.7; }
     .cal-day-task-name  { flex:1; font-size:14px; font-weight:600; }
     .cal-day-task-pts   { font-size:12px; color:var(--success); font-weight:700; }
     .cal-day-task-arrow { font-size:15px; }
 
+    /* ── Clickable history items ── */
+    .history-item.h-earn { cursor:pointer; }
+    .history-item.h-earn:active { opacity:.65; }
+
     /* ── Category drag-and-drop ── */
-    .drag-handle { font-size:18px; color:var(--g300); padding:0 6px 0 0; cursor:grab; flex-shrink:0; touch-action:none; line-height:1; user-select:none; }
+    .drag-handle { font-size:18px; color:var(--g400); padding:0 6px 0 0; cursor:grab; flex-shrink:0; touch-action:none; line-height:1; user-select:none; }
     .list-item.dragging  { opacity:.25; }
     .list-item.drag-over { box-shadow:0 -3px 0 var(--primary), var(--sh); }
   </style>
@@ -592,6 +596,23 @@
     </div>
   </div>
 
+  <!-- ── Delete history entry sheet ── -->
+  <div class="overlay" id="del-history-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="del-hist-name"></div>
+      <div class="done-pts-box" style="background:linear-gradient(135deg,var(--danger-light),#450a0a);">
+        <div class="num" id="del-hist-pts" style="color:var(--danger);">−10</div>
+        <div class="sub" style="color:var(--danger);">points will be removed</div>
+      </div>
+      <div style="background:var(--g50);border-radius:var(--rs);padding:11px 14px;margin-bottom:16px;font-size:13px;color:var(--g400);">
+        📅 <span id="del-hist-date"></span> · Task progress and calendar will be updated
+      </div>
+      <button class="btn btn-danger btn-full" id="confirm-del-history">🗑 Remove activity</button>
+      <button class="btn btn-secondary btn-full" id="cancel-del-history">Cancel</button>
+    </div>
+  </div>
+
   <input type="file" id="json-import-input" accept=".json" style="display:none">
   <div class="toast" id="toast"></div>
   <canvas id="confetti-canvas"></canvas>
@@ -824,12 +845,12 @@ function renderRewards(){
 
   html+=`
     <div class="slabel" style="margin-top:20px;">💾 Backup</div>
-    <div style="background:white;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
+    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📤 Export data</div>
       <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Save everything — tasks, rewards, points and history — to a JSON file.</div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="exportJson()">Download JSON backup</button>
     </div>
-    <div style="background:white;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
+    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📥 Import data</div>
       <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Restore from a previously exported JSON file. Replaces all current data.</div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="triggerFileImport()">Choose JSON file</button>
@@ -838,13 +859,17 @@ function renderRewards(){
   if(state.history.length){
     const recent=[...state.history].reverse().slice(0,30);
     html+=`<div class="slabel" style="margin-top:20px;">📋 Recent Activity</div>`;
-    html+=recent.map(h=>`
-      <div class="history-item">
+    html+=recent.map((h,di)=>{
+      const origIdx=state.history.length-1-di;
+      const clickable=h.type==='earn';
+      return `
+      <div class="history-item${clickable?' h-earn':''}" ${clickable?`onclick="openDeleteHistorySheet(${origIdx})"`:''}>
         <div class="hdot ${h.type}"></div>
         <div class="hname">${esc(h.name)}</div>
         <div class="hpts ${h.type}">${h.type==='redeem'?'−':'+'}${h.pts} pts</div>
         <div class="hdate">${fmtDate(h.date)}</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   html+=`
@@ -1180,6 +1205,49 @@ function redeemReward(id){
 }
 
 // ══════════════════════════════════════════
+//  DELETE HISTORY ENTRY
+// ══════════════════════════════════════════
+let deleteHistoryEntry = null;
+
+function openDeleteHistorySheet(origIdx) {
+  const h = state.history[origIdx];
+  if (!h || h.type !== 'earn') return;
+  deleteHistoryEntry = h;
+  document.getElementById('del-hist-name').textContent = h.name;
+  document.getElementById('del-hist-pts').textContent = '−' + h.pts;
+  document.getElementById('del-hist-date').textContent = fmtDate(h.date);
+  document.getElementById('del-history-overlay').classList.add('open');
+}
+document.getElementById('confirm-del-history').addEventListener('click', () => {
+  const h = deleteHistoryEntry; if (!h) return;
+  const idx = state.history.indexOf(h); if (idx === -1) { closeSheets(); return; }
+
+  state.history.splice(idx, 1);
+  state.availablePoints = Math.max(0, state.availablePoints - h.pts);
+  state.totalPoints     = Math.max(0, state.totalPoints     - h.pts);
+
+  // Update task's lastDone and nextDue to reflect removal
+  const task = state.tasks.find(t => t.name === h.name);
+  if (task) {
+    const remaining = state.history
+      .filter(e => e.type === 'earn' && e.name === h.name)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    if (remaining.length > 0) {
+      task.lastDone = remaining[0].date;
+      task.nextDue  = addDays(remaining[0].date, task.defaultInterval);
+    } else {
+      task.lastDone = null;
+      task.nextDue  = today();
+    }
+  }
+
+  deleteHistoryEntry = null;
+  saveState(); closeSheets(); showToast('Activity removed'); render();
+});
+document.getElementById('cancel-del-history').addEventListener('click', closeSheets);
+document.getElementById('del-history-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
+
+// ══════════════════════════════════════════
 //  EDIT POINTS
 // ══════════════════════════════════════════
 function startEditPts(){
@@ -1348,10 +1416,10 @@ function renderCalendar() {
       <div class="cal-legend">
         <span style="font-size:11px;color:var(--g500);margin-right:2px;">Tasks done:</span>
         <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:var(--g100);"></div>0</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#dcfce7;"></div>1</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#86efac;"></div>2</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#22c55e;"></div>3</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#15803d;"></div>4+</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#0a2e1c;"></div>1</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#14532d;"></div>2</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#15803d;"></div>3</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#22c55e;"></div>4+</div>
       </div>`;
   }
 
