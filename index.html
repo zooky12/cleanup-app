@@ -310,6 +310,16 @@
     .cal-legend-item   { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--g500); }
     .cal-legend-swatch { width:16px; height:16px; border-radius:4px; flex-shrink:0; }
     .cal-back { background:var(--g100); border:none; border-radius:var(--rs); padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; color:var(--g700); font-family:inherit; display:flex; align-items:center; gap:6px; margin-bottom:12px; width:100%; }
+    .prow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--rs);margin-bottom:3px;background:var(--g50);}
+    .prow .pcb{width:18px;height:18px;accent-color:var(--primary);cursor:pointer;}
+    .prow .ptn{flex:1;font-size:13px;font-weight:600;}
+    .prow .ppts{font-size:11px;color:var(--primary);font-weight:700;white-space:nowrap;}
+    .slist{background:var(--g100);border-radius:var(--rs);padding:10px 12px;margin:8px 0 12px;}
+    .slist .slh{font-size:11px;font-weight:700;color:var(--g400);margin-bottom:6px;text-transform:uppercase;}
+    .srow{display:flex;align-items:center;gap:8px;padding:4px 4px;cursor:grab;}
+    .srow .snm{flex:1;font-size:13px;font-weight:600;}
+    .srow .spt{font-size:11px;color:var(--primary);font-weight:700;}
+    .srow .srm{background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:2px;}
     .cal-task-name { font-size:15px; font-weight:700; margin-bottom:12px; color:var(--primary); }
     .cal-day-task { display:flex; align-items:center; gap:10px; padding:11px 13px; background:var(--g100); border-radius:var(--rs); margin-bottom:6px; cursor:pointer; box-shadow:var(--sh); -webkit-tap-highlight-color:transparent; }
     .cal-day-task:active { opacity:.7; }
@@ -613,6 +623,23 @@
     </div>
   </div>
 
+  <div class="overlay" id="pending-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" style="display:flex;align-items:center;gap:8px;">
+        <span>📋 Build Your Cycle</span>
+        <span id="pending-count" style="font-size:13px;color:var(--g400);font-weight:500;"></span>
+      </div>
+      <div id="pending-cats"></div>
+      <button class="btn btn-secondary btn-full" id="add-more-btn" style="margin-bottom:10px;">+ Add tasks</button>
+      <div id="pending-slist" class="slist" style="display:none;">
+        <div class="slh">Selected order</div>
+        <div id="pending-sitems"></div>
+      </div>
+      <button class="btn btn-primary btn-full" id="begin-cycle-btn">▶ Begin cycle</button>
+      <button class="btn btn-secondary btn-full" id="cancel-pending-btn">Cancel</button>
+    </div>
+  </div>
   <input type="file" id="json-import-input" accept=".json" style="display:none">
   <div class="toast" id="toast"></div>
   <canvas id="confetti-canvas"></canvas>
@@ -660,9 +687,9 @@ const FALLBACK_REWARDS = [
 // ══════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════
-let state = { tasks:[], categories:[], totalPoints:0, availablePoints:0, history:[], rewards:[] };
-let collapsed = JSON.parse(localStorage.getItem('cleanup_collapsed')||'{}');
-function saveCollapsed(){ localStorage.setItem('cleanup_collapsed',JSON.stringify(collapsed)); }
+let state = { tasks:[], categories:[], totalPoints:0, availablePoints:0, history:[], rewards:[], activeCycle: null, notificationSubscribed: false };
+let expanded = JSON.parse(localStorage.getItem('cleanup_expanded')||'{}');
+function saveExpanded(){ localStorage.setItem('cleanup_expanded',JSON.stringify(expanded)); }
 
 function loadState() {
   try {
@@ -671,7 +698,106 @@ function loadState() {
     return !raw;
   } catch(e){ return true; }
 }
-function saveState(){ try{ localStorage.setItem('cleanup_v2',JSON.stringify(state)); }catch(e){} }
+function saveState(){ try{ localStorage.setItem('cleanup_v2',JSON.stringify(state)); }catch(e){} syncStateToIDB(); }
+
+// ── IndexedDB & Notifications ──
+const VAPID_PUBLIC_KEY='BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg';
+let PUSH_SERVER=''; // Set after deploying the Deno server (e.g. 'https://cleanup-push.deno.dev')
+
+function urlB64ToUint8Array(b64){ const s=b64.replace(/-/g,'+').replace(/_/g,'/'); const raw=atob(s); return new Uint8Array([...raw].map(c=>c.charCodeAt(0))); }
+
+async function openAppDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open('cleanup_idb',1);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('state')) db.createObjectStore('state');
+      if(!db.objectStoreNames.contains('cycle')) db.createObjectStore('cycle');
+      if(!db.objectStoreNames.contains('pending_ops')) db.createObjectStore('pending_ops',{autoIncrement:true});
+      if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function syncStateToIDB(){
+  if(!('indexedDB' in window)) return;
+  try{
+    const db=await openAppDB();
+    const tx=db.transaction(['state','cycle'],'readwrite');
+    tx.objectStore('state').put(JSON.stringify(state),'current');
+    if(state.activeCycle) tx.objectStore('cycle').put(state.activeCycle,'active');
+    else tx.objectStore('cycle').delete('active');
+    await new Promise(r=>{tx.oncomplete=r;});
+    db.close();
+  }catch(e){}
+}
+
+async function reconcilePendingOps(){
+  if(!('indexedDB' in window)||!state.tasks.length) return;
+  try{
+    const db=await openAppDB();
+    const readTx=db.transaction('pending_ops','readonly');
+    const ops=await new Promise(r=>{ const req=readTx.objectStore('pending_ops').getAll(); req.onsuccess=()=>r(req.result); req.onerror=()=>r([]); });
+    if(!ops.length){ db.close(); return; }
+    for(const op of ops){
+      const t=state.tasks.find(x=>x.id===op.taskId);
+      if(!t){ continue; }
+      if(op.action==='done'){
+        t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
+        state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
+        state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn'});
+      }else if(op.action==='snooze'){
+        t.nextDue=t.nextDue<today()?today():addDays(t.nextDue,1);
+      }
+    }
+    const cycleTx=db.transaction('cycle','readonly');
+    const cycle=await new Promise(r=>{ const req=cycleTx.objectStore('cycle').get('active'); req.onsuccess=()=>r(req.result); });
+    state.activeCycle=cycle||null;
+    const clearTx=db.transaction('pending_ops','readwrite');
+    clearTx.objectStore('pending_ops').clear();
+    await new Promise(r=>{clearTx.oncomplete=r;});
+    db.close();
+    saveState();
+    showToast('Synced notification changes');
+  }catch(e){}
+}
+
+async function requestNotificationPermission(){
+  if(!('Notification' in window)){ showToast('Notifications not supported'); return; }
+  if(Notification.permission==='granted'){ subscribeToPush(); return; }
+  if(Notification.permission==='denied'){ showToast('Notifications blocked. Enable in browser settings.'); return; }
+  const result=await Notification.requestPermission();
+  if(result==='granted'){ subscribeToPush(); }
+  else{ showToast('Notification permission denied'); }
+  render();
+}
+
+async function subscribeToPush(){
+  if(!('serviceWorker' in navigator)||!VAPID_PUBLIC_KEY||!PUSH_SERVER) return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+    const res=await fetch(PUSH_SERVER+'/subscribe',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(sub.toJSON())
+    });
+    if(res.ok){ state.notificationSubscribed=true; saveState(); showToast('Notifications enabled!'); }
+    else showToast('Failed to register with push server');
+  }catch(e){ showToast('Could not subscribe: '+e.message); }
+  render();
+}
+
+function testNotification(){
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.ready.then(reg=>{
+    reg.showNotification('CleanUp',{body:'🔔 Notifications work! Tap to open.',icon:'/icon.svg',tag:'test'});
+  });
+}
 
 async function seedFromJson() {
   let cats=FALLBACK_CATS, tasks=FALLBACK_TASKS, rewards=FALLBACK_REWARDS;
@@ -689,7 +815,7 @@ async function seedFromJson() {
 
 async function clearAll() {
   state={tasks:[],categories:[],totalPoints:0,availablePoints:0,history:[],rewards:[]};
-  collapsed={}; localStorage.removeItem('cleanup_v2'); localStorage.removeItem('cleanup_collapsed');
+  expanded={}; localStorage.removeItem('cleanup_v2'); localStorage.removeItem('cleanup_expanded');
   await seedFromJson(); render();
 }
 
@@ -756,7 +882,7 @@ function renderDashboard(){
   let html='';
   catKeys.forEach(cat=>{
     const tasks=cats[cat].sort((a,b)=>diffDays(a.nextDue)-diffDays(b.nextDue));
-    const isOpen=collapsed[cat]!==true; // default open
+    const isOpen=expanded[cat]===true; // default closed
     const uc={overdue:0,today:0,soon:0};
     tasks.forEach(t=>{ const u=urgency(t.nextDue).type; if(u in uc)uc[u]++; });
     let badges='';
@@ -779,7 +905,7 @@ function renderDashboard(){
   el.innerHTML=html;
 }
 
-function toggleCat(cat){ collapsed[cat]=collapsed[cat]!==true; saveCollapsed(); renderDashboard(); }
+function toggleCat(cat){ expanded[cat]=!expanded[cat]; saveExpanded(); renderDashboard(); }
 
 function taskCard(t){
   const u=urgency(t.nextDue);
@@ -794,8 +920,7 @@ function taskCard(t){
       </div>
       <div class="task-actions">
         <button class="btn btn-done" onclick="openDoneSheet('${t.id}')">✓ Done</button>
-        <button class="btn btn-snooze" onclick="snoozeTask('${t.id}',1)">+1d</button>
-        <button class="btn btn-snooze" onclick="snoozeTask('${t.id}',2)">+2d</button>
+        <button class="btn btn-snooze" onclick="snoozeTask('${t.id}')">📅 Snooze</button>
       </div>
     </div>`;
 }
@@ -873,6 +998,19 @@ function renderRewards(){
   }
 
   html+=`
+    <div class="slabel" style="margin-top:20px;">🔔 Notifications</div>
+    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:600;">Status: ${Notification.permission==='granted'?'✅ Enabled':'🔕 Not enabled'}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        ${Notification.permission==='granted'
+          ? `<button class="btn btn-primary" onclick="testNotification()" style="flex:1;justify-content:center;">Test notification</button>`
+          : `<button class="btn btn-primary" onclick="requestNotificationPermission()" style="flex:1;justify-content:center;">Enable notifications</button>`}
+        <button class="btn btn-primary" onclick="openPendingTasksSheet()" style="flex:1;justify-content:center;">▶ Begin cycle</button>
+      </div>
+      ${!state.notificationSubscribed?'<div style="font-size:11px;color:var(--g500);margin-top:6px;">Set PUSH_SERVER in the code after deploying the server, then enable notifications.</div>':''}
+    </div>`;
+
+  html+=`
     <div class="danger-zone">
       <h3>⚠️ Danger Zone</h3>
       <p style="font-size:12px;color:var(--g700);margin-bottom:12px;">Clears all data and resets to the defaults in <code>data.json</code>.</p>
@@ -912,10 +1050,12 @@ document.getElementById('done-overlay').addEventListener('click',e=>{ if(e.targe
 // ══════════════════════════════════════════
 //  SNOOZE
 // ══════════════════════════════════════════
-function snoozeTask(id,days){
+function snoozeTask(id){
   const t=state.tasks.find(x=>x.id===id); if(!t)return;
-  t.nextDue=addDays(t.nextDue,days);
-  saveState(); showToast(`Snoozed +${days} day${days>1?'s':''}`); render();
+  const td=today();
+  if(t.nextDue<td){ t.nextDue=td; showToast('Snoozed — reset to today'); }
+  else{ t.nextDue=addDays(t.nextDue,1); showToast('Snoozed +1 day'); }
+  saveState(); render();
 }
 
 // ══════════════════════════════════════════
@@ -958,6 +1098,7 @@ document.getElementById('save-task-btn').addEventListener('click',()=>{
   if(editTaskId){ const t=state.tasks.find(x=>x.id===editTaskId); if(t)Object.assign(t,data); showToast('Task updated!'); }
   else{ state.tasks.push({id:uid(),lastDone:null,...data}); showToast('Task added!'); }
   saveState(); closeSheets(); render();
+  if(_reopenPendingAfterSave){ _reopenPendingAfterSave=false; setTimeout(()=>{ openPendingTasksSheet(); },100); }
 });
 document.getElementById('cancel-task-btn').addEventListener('click',closeSheets);
 document.getElementById('task-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
@@ -1099,7 +1240,7 @@ document.getElementById('save-cat-btn').addEventListener('click',()=>{
     const c=state.categories.find(x=>x.name===editCatName);
     if(c){ c.name=name; c.emoji=emoji; }
     // Update collapse key
-    if(collapsed[editCatName]!==undefined){ collapsed[name]=collapsed[editCatName]; delete collapsed[editCatName]; saveCollapsed(); }
+    if(expanded[editCatName]!==undefined){ expanded[name]=expanded[editCatName]; delete expanded[editCatName]; saveExpanded(); }
     showToast('Category updated!');
   } else {
     if(state.categories.find(x=>x.name===name)){showToast('Category already exists');return;}
@@ -1246,6 +1387,121 @@ document.getElementById('confirm-del-history').addEventListener('click', () => {
 });
 document.getElementById('cancel-del-history').addEventListener('click', closeSheets);
 document.getElementById('del-history-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
+
+// ══════════════════════════════════════════
+//  PENDING TASKS CYCLE
+// ══════════════════════════════════════════
+let _pendingSelection=new Set();
+let _pendingOrder=[];
+let _pendingExpanded={};
+let _reopenPendingAfterSave=false;
+
+function openPendingTasksSheet(){
+  const td=today();
+  const overdueIds=new Set(state.tasks.filter(t=>t.nextDue<td).map(t=>t.id));
+  const dueTodayIds=new Set(state.tasks.filter(t=>t.nextDue===td).map(t=>t.id));
+  if(!_pendingSelection.size&&!_pendingOrder.length){
+    _pendingSelection=new Set([...overdueIds,...dueTodayIds]);
+    const todayStr=today();
+    _pendingOrder=state.tasks
+      .filter(t=>_pendingSelection.has(t.id))
+      .sort((a,b)=>diffDays(a.nextDue)-diffDays(b.nextDue))
+      .map(t=>t.id);
+  }
+  _pendingExpanded={};
+  renderPendingTasksSheet();
+  document.getElementById('pending-overlay').classList.add('open');
+}
+
+function renderPendingTasksSheet(){
+  const catsEl=document.getElementById('pending-cats');
+  const td=today();
+  let html='';
+  state.categories.forEach(c=>{
+    const catTasks=state.tasks.filter(t=>t.category===c.name);
+    if(!catTasks.length) return;
+    const selCount=catTasks.filter(t=>_pendingSelection.has(t.id)).length;
+    const isOpen=_pendingExpanded[c.name]===true;
+    html+=`<div style="margin-bottom:4px;">
+      <div class="cat-header ${isOpen?'open':''}" onclick="togglePendingCat('${esc(c.name)}')" style="padding:8px 12px;">
+        <span class="cat-title" style="font-size:13px;">${c.emoji} ${esc(c.name)} <span style="color:var(--g400);font-size:11px;">(${selCount}/${catTasks.length})</span></span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="cat-body ${isOpen?'open':''}"><div class="cat-body-inner" style="padding:4px 8px 8px;">`;
+    catTasks.sort((a,b)=>a.name.localeCompare(b.name));
+    catTasks.forEach(t=>{
+      const ch=_pendingSelection.has(t.id)?'checked':'';
+      const urg=t.nextDue<td?'🔴 ':t.nextDue===td?'🟡 ':'';
+      html+=`<div class="prow"><input class="pcb" type="checkbox" ${ch} onchange="togglePendingTask('${t.id}')">
+        <span class="ptn">${urg}${esc(t.name)}</span><span class="ppts">⭐${t.pointValue}</span></div>`;
+    });
+    html+=`</div></div></div>`;
+  });
+  catsEl.innerHTML=html;
+
+  const sEl=document.getElementById('pending-slist');
+  const siEl=document.getElementById('pending-sitems');
+  if(_pendingSelection.size){
+    sEl.style.display='block';
+    siEl.innerHTML=_pendingOrder.map((id,i)=>{
+      const t=state.tasks.find(x=>x.id===id);
+      if(!t) return '';
+      return `<div class="srow"><span style="color:var(--g400);font-size:11px;width:16px;">${i+1}.</span>
+        <span class="snm">${esc(t.name)}</span><span class="spt">⭐${t.pointValue}</span>
+        <button class="srm" onclick="removeFromPending('${id}')">✕</button></div>`;
+    }).join('');
+  }else{ sEl.style.display='none'; }
+  document.getElementById('pending-count').textContent=_pendingSelection.size?`(${_pendingSelection.size} selected) `:'';
+  document.getElementById('begin-cycle-btn').textContent=`▶ Begin cycle${_pendingSelection.size?` (${_pendingSelection.size})`:''}`;
+}
+
+function togglePendingCat(name){ _pendingExpanded[name]=!_pendingExpanded[name]; renderPendingTasksSheet(); }
+
+function togglePendingTask(id){
+  if(_pendingSelection.has(id)){ _pendingSelection.delete(id); _pendingOrder=_pendingOrder.filter(x=>x!==id); }
+  else{ _pendingSelection.add(id); if(!_pendingOrder.includes(id)) _pendingOrder.push(id); }
+  renderPendingTasksSheet();
+}
+
+function removeFromPending(id){ _pendingSelection.delete(id); _pendingOrder=_pendingOrder.filter(x=>x!==id); renderPendingTasksSheet(); }
+
+document.getElementById('add-more-btn').addEventListener('click',()=>{
+  _reopenPendingAfterSave=true; closeSheets(); openAddTask();
+});
+
+async function beginCycle(){
+  const items=_pendingOrder.filter(id=>_pendingSelection.has(id));
+  if(!items.length){ showToast('Select at least one task'); return; }
+  const td=today();
+  const cycle={
+    cycleId:uid(),
+    tasks:items.map(id=>{
+      const t=state.tasks.find(x=>x.id===id);
+      const cat=state.categories.find(c=>c.name===t?.category);
+      return{taskId:t.id,name:t.name,catEmoji:cat?cat.emoji:'',pointValue:t.pointValue};
+    }),
+    currentIdx:0,startedAt:td
+  };
+  state.activeCycle=cycle;
+  saveState();
+  closeSheets();
+  const first=cycle.tasks[0];
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    reg.showNotification(`Task 1/${cycle.tasks.length}`,{
+      body:`${first.catEmoji} ${first.name} · ⭐ ${first.pointValue} pts`,
+      icon:'/icon.svg',tag:'cycle-task',requireInteraction:true,
+      actions:[{action:'done',title:'✓ Done'},{action:'snooze',title:'📅 Snooze +1d'}],
+      data:{type:'cycle-task',cycleId:cycle.cycleId,taskIndex:0}
+    });
+  }catch(e){}
+  showToast(`Cycle started — ${cycle.tasks.length} tasks`);
+  _pendingSelection=new Set(); _pendingOrder=[];
+}
+
+document.getElementById('begin-cycle-btn').addEventListener('click',beginCycle);
+document.getElementById('cancel-pending-btn').addEventListener('click',()=>{ _pendingSelection=new Set(); _pendingOrder=[]; closeSheets(); });
+document.getElementById('pending-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget){ _pendingSelection=new Set(); _pendingOrder=[]; closeSheets(); } });
 
 // ══════════════════════════════════════════
 //  EDIT POINTS
@@ -1524,12 +1780,37 @@ function triggerConfetti(){
 // ══════════════════════════════════════════
 //  SERVICE WORKER
 // ══════════════════════════════════════════
-if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  navigator.serviceWorker.addEventListener('message',e=>{
+    if(e.data.type==='task-action'){
+      const t=state.tasks.find(x=>x.id===e.data.taskId);
+      if(t){
+        if(e.data.action==='done'){
+          t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
+          state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
+          state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn'});
+        }else if(e.data.action==='snooze'){
+          t.nextDue=t.nextDue<today()?today():addDays(t.nextDue,1);
+        }
+        if(state.activeCycle){
+          state.activeCycle.currentIdx++;
+          if(state.activeCycle.currentIdx>=state.activeCycle.tasks.length) state.activeCycle=null;
+        }
+        saveState(); render();
+      }
+    }else if(e.data.type==='cycle-complete'){
+      state.activeCycle=null; saveState(); render(); showToast(`🎉 All ${e.data.count} tasks done!`);
+    }else if(e.data.type==='navigate'){
+      if(e.data.view) navigate(e.data.view);
+    }
+  });
+}
 
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-async function init(){ const firstRun=loadState(); if(firstRun)await seedFromJson(); checkImportParam(); render(); }
+async function init(){ const firstRun=loadState(); if(firstRun)await seedFromJson(); await reconcilePendingOps(); checkImportParam(); render(); const p=new URLSearchParams(location.search); if(p.get('view')==='pending'){ history.replaceState({},'',location.pathname); openPendingTasksSheet(); } }
 init();
 </script>
 </body>
