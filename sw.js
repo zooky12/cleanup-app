@@ -78,8 +78,9 @@ self.addEventListener("push", (e) => {
 });
 
 async function handlePush() {
-  const cycle = await getFromIDB("cycle", "active");
-  if (cycle) return;
+  let cycles = await getFromIDB("cycle", "active");
+  if (typeof cycles === "string") { try { cycles = JSON.parse(cycles); } catch(e) { cycles = null; } }
+  if (cycles && cycles.length) return;
 
   const lastDate = await getFromIDB("meta", "lastReminderDate");
   const today = new Date().toISOString().split("T")[0];
@@ -168,8 +169,24 @@ async function openOrFocus(url) {
   return self.clients.openWindow(url);
 }
 
+async function getCycles() {
+  let raw = await getFromIDB("cycle", "active");
+  if (typeof raw === "string") { try { raw = JSON.parse(raw); } catch(e) { return []; } }
+  return Array.isArray(raw) ? raw : [];
+}
+
+async function saveCycles(cycles) {
+  if (cycles.length) await putToIDB("cycle", "active", JSON.stringify(cycles));
+  else await delFromIDB("cycle", "active");
+}
+
+function findCycle(cycles, cycleId) {
+  return cycles.find(c => c.cycleId === cycleId);
+}
+
 async function cycleDone(data) {
-  const cycle = await getFromIDB("cycle", "active");
+  const cycles = await getCycles();
+  const cycle = findCycle(cycles, data.cycleId);
   if (!cycle || !cycle.tasks[cycle.currentIdx]) return;
 
   const task = cycle.tasks[cycle.currentIdx];
@@ -178,7 +195,7 @@ async function cycleDone(data) {
   let pageAlive = false;
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
-      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, action: "done" });
+      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "done", cycleId: cycle.cycleId });
       pageAlive = true;
       break;
     }
@@ -186,16 +203,17 @@ async function cycleDone(data) {
 
   if (!pageAlive) {
     await putToIDB("pending_ops", undefined, {
-      taskId: task.taskId, taskName: task.name, action: "done", time: Date.now(),
+      taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "done", time: Date.now(),
     });
   }
 
   cycle.currentIdx++;
-  await advanceCycle(cycle);
+  await advanceCycle(cycle, cycles);
 }
 
 async function cycleSnooze(data) {
-  const cycle = await getFromIDB("cycle", "active");
+  const cycles = await getCycles();
+  const cycle = findCycle(cycles, data.cycleId);
   if (!cycle || !cycle.tasks[cycle.currentIdx]) return;
 
   const task = cycle.tasks[cycle.currentIdx];
@@ -204,7 +222,7 @@ async function cycleSnooze(data) {
   let pageAlive = false;
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
-      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, action: "snooze" });
+      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "snooze", cycleId: cycle.cycleId });
       pageAlive = true;
       break;
     }
@@ -212,41 +230,42 @@ async function cycleSnooze(data) {
 
   if (!pageAlive) {
     await putToIDB("pending_ops", undefined, {
-      taskId: task.taskId, taskName: task.name, action: "snooze", time: Date.now(),
+      taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "snooze", time: Date.now(),
     });
   }
 
   cycle.currentIdx++;
-  await advanceCycle(cycle);
+  await advanceCycle(cycle, cycles);
 }
 
-async function advanceCycle(cycle) {
+async function advanceCycle(cycle, cycles) {
   if (cycle.currentIdx >= cycle.tasks.length) {
-    await delFromIDB("cycle", "active");
+    const remaining = cycles.filter(c => c.cycleId !== cycle.cycleId);
+    await saveCycles(remaining);
     self.registration.showNotification("🎉 All done!", {
       body: `Completed ${cycle.tasks.length} tasks. Well done!`,
       icon: "/icon.svg",
-      tag: "cycle-complete",
-      data: { type: "cycle-complete" },
+      tag: `cycle-complete-${cycle.cycleId}`,
+      data: { type: "cycle-complete", cycleId: cycle.cycleId, count: cycle.tasks.length },
     });
     const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const c of clients) {
       if (c.url.startsWith(self.location.origin)) {
-        c.postMessage({ type: "cycle-complete", count: cycle.tasks.length });
+        c.postMessage({ type: "cycle-complete", cycleId: cycle.cycleId, count: cycle.tasks.length });
         break;
       }
     }
     return;
   }
 
-  await putToIDB("cycle", "active", cycle);
+  await saveCycles(cycles);
 
   const next = cycle.tasks[cycle.currentIdx];
   const emoji = next.catEmoji || "";
   self.registration.showNotification(`Task ${cycle.currentIdx + 1}/${cycle.tasks.length}`, {
     body: `${emoji} ${next.name} · ⭐ ${next.pointValue} pts`,
     icon: "/icon.svg",
-    tag: "cycle-task",
+    tag: `cycle-task-${cycle.cycleId}`,
     requireInteraction: true,
     actions: [
       { action: "done", title: "✓ Done" },

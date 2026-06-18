@@ -94,7 +94,7 @@
     }
     .task-card.overdue   { border-left-color:var(--danger);  background:#2d0f0f; }
     .task-card.due-today { border-left-color:var(--warning); background:#2d1f00; }
-    .task-card.due-soon  { border-left-color:var(--orange);  background:#2d1500; }
+    .task-card.due-soon  { border-left-color:#4ade80;  background:#052e16; }
     .task-card.upcoming  { border-left-color:var(--success); background:#022c1a; }
     .task-name { font-size:14px; font-weight:700; }
     .task-meta { font-size:11px; color:var(--g400); margin-top:1px; }
@@ -104,7 +104,7 @@
     }
     .badge-overdue  { background:var(--danger-light);  color:var(--danger);  }
     .badge-today    { background:var(--warning-light); color:var(--warning); }
-    .badge-soon     { background:var(--orange-light);  color:var(--orange);  }
+    .badge-soon     { background:#052e16;  color:#4ade80;  }
     .badge-upcoming { background:var(--success-light); color:var(--success); }
     .badge-pts      { background:var(--primary-light); color:var(--primary); }
     .task-actions { display:flex; gap:6px; }
@@ -349,16 +349,6 @@
     <div id="dashboard-content"></div>
   </div>
 
-  <!-- Tasks management -->
-  <div class="view" id="view-tasks">
-    <button class="manage-cats-btn" id="open-cats-btn">
-      <span>📁 Manage Categories</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-    <div id="tasks-content"></div>
-    <button class="fab" id="fab-add-task">+</button>
-  </div>
-
   <!-- Rewards -->
   <div class="view" id="view-rewards">
     <div id="rewards-content"></div>
@@ -370,18 +360,17 @@
     <div id="calendar-content"></div>
   </div>
 
+  <!-- Options -->
+  <div class="view" id="view-options">
+    <div id="options-content"></div>
+  </div>
+
   <nav class="bottom-nav">
     <button class="nav-item active" data-view="dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>Dashboard
-    </button>
-    <button class="nav-item" data-view="tasks">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-        <circle cx="3" cy="6" r=".5" fill="currentColor"/><circle cx="3" cy="12" r=".5" fill="currentColor"/><circle cx="3" cy="18" r=".5" fill="currentColor"/>
-      </svg>Tasks
     </button>
     <button class="nav-item" data-view="calendar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -394,6 +383,11 @@
         <circle cx="12" cy="8" r="7"/>
         <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
       </svg>Rewards
+    </button>
+    <button class="nav-item" data-view="options">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>Options
     </button>
   </nav>
 
@@ -588,7 +582,18 @@
       <div class="sheet-handle"></div>
       <div class="sheet-title">📅 <span id="cal-day-date"></span></div>
       <div id="cal-day-tasks"></div>
-      <button class="btn btn-secondary btn-full" style="margin-top:8px;" onclick="closeSheets()">Close</button>
+      <button class="btn btn-primary btn-full" style="margin-top:8px;" onclick="openCalAddTask()">+ Add task completion</button>
+      <button class="btn btn-secondary btn-full" onclick="closeSheets()">Close</button>
+    </div>
+  </div>
+
+  <!-- ── Calendar add task overlay ── -->
+  <div class="overlay" id="cal-add-task-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">📅 Add task completion</div>
+      <div id="cal-add-task-list"></div>
+      <button class="btn btn-secondary btn-full" onclick="closeSheets()">Cancel</button>
     </div>
   </div>
 
@@ -603,6 +608,20 @@
       <div id="json-import-summary" style="background:var(--primary-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--primary);font-weight:600;line-height:1.8;"></div>
       <button class="btn btn-primary btn-full" id="confirm-json-import">Import</button>
       <button class="btn btn-secondary btn-full" id="cancel-json-import">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── Tasks management sheet ── -->
+  <div class="overlay" id="tasks-sheet-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" style="display:flex;align-items:center;gap:8px;">
+        <span>📋 Tasks</span>
+        <span style="font-size:13px;color:var(--g400);font-weight:500;" id="tasks-sheet-count"></span>
+      </div>
+      <div id="tasks-sheet-content"></div>
+      <button class="btn btn-primary btn-full" onclick="_reopenTasksSheet=true;openAddTask()" style="margin-top:8px;">+ Add Task</button>
+      <button class="btn btn-secondary btn-full" onclick="closeSheets()">Close</button>
     </div>
   </div>
 
@@ -623,6 +642,20 @@
     </div>
   </div>
 
+  <!-- ── Edit history date sheet ── -->
+  <div class="overlay" id="edit-history-date-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">✏️ Edit date</div>
+      <div class="form-group">
+        <label class="form-label">Change completion date</label>
+        <input class="form-input" id="edit-hist-date-input" type="date">
+      </div>
+      <button class="btn btn-primary btn-full" id="confirm-edit-hist-date">Save</button>
+      <button class="btn btn-secondary btn-full" id="cancel-edit-hist-date">Cancel</button>
+    </div>
+  </div>
+
   <div class="overlay" id="pending-overlay">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -635,6 +668,11 @@
       <div id="pending-slist" class="slist" style="display:none;">
         <div class="slh">Selected order</div>
         <div id="pending-sitems"></div>
+      </div>
+      <div id="temp-task-row" style="display:flex;gap:8px;padding:8px 0;align-items:center;">
+        <input class="form-input" id="temp-task-name" placeholder="Quick task…" style="flex:1;padding:8px 10px;">
+        <input class="form-input" id="temp-task-pts" type="number" value="5" min="1" style="width:56px;padding:8px 6px;">
+        <button class="btn btn-primary" onclick="addTempTask()" style="padding:8px 12px;">+ Add</button>
       </div>
       <button class="btn btn-primary btn-full" id="begin-cycle-btn">▶ Begin cycle</button>
       <button class="btn btn-secondary btn-full" id="cancel-pending-btn">Cancel</button>
@@ -687,7 +725,7 @@ const FALLBACK_REWARDS = [
 // ══════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════
-let state = { tasks:[], categories:[], totalPoints:0, availablePoints:0, history:[], rewards:[], activeCycle: null, notificationSubscribed: false };
+let state = { tasks:[], categories:[], totalPoints:0, availablePoints:0, history:[], rewards:[], activeCycles: [], notificationSubscribed: false };
 let expanded = JSON.parse(localStorage.getItem('cleanup_expanded')||'{}');
 function saveExpanded(){ localStorage.setItem('cleanup_expanded',JSON.stringify(expanded)); }
 
@@ -695,6 +733,8 @@ function loadState() {
   try {
     const raw = localStorage.getItem('cleanup_v2');
     if(raw){ state={...state,...JSON.parse(raw)}; if(!state.rewards?.length) state.rewards=FALLBACK_REWARDS; if(!state.categories?.length) state.categories=FALLBACK_CATS; }
+    if(state.activeCycle!==undefined&&!state.activeCycles){ state.activeCycles=state.activeCycle?[state.activeCycle]:[]; delete state.activeCycle; }
+    if(!Array.isArray(state.activeCycles)) state.activeCycles=[];
     return !raw;
   } catch(e){ return true; }
 }
@@ -727,7 +767,7 @@ async function syncStateToIDB(){
     const db=await openAppDB();
     const tx=db.transaction(['state','cycle'],'readwrite');
     tx.objectStore('state').put(JSON.stringify(state),'current');
-    if(state.activeCycle) tx.objectStore('cycle').put(state.activeCycle,'active');
+    if(state.activeCycles.length) tx.objectStore('cycle').put(JSON.stringify(state.activeCycles),'active');
     else tx.objectStore('cycle').delete('active');
     await new Promise(r=>{tx.oncomplete=r;});
     db.close();
@@ -742,19 +782,27 @@ async function reconcilePendingOps(){
     const ops=await new Promise(r=>{ const req=readTx.objectStore('pending_ops').getAll(); req.onsuccess=()=>r(req.result); req.onerror=()=>r([]); });
     if(!ops.length){ db.close(); return; }
     for(const op of ops){
-      const t=state.tasks.find(x=>x.id===op.taskId);
-      if(!t){ continue; }
       if(op.action==='done'){
-        t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
-        state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
-        state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn'});
-      }else if(op.action==='snooze'){
-        t.nextDue=t.nextDue<today()?today():addDays(t.nextDue,1);
+        if(op.taskId){
+          const t=state.tasks.find(x=>x.id===op.taskId);
+          if(t){
+            t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
+            state.totalPoints+=op.pointValue||t.pointValue; state.availablePoints+=op.pointValue||t.pointValue;
+            state.history.push({name:t.name,pts:op.pointValue||t.pointValue,date:today(),type:'earn'});
+          }
+        }else if(op.taskName){
+          state.totalPoints+=op.pointValue||5; state.availablePoints+=op.pointValue||5;
+          state.history.push({name:op.taskName,pts:op.pointValue||5,date:today(),type:'earn'});
+        }
+      }else if(op.action==='snooze'&&op.taskId){
+        const t=state.tasks.find(x=>x.id===op.taskId);
+        if(t) t.nextDue=t.nextDue<today()?today():addDays(t.nextDue,1);
       }
     }
     const cycleTx=db.transaction('cycle','readonly');
-    const cycle=await new Promise(r=>{ const req=cycleTx.objectStore('cycle').get('active'); req.onsuccess=()=>r(req.result); });
-    state.activeCycle=cycle||null;
+    let cycle=await new Promise(r=>{ const req=cycleTx.objectStore('cycle').get('active'); req.onsuccess=()=>r(req.result); });
+    if(typeof cycle==='string'){ try{ cycle=JSON.parse(cycle); }catch(e){ cycle=[]; } }
+    state.activeCycles=Array.isArray(cycle)?cycle:(cycle?[cycle]:[]);
     const clearTx=db.transaction('pending_ops','readwrite');
     clearTx.objectStore('pending_ops').clear();
     await new Promise(r=>{clearTx.oncomplete=r;});
@@ -792,13 +840,6 @@ async function subscribeToPush(){
   render();
 }
 
-function testNotification(){
-  if(!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.ready.then(reg=>{
-    reg.showNotification('CleanUp',{body:'🔔 Notifications work! Tap to open.',icon:'/icon.svg',tag:'test'});
-  });
-}
-
 async function seedFromJson() {
   let cats=FALLBACK_CATS, tasks=FALLBACK_TASKS, rewards=FALLBACK_REWARDS;
   try {
@@ -814,7 +855,7 @@ async function seedFromJson() {
 }
 
 async function clearAll() {
-  state={tasks:[],categories:[],totalPoints:0,availablePoints:0,history:[],rewards:[]};
+  state={tasks:[],categories:[],totalPoints:0,availablePoints:0,history:[],rewards:[],activeCycles:[]};
   expanded={}; localStorage.removeItem('cleanup_v2'); localStorage.removeItem('cleanup_expanded');
   await seedFromJson(); render();
 }
@@ -863,15 +904,15 @@ document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click'
 function render(){
   document.getElementById('header-points').textContent=`⭐ ${state.availablePoints} pts`;
   if(currentView==='dashboard') renderDashboard();
-  if(currentView==='tasks')     renderTasksView();
   if(currentView==='rewards')   renderRewards();
   if(currentView==='calendar')  renderCalendar();
+  if(currentView==='options')   renderOptions();
 }
 
 // ── Dashboard: grouped by category, collapsible ──
 function renderDashboard(){
   const el=document.getElementById('dashboard-content');
-  if(!state.tasks.length){ el.innerHTML=`<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Go to <b>Tasks</b> to add some!</p></div>`; return; }
+  if(!state.tasks.length){ el.innerHTML=`<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Tap <b>Edit Tasks</b> to add some!</p></div>`; return; }
 
   const cats={};
   state.tasks.forEach(t=>{ (cats[t.category]||(cats[t.category]=[])).push(t); });
@@ -902,6 +943,10 @@ function renderDashboard(){
         </div>
       </div>`;
   });
+  html+=`<button class="manage-cats-btn" onclick="openTasksSheet()" style="margin-top:12px;">
+    <span>📋 Edit Tasks</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>`;
   el.innerHTML=html;
 }
 
@@ -926,21 +971,51 @@ function taskCard(t){
 }
 
 // ── Tasks management ──
-function renderTasksView(){
-  const el=document.getElementById('tasks-content');
-  if(!state.tasks.length){ el.innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>No tasks yet.<br>Tap <b>+</b> to add one!</p></div>`; return; }
-  const sorted=[...state.tasks].sort((a,b)=>a.name.localeCompare(b.name));
-  el.innerHTML=sorted.map(t=>`
-    <div class="list-item">
-      <div class="list-item-info">
-        <div class="list-item-name">${esc(t.name)}</div>
-        <div class="list-item-sub">${catEmoji(t.category)} ${esc(t.category)} · every ${t.defaultInterval}d · ⭐${t.pointValue} pts · next ${fmtDate(t.nextDue)}</div>
+function renderTasksSheetContent(){
+  const el=document.getElementById('tasks-sheet-content');
+  if(!state.tasks.length){
+    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--g400);font-size:13px;">No tasks yet.</div>`;
+    document.getElementById('tasks-sheet-count').textContent='';
+    return;
+  }
+  document.getElementById('tasks-sheet-count').textContent=`(${state.tasks.length})`;
+  const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
+  const grouped={};
+  state.tasks.forEach(t=>{ (grouped[t.category]||(grouped[t.category]=[])).push(t); });
+  const catKeys=Object.keys(grouped).sort((a,b)=>(catOrder[a]??999)-(catOrder[b]??999));
+  let html='';
+  catKeys.forEach(cat=>{
+    const tasks=grouped[cat].sort((a,b)=>a.name.localeCompare(b.name));
+    html+=`<div class="cat-section" style="margin-bottom:4px;">
+      <div class="cat-header open" style="padding:8px 12px;cursor:default;">
+        <span class="cat-title" style="font-size:13px;">${catEmoji(cat)} ${esc(cat)} <span style="color:var(--g400);font-weight:500;font-size:11px;">(${tasks.length})</span></span>
       </div>
-      <div class="list-item-actions">
-        <button class="icon-btn icon-btn-edit"   onclick="openEditTask('${t.id}')">✏️</button>
-        <button class="icon-btn icon-btn-delete" onclick="openDeleteTaskSheet('${t.id}')">🗑️</button>
+      <div style="background:var(--g100);border-radius:0 0 var(--r) var(--r);border-top:1px solid var(--g200);">
+        <div style="padding:4px 10px 10px;">${tasks.map(t=>`
+          <div class="list-item" style="margin-bottom:4px;">
+            <div class="list-item-info">
+              <div class="list-item-name">${esc(t.name)}</div>
+              <div class="list-item-sub">every ${t.defaultInterval}d · ⭐${t.pointValue} pts · next ${fmtDate(t.nextDue)}</div>
+            </div>
+            <div class="list-item-actions">
+              <button class="icon-btn icon-btn-edit" onclick="openEditTask('${t.id}')">✏️</button>
+              <button class="icon-btn icon-btn-delete" onclick="openDeleteTaskSheet('${t.id}')">🗑️</button>
+            </div>
+          </div>`).join('')}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  });
+  // Add Manage Categories
+  html+=`<button class="manage-cats-btn" onclick="openCatsSheet()" style="margin-bottom:0;">
+    <span>📁 Manage Categories</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>`;
+  el.innerHTML=html;
+}
+
+function openTasksSheet(){
+  renderTasksSheetContent();
+  document.getElementById('tasks-sheet-overlay').classList.add('open');
 }
 
 // ── Rewards ──
@@ -969,7 +1044,100 @@ function renderRewards(){
   });
 
   html+=`
-    <div class="slabel" style="margin-top:20px;">💾 Backup</div>
+    <div class="slabel" style="margin-top:20px;">🔄 Cycle</div>
+    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:600;">Status: ${Notification.permission==='granted'?'✅ Enabled':'🔕 Not enabled'}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-primary" onclick="requestNotificationPermission()" style="flex:1;justify-content:center;">${Notification.permission==='granted'?'🔔 Notifications on':'Enable notifications'}</button>
+        <button class="btn btn-primary" onclick="openPendingTasksSheet()" style="flex:1;justify-content:center;">▶ Begin cycle</button>
+      </div>
+      ${!state.notificationSubscribed?'<div style="font-size:11px;color:var(--g500);margin-top:6px;">Set PUSH_SERVER in the code after deploying the server, then enable notifications.</div>':''}
+      <div id="active-cycles-list" style="margin-top:10px;"></div>
+    </div>`;
+
+  el.innerHTML=html;
+  renderActiveCycles();
+}
+
+function renderActiveCycles(){
+  const el=document.getElementById('active-cycles-list');
+  if(!state.activeCycles.length){ el.innerHTML=''; return; }
+  el.innerHTML=state.activeCycles.map(c=>{
+    const done=c.currentIdx;
+    const total=c.tasks.length;
+    const pct=total?Math.round(done/total*100):0;
+    return `
+      <div class="cycle-item" style="background:var(--g50);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <strong style="font-size:13px;">Cycle #${c.cycleId.slice(0,5)}</strong>
+          <span style="font-size:11px;color:var(--g400);">${done}/${total} tasks</span>
+        </div>
+        <div style="height:4px;background:var(--g200);border-radius:2px;margin:6px 0;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:var(--primary);border-radius:2px;transition:width .3s;"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button class="btn btn-danger" style="padding:5px 10px;font-size:11px;" onclick="cancelCycle('${c.cycleId}')">✕ Cancel</button>
+          <button class="btn btn-primary" style="padding:5px 10px;font-size:11px;" onclick="openAddTasksToCycle('${c.cycleId}')">+ Add tasks</button>
+          <button class="btn btn-primary" style="padding:5px 10px;font-size:11px;" onclick="openReorderCycle('${c.cycleId}')">⇅ Reorder</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function cancelCycle(cycleId){
+  state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==cycleId);
+  saveState(); renderRewards(); showToast('Cycle cancelled');
+}
+
+function openAddTasksToCycle(cycleId){
+  _pendingSelection=new Set();
+  _pendingOrder=[];
+  _pendingTempTasks=[];
+  const cycle=state.activeCycles.find(c=>c.cycleId===cycleId);
+  if(cycle){
+    cycle.tasks.forEach(t=>{
+      if(t.taskId) _pendingSelection.add(t.taskId);
+    });
+    _pendingOrder=cycle.tasks.map(t=>t.taskId).filter(Boolean);
+  }
+  _pendingExpanded={};
+  renderPendingTasksSheet();
+  document.getElementById('pending-overlay').classList.add('open');
+  document.getElementById('begin-cycle-btn').textContent='▶ Update cycle';
+  document.getElementById('begin-cycle-btn').onclick=()=>updateCycle(cycleId);
+}
+
+function openReorderCycle(cycleId){
+  openAddTasksToCycle(cycleId);
+}
+
+function updateCycle(cycleId){
+  const items=_pendingOrder.filter(id=>_pendingSelection.has(id));
+  if(!items.length){ showToast('Select at least one task'); return; }
+  const cycle=state.activeCycles.find(c=>c.cycleId===cycleId);
+  if(!cycle) return;
+  const currentTaskIdx=Math.min(cycle.currentIdx,items.length-1);
+  cycle.tasks=items.map(id=>{
+    const t=state.tasks.find(x=>x.id===id)||_pendingTempTasks.find(x=>x.id===id);
+    if(!t) return null;
+    const cat=t.isTemp?null:state.categories.find(c=>c.name===t.category);
+    return{taskId:t.isTemp?null:t.id,isTemp:!!t.isTemp,name:t.name,catEmoji:cat?cat.emoji:t.catEmoji||'',pointValue:t.pointValue};
+  }).filter(Boolean);
+  cycle.currentIdx=currentTaskIdx;
+  saveState(); closeSheets(); showToast('Cycle updated');
+  _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[];
+  document.getElementById('begin-cycle-btn').onclick=beginCycle;
+  render();
+}
+
+// ── Options view ──
+function renderOptions(){
+  const el=document.getElementById('options-content');
+  let html='';
+
+  // Backup
+  html+=`
+    <div class="slabel" style="margin-top:4px;">💾 Backup</div>
     <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📤 Export data</div>
       <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Save everything — tasks, rewards, points and history — to a JSON file.</div>
@@ -981,37 +1149,27 @@ function renderRewards(){
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="triggerFileImport()">Choose JSON file</button>
     </div>`;
 
+  // Recent Activity
   if(state.history.length){
     const recent=[...state.history].reverse().slice(0,30);
     html+=`<div class="slabel" style="margin-top:20px;">📋 Recent Activity</div>`;
     html+=recent.map((h,di)=>{
       const origIdx=state.history.length-1-di;
-      const clickable=h.type==='earn';
       return `
-      <div class="history-item${clickable?' h-earn':''}" ${clickable?`onclick="openDeleteHistorySheet(${origIdx})"`:''}>
+      <div class="history-item">
         <div class="hdot ${h.type}"></div>
         <div class="hname">${esc(h.name)}</div>
         <div class="hpts ${h.type}">${h.type==='redeem'?'−':'+'}${h.pts} pts</div>
         <div class="hdate">${fmtDate(h.date)}</div>
+        ${h.type==='earn'?`<button class="icon-btn icon-btn-edit" onclick="openEditHistoryDate(${origIdx})" style="width:28px;height:28px;font-size:12px;">✏️</button>`:''}
+        ${h.type==='earn'?`<button class="icon-btn icon-btn-delete" onclick="openDeleteHistorySheet(${origIdx})" style="width:28px;height:28px;font-size:12px;">🗑️</button>`:''}
       </div>`;
     }).join('');
   }
 
+  // Danger Zone
   html+=`
-    <div class="slabel" style="margin-top:20px;">🔔 Notifications</div>
-    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:600;">Status: ${Notification.permission==='granted'?'✅ Enabled':'🔕 Not enabled'}</div>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        ${Notification.permission==='granted'
-          ? `<button class="btn btn-primary" onclick="testNotification()" style="flex:1;justify-content:center;">Test notification</button>`
-          : `<button class="btn btn-primary" onclick="requestNotificationPermission()" style="flex:1;justify-content:center;">Enable notifications</button>`}
-        <button class="btn btn-primary" onclick="openPendingTasksSheet()" style="flex:1;justify-content:center;">▶ Begin cycle</button>
-      </div>
-      ${!state.notificationSubscribed?'<div style="font-size:11px;color:var(--g500);margin-top:6px;">Set PUSH_SERVER in the code after deploying the server, then enable notifications.</div>':''}
-    </div>`;
-
-  html+=`
-    <div class="danger-zone">
+    <div class="danger-zone" style="margin-top:20px;">
       <h3>⚠️ Danger Zone</h3>
       <p style="font-size:12px;color:var(--g700);margin-bottom:12px;">Clears all data and resets to the defaults in <code>data.json</code>.</p>
       <button class="btn btn-danger" style="width:100%;justify-content:center;padding:10px;" onclick="openClearConfirm()">🗑 Reset all data to defaults</button>
@@ -1062,7 +1220,7 @@ function snoozeTask(id){
 //  TASK FORM
 // ══════════════════════════════════════════
 let editTaskId=null;
-document.getElementById('fab-add-task').addEventListener('click',openAddTask);
+let _reopenTasksSheet=false;
 
 function openAddTask(){
   editTaskId=null;
@@ -1099,6 +1257,7 @@ document.getElementById('save-task-btn').addEventListener('click',()=>{
   else{ state.tasks.push({id:uid(),lastDone:null,...data}); showToast('Task added!'); }
   saveState(); closeSheets(); render();
   if(_reopenPendingAfterSave){ _reopenPendingAfterSave=false; setTimeout(()=>{ openPendingTasksSheet(); },100); }
+  if(_reopenTasksSheet){ _reopenTasksSheet=false; setTimeout(()=>{ openTasksSheet(); },100); }
 });
 document.getElementById('cancel-task-btn').addEventListener('click',closeSheets);
 document.getElementById('task-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
@@ -1108,8 +1267,6 @@ document.getElementById('task-form-overlay').addEventListener('click',e=>{ if(e.
 // ══════════════════════════════════════════
 let editCatName=null; // original name of category being edited
 let deleteCatName=null;
-
-document.getElementById('open-cats-btn').addEventListener('click',openCatsSheet);
 
 function openCatsSheet(){
   renderCatsList();
@@ -1273,7 +1430,7 @@ document.getElementById('confirm-delete-cat').addEventListener('click',()=>{
   if(fallback==='Other' && !state.categories.find(c=>c.name==='Other')){
     state.categories.push({name:'Other',emoji:'📦'});
   }
-  delete collapsed[deleteCatName]; saveCollapsed();
+  delete expanded[deleteCatName]; saveExpanded();
   saveState();
   document.getElementById('delete-cat-overlay').classList.remove('open');
   renderCatsList();
@@ -1367,20 +1524,7 @@ document.getElementById('confirm-del-history').addEventListener('click', () => {
   state.availablePoints = Math.max(0, state.availablePoints - h.pts);
   state.totalPoints     = Math.max(0, state.totalPoints     - h.pts);
 
-  // Update task's lastDone and nextDue to reflect removal
-  const task = state.tasks.find(t => t.name === h.name);
-  if (task) {
-    const remaining = state.history
-      .filter(e => e.type === 'earn' && e.name === h.name)
-      .sort((a, b) => b.date.localeCompare(a.date));
-    if (remaining.length > 0) {
-      task.lastDone = remaining[0].date;
-      task.nextDue  = addDays(remaining[0].date, task.defaultInterval);
-    } else {
-      task.lastDone = null;
-      task.nextDue  = today();
-    }
-  }
+  recalcTaskFromHistory(h.name);
 
   deleteHistoryEntry = null;
   saveState(); closeSheets(); showToast('Activity removed'); render();
@@ -1388,28 +1532,45 @@ document.getElementById('confirm-del-history').addEventListener('click', () => {
 document.getElementById('cancel-del-history').addEventListener('click', closeSheets);
 document.getElementById('del-history-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
 
+// ── Edit history date ──
+function openEditHistoryDate(origIdx){
+  const h=state.history[origIdx];
+  if(!h||h.type!=='earn') return;
+  editHistoryIdx=origIdx;
+  document.getElementById('edit-hist-date-input').value=h.date;
+  document.getElementById('edit-history-date-overlay').classList.add('open');
+}
+document.getElementById('confirm-edit-hist-date').addEventListener('click',()=>{
+  if(editHistoryIdx===null) return;
+  const newDate=document.getElementById('edit-hist-date-input').value;
+  if(!newDate){ showToast('Select a date'); return; }
+  const h=state.history[editHistoryIdx];
+  if(!h) return;
+  h.date=newDate;
+  recalcTaskFromHistory(h.name);
+  editHistoryIdx=null;
+  saveState(); closeSheets(); showToast('Date updated'); render();
+});
+document.getElementById('cancel-edit-hist-date').addEventListener('click', closeSheets);
+document.getElementById('edit-history-date-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
+
 // ══════════════════════════════════════════
 //  PENDING TASKS CYCLE
 // ══════════════════════════════════════════
 let _pendingSelection=new Set();
 let _pendingOrder=[];
+let _pendingTempTasks=[];
 let _pendingExpanded={};
 let _reopenPendingAfterSave=false;
 
 function openPendingTasksSheet(){
-  const td=today();
-  const overdueIds=new Set(state.tasks.filter(t=>t.nextDue<td).map(t=>t.id));
-  const dueTodayIds=new Set(state.tasks.filter(t=>t.nextDue===td).map(t=>t.id));
-  if(!_pendingSelection.size&&!_pendingOrder.length){
-    _pendingSelection=new Set([...overdueIds,...dueTodayIds]);
-    const todayStr=today();
-    _pendingOrder=state.tasks
-      .filter(t=>_pendingSelection.has(t.id))
-      .sort((a,b)=>diffDays(a.nextDue)-diffDays(b.nextDue))
-      .map(t=>t.id);
-  }
+  _pendingSelection=new Set();
+  _pendingOrder=[];
+  _pendingTempTasks=[];
   _pendingExpanded={};
   renderPendingTasksSheet();
+  document.getElementById('begin-cycle-btn').onclick=beginCycle;
+  document.getElementById('begin-cycle-btn').textContent='▶ Begin cycle';
   document.getElementById('pending-overlay').classList.add('open');
 }
 
@@ -1444,7 +1605,8 @@ function renderPendingTasksSheet(){
   if(_pendingSelection.size){
     sEl.style.display='block';
     siEl.innerHTML=_pendingOrder.map((id,i)=>{
-      const t=state.tasks.find(x=>x.id===id);
+      let t=state.tasks.find(x=>x.id===id);
+      if(!t) t=_pendingTempTasks.find(x=>x.id===id);
       if(!t) return '';
       return `<div class="srow"><span style="color:var(--g400);font-size:11px;width:16px;">${i+1}.</span>
         <span class="snm">${esc(t.name)}</span><span class="spt">⭐${t.pointValue}</span>
@@ -1463,7 +1625,25 @@ function togglePendingTask(id){
   renderPendingTasksSheet();
 }
 
-function removeFromPending(id){ _pendingSelection.delete(id); _pendingOrder=_pendingOrder.filter(x=>x!==id); renderPendingTasksSheet(); }
+function removeFromPending(id){
+  _pendingSelection.delete(id);
+  _pendingOrder=_pendingOrder.filter(x=>x!==id);
+  const tempIdx=_pendingTempTasks.findIndex(t=>t.id===id);
+  if(tempIdx!==-1) _pendingTempTasks.splice(tempIdx,1);
+  renderPendingTasksSheet();
+}
+
+function addTempTask(){
+  const name=document.getElementById('temp-task-name').value.trim();
+  if(!name){ showToast('Enter a task name'); return; }
+  const pts=Math.max(1,parseInt(document.getElementById('temp-task-pts').value)||5);
+  const task={id:'temp-'+uid(),name,pointValue:pts,isTemp:true,catEmoji:'⚡'};
+  _pendingTempTasks.push(task);
+  _pendingSelection.add(task.id);
+  _pendingOrder.push(task.id);
+  document.getElementById('temp-task-name').value='';
+  renderPendingTasksSheet();
+}
 
 document.getElementById('add-more-btn').addEventListener('click',()=>{
   _reopenPendingAfterSave=true; closeSheets(); openAddTask();
@@ -1476,13 +1656,14 @@ async function beginCycle(){
   const cycle={
     cycleId:uid(),
     tasks:items.map(id=>{
-      const t=state.tasks.find(x=>x.id===id);
-      const cat=state.categories.find(c=>c.name===t?.category);
-      return{taskId:t.id,name:t.name,catEmoji:cat?cat.emoji:'',pointValue:t.pointValue};
-    }),
+      const t=state.tasks.find(x=>x.id===id)||_pendingTempTasks.find(x=>x.id===id);
+      if(!t) return null;
+      const cat=t.isTemp?null:state.categories.find(c=>c.name===t.category);
+      return{taskId:t.isTemp?null:t.id,isTemp:!!t.isTemp,name:t.name,catEmoji:cat?cat.emoji:t.catEmoji||'',pointValue:t.pointValue};
+    }).filter(Boolean),
     currentIdx:0,startedAt:td
   };
-  state.activeCycle=cycle;
+  state.activeCycles.push(cycle);
   saveState();
   closeSheets();
   const first=cycle.tasks[0];
@@ -1490,18 +1671,18 @@ async function beginCycle(){
     const reg=await navigator.serviceWorker.ready;
     reg.showNotification(`Task 1/${cycle.tasks.length}`,{
       body:`${first.catEmoji} ${first.name} · ⭐ ${first.pointValue} pts`,
-      icon:'/icon.svg',tag:'cycle-task',requireInteraction:true,
+      icon:'/icon.svg',tag:'cycle-task-'+cycle.cycleId,requireInteraction:true,
       actions:[{action:'done',title:'✓ Done'},{action:'snooze',title:'📅 Snooze +1d'}],
       data:{type:'cycle-task',cycleId:cycle.cycleId,taskIndex:0}
     });
   }catch(e){}
   showToast(`Cycle started — ${cycle.tasks.length} tasks`);
-  _pendingSelection=new Set(); _pendingOrder=[];
+  _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[];
 }
 
 document.getElementById('begin-cycle-btn').addEventListener('click',beginCycle);
-document.getElementById('cancel-pending-btn').addEventListener('click',()=>{ _pendingSelection=new Set(); _pendingOrder=[]; closeSheets(); });
-document.getElementById('pending-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget){ _pendingSelection=new Set(); _pendingOrder=[]; closeSheets(); } });
+document.getElementById('cancel-pending-btn').addEventListener('click',()=>{ _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); });
+document.getElementById('pending-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget){ _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); } });
 
 // ══════════════════════════════════════════
 //  EDIT POINTS
@@ -1661,7 +1842,7 @@ function renderCalendar() {
       ? (count > 0 ? 'ct' : 'c0')
       : (count === 0 ? 'c0' : count === 1 ? 'c1' : count === 2 ? 'c2' : count === 3 ? 'c3' : 'c4');
     if (isToday) cls += ' today';
-    const click = count > 0 ? `onclick="openCalDay('${dateStr}')"` : '';
+    const click = `onclick="openCalDay('${dateStr}')"`;
     html += `<div class="cal-day ${cls}" ${click}>${day}${count > 0 ? `<span class="cal-count">${count}</span>` : ''}</div>`;
   }
 
@@ -1687,15 +1868,19 @@ function calNext() { if(calMonth===11){calMonth=0;calYear++;}else calMonth++; re
 
 function openCalDay(dateStr) {
   const entries = state.history.filter(h => h.type === 'earn' && h.date === dateStr);
-  if (!entries.length) return;
   const [y, m, d] = dateStr.split('-');
   document.getElementById('cal-day-date').textContent = `${d}/${m}/${y.slice(2)}`;
-  document.getElementById('cal-day-tasks').innerHTML = entries.map(h => `
-    <div class="cal-day-task" onclick="openTaskCalendar('${esc(h.name).replace(/'/g,"\\'")}')">
-      <div class="cal-day-task-name">${esc(h.name)}</div>
-      <div class="cal-day-task-pts">+${h.pts} pts</div>
-      <div class="cal-day-task-arrow">📅</div>
-    </div>`).join('');
+  calAddDate = dateStr;
+  if(entries.length){
+    document.getElementById('cal-day-tasks').innerHTML = entries.map(h => `
+      <div class="cal-day-task" onclick="openTaskCalendar('${esc(h.name).replace(/'/g,"\\'")}')">
+        <div class="cal-day-task-name">${esc(h.name)}</div>
+        <div class="cal-day-task-pts">+${h.pts} pts</div>
+        <div class="cal-day-task-arrow">📅</div>
+      </div>`).join('');
+  }else{
+    document.getElementById('cal-day-tasks').innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks done on this day.</div>';
+  }
   document.getElementById('cal-day-overlay').classList.add('open');
 }
 
@@ -1704,6 +1889,36 @@ function openTaskCalendar(name) {
   closeSheets();
   if (currentView !== 'calendar') navigate('calendar');
   else renderCalendar();
+}
+
+function openCalAddTask(){
+  if(!calAddDate){ showToast('No date selected'); return; }
+  const el=document.getElementById('cal-add-task-list');
+  const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
+  const sorted=[...state.tasks].sort((a,b)=>a.name.localeCompare(b.name));
+  if(!sorted.length){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks available.</div>'; }
+  else {
+    el.innerHTML=sorted.map(t=>`
+      <div class="cal-day-task" onclick="confirmCalAddTask('${t.id}')">
+        <div class="cal-day-task-name">${esc(t.name)}</div>
+        <div class="cal-day-task-pts">+${t.pointValue} pts</div>
+        <div class="cal-day-task-arrow">✓</div>
+      </div>`).join('');
+  }
+  document.getElementById('cal-add-task-overlay').classList.add('open');
+}
+
+function confirmCalAddTask(taskId){
+  const t=state.tasks.find(x=>x.id===taskId);
+  if(!t||!calAddDate) return;
+  const prev=state.availablePoints;
+  state.history.push({name:t.name,pts:t.pointValue,date:calAddDate,type:'earn'});
+  state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
+  recalcTaskFromHistory(t.name);
+  saveState(); closeSheets(); showToast(`✓ ${t.name} done! +${t.pointValue} pts`);
+  if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
+  renderCalendar();
+  render();
 }
 
 // ══════════════════════════════════════════
@@ -1759,7 +1974,25 @@ document.getElementById('json-import-overlay').addEventListener('click', e => { 
 // ══════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════
-function closeSheets(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); doneTaskId=null; deleteTaskId=null; deleteRewardId=null; deleteCatName=null; }
+let editHistoryIdx=null;
+let calAddDate=null;
+
+function recalcTaskFromHistory(taskName){
+  const task=state.tasks.find(t=>t.name===taskName);
+  if(!task) return;
+  const remaining=state.history
+    .filter(e=>e.type==='earn'&&e.name===taskName)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  if(remaining.length>0){
+    task.lastDone=remaining[0].date;
+    task.nextDue=addDays(remaining[0].date,task.defaultInterval);
+  }else{
+    task.lastDone=null;
+    task.nextDue=today();
+  }
+}
+
+function closeSheets(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); doneTaskId=null; deleteTaskId=null; deleteRewardId=null; deleteCatName=null; editHistoryIdx=null; calAddDate=null; }
 let toastTimer;
 function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
 function bumpPts(){ const el=document.getElementById('header-points'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
@@ -1784,7 +2017,7 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data.type==='task-action'){
-      const t=state.tasks.find(x=>x.id===e.data.taskId);
+      const t=e.data.taskId?state.tasks.find(x=>x.id===e.data.taskId):null;
       if(t){
         if(e.data.action==='done'){
           t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
@@ -1793,14 +2026,18 @@ if('serviceWorker' in navigator){
         }else if(e.data.action==='snooze'){
           t.nextDue=t.nextDue<today()?today():addDays(t.nextDue,1);
         }
-        if(state.activeCycle){
-          state.activeCycle.currentIdx++;
-          if(state.activeCycle.currentIdx>=state.activeCycle.tasks.length) state.activeCycle=null;
-        }
-        saveState(); render();
+      }else if(e.data.action==='done'&&e.data.taskName){
+        state.totalPoints+=e.data.pointValue||5; state.availablePoints+=e.data.pointValue||5;
+        state.history.push({name:e.data.taskName,pts:e.data.pointValue||5,date:today(),type:'earn'});
       }
+      const cycle=state.activeCycles.find(c=>c.cycleId===e.data.cycleId);
+      if(cycle){
+        cycle.currentIdx++;
+        if(cycle.currentIdx>=cycle.tasks.length) state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId);
+      }
+      saveState(); render();
     }else if(e.data.type==='cycle-complete'){
-      state.activeCycle=null; saveState(); render(); showToast(`🎉 All ${e.data.count} tasks done!`);
+      state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId); saveState(); render(); showToast(`🎉 All ${e.data.count} tasks done!`);
     }else if(e.data.type==='navigate'){
       if(e.data.view) navigate(e.data.view);
     }
