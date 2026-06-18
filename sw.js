@@ -1,4 +1,4 @@
-const CACHE_NAME = "cleanup-v2";
+const CACHE_NAME = "cleanup-v3";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", "./data.json"];
 
 const VAPID_PUBLIC_KEY = "BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg";

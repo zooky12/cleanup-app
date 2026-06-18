@@ -790,14 +790,11 @@ async function reconcilePendingOps(){
     const ops=await new Promise(r=>{ const req=readTx.objectStore('pending_ops').getAll(); req.onsuccess=()=>r(req.result); req.onerror=()=>r([]); });
     for(const op of ops){
       if(op.action==='done'){
-        if(op.taskId){
-          const t=state.tasks.find(x=>x.id===op.taskId);
-          if(t){
-            t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
-            state.totalPoints+=op.pointValue||t.pointValue; state.availablePoints+=op.pointValue||t.pointValue;
-            state.history.push({name:t.name,pts:op.pointValue||t.pointValue,date:today(),type:'earn',catEmoji:op.catEmoji||catEmoji(t.category)});
-          }
+        const t=op.taskId?state.tasks.find(x=>x.id===op.taskId):null;
+        if(t){
+          completeTask(t,t.defaultInterval,{silent:true});
         }else if(op.taskName){
+          // Orphan op (task no longer exists): record points/history directly.
           state.totalPoints+=op.pointValue||5; state.availablePoints+=op.pointValue||5;
           state.history.push({name:op.taskName,pts:op.pointValue||5,date:today(),type:'earn',catEmoji:op.catEmoji||''});
         }
@@ -1199,15 +1196,28 @@ function openDoneSheet(id){
 }
 document.getElementById('int-minus').addEventListener('click',()=>{ if(doneInt>1){doneInt--;document.getElementById('int-val').textContent=doneInt;} });
 document.getElementById('int-plus').addEventListener('click',()=>{ doneInt++;document.getElementById('int-val').textContent=doneInt; });
-document.getElementById('confirm-done').addEventListener('click',()=>{
-  const t=state.tasks.find(x=>x.id===doneTaskId); if(!t)return;
+// Single canonical "complete a task today" path. Used by the in-app Done sheet
+// and by reconcilePendingOps() (notification Done). Mutates state but does NOT
+// saveState/render — the caller decides when to persist/repaint. interval falls
+// back to the task's default. Pass {silent:true} to skip toast/confetti (batch).
+function completeTask(t, interval, opts){
+  if(!t) return false;
+  opts=opts||{};
   const prev=state.availablePoints;
-  t.lastDone=today(); t.nextDue=addDays(today(),doneInt);
+  const iv=interval||t.defaultInterval;
+  t.lastDone=today(); t.nextDue=addDays(today(),iv);
   state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
   state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn',catEmoji:catEmoji(t.category)});
-  saveState(); closeSheets(); showToast(`✓ Done! +${t.pointValue} pts`); bumpPts();
-  if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
-  render();
+  if(!opts.silent){
+    showToast(`✓ Done! +${t.pointValue} pts`); bumpPts();
+    if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
+  }
+  return true;
+}
+document.getElementById('confirm-done').addEventListener('click',()=>{
+  const t=state.tasks.find(x=>x.id===doneTaskId); if(!t)return;
+  completeTask(t,doneInt);
+  saveState(); closeSheets(); render();
 });
 document.getElementById('cancel-done').addEventListener('click',closeSheets);
 document.getElementById('done-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
