@@ -1,8 +1,18 @@
-const CACHE_NAME = "cleanup-v3";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg", "./data.json"];
+// CleanUp Service Worker
+// Bump CACHE_NAME whenever js/*.js or index.html changes to force re-cache
+const CACHE_NAME = "cleanup-v5";
 
-const VAPID_PUBLIC_KEY = "BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg";
-const PUSH_SERVER = ""; // ← Set to your Deno Deploy URL after deployment
+const VAPID_PUBLIC_KEY = 'BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg';
+const PUSH_SERVER = ''; // Set after deploying the Deno push server
+
+const ASSETS = [
+  "./", "./index.html", "./manifest.json", "./icon.svg", "./data.json",
+  "./js/utils.js", "./js/idb.js", "./js/store.js", "./js/events.js",
+  "./js/tasks.js", "./js/rewards.js", "./js/history.js", "./js/cycles.js",
+  "./js/selection.js", "./js/notifications.js", "./js/sharing.js",
+  "./js/components.js", "./js/drag.js", "./js/calendar.js", "./js/render.js",
+  "./js/main.js",
+];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)));
@@ -23,6 +33,7 @@ self.addEventListener("fetch", (e) => {
   e.respondWith(caches.match(e.request).then((cached) => cached || fetch(e.request)));
 });
 
+/* ── IndexedDB helpers ── */
 function openIDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open("cleanup_idb", 1);
@@ -73,6 +84,7 @@ async function delFromIDB(store, key) {
   } catch {}
 }
 
+/* ── Push handler ── */
 self.addEventListener("push", (e) => {
   e.waitUntil(handlePush());
 });
@@ -122,10 +134,10 @@ async function handlePush() {
   await putToIDB("meta", "lastReminderDate", today);
 }
 
+/* ── Notification clicks ── */
 self.addEventListener("notificationclick", (e) => {
   const action = e.action;
   const data = e.notification.data || {};
-  const tag = e.notification.tag;
   e.notification.close();
 
   if (action === "dismiss") return;
@@ -140,7 +152,7 @@ self.addEventListener("notificationclick", (e) => {
           return;
         }
       }
-      clients.openWindow("./?view=pending");
+      self.clients.openWindow("./?view=pending");
     })());
     return;
   }
@@ -169,6 +181,7 @@ async function openOrFocus(url) {
   return self.clients.openWindow(url);
 }
 
+/* ── Cycle helpers ── */
 async function getCycles() {
   let raw = await getFromIDB("cycle", "active");
   if (typeof raw === "string") { try { raw = JSON.parse(raw); } catch(e) { return []; } }
@@ -192,13 +205,28 @@ async function cycleDone(data) {
   const task = cycle.tasks[data.taskIndex];
 
   await putToIDB("pending_ops", undefined, {
-    taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", time: Date.now(), taskIndex: data.taskIndex,
+    taskId: task.taskId,
+    taskName: task.name,
+    pointValue: task.pointValue,
+    catEmoji: task.catEmoji || '',
+    action: "done",
+    time: Date.now(),
+    taskIndex: data.taskIndex,
   });
 
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
-      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", cycleId: cycle.cycleId, taskIndex: data.taskIndex });
+      c.postMessage({
+        type: "task-action",
+        taskId: task.taskId,
+        taskName: task.name,
+        pointValue: task.pointValue,
+        catEmoji: task.catEmoji || '',
+        action: "done",
+        cycleId: cycle.cycleId,
+        taskIndex: data.taskIndex,
+      });
       break;
     }
   }
@@ -241,13 +269,24 @@ async function cycleSnooze(data) {
   const task = cycle.tasks[cycle.currentIdx];
 
   await putToIDB("pending_ops", undefined, {
-    taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "snooze", time: Date.now(),
+    taskId: task.taskId,
+    taskName: task.name,
+    pointValue: task.pointValue,
+    action: "snooze",
+    time: Date.now(),
   });
 
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
-      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "snooze", cycleId: cycle.cycleId });
+      c.postMessage({
+        type: "task-action",
+        taskId: task.taskId,
+        taskName: task.name,
+        pointValue: task.pointValue,
+        action: "snooze",
+        cycleId: cycle.cycleId,
+      });
       break;
     }
   }

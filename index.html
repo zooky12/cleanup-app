@@ -31,6 +31,17 @@
       -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
     }
 
+    #app-loading {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      min-height:100vh; gap:16px; color:var(--g400);
+    }
+    .spinner {
+      width:36px; height:36px; border:3px solid var(--g200);
+      border-top-color:var(--primary); border-radius:50%;
+      animation:spin .7s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
     /* ── Header ── */
     .header {
       background:var(--g100); padding:13px 18px; border-bottom:1px solid var(--g200);
@@ -196,7 +207,6 @@
     .icon-btn-edit   { background:var(--primary-light); }
     .icon-btn-delete { background:var(--danger-light); }
 
-    /* ── Manage categories button in tasks view ── */
     .manage-cats-btn {
       display:flex; align-items:center; gap:10px; background:var(--g100);
       border:none; border-radius:var(--rs); padding:11px 14px; margin-bottom:14px;
@@ -264,15 +274,12 @@
     .hpts.redeem { color:var(--danger); }
     .hdate { color:var(--g400); font-size:10px; flex-shrink:0; }
 
-    /* ── Section label ── */
     .slabel { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--g400); margin:16px 2px 8px; }
     .slabel:first-child { margin-top:4px; }
 
-    /* ── Danger zone ── */
     .danger-zone { margin-top:24px; padding:16px; background:var(--danger-light); border-radius:var(--r); border:1px solid rgba(248,113,113,.25); }
     .danger-zone h3 { font-size:13px; font-weight:700; color:var(--danger); margin-bottom:10px; }
 
-    /* ── Toast ── */
     .toast {
       position:fixed; bottom:88px; left:50%; transform:translateX(-50%) translateY(8px);
       background:var(--g900); color:white; padding:9px 20px; border-radius:22px;
@@ -281,7 +288,6 @@
     }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-    /* ── Confetti ── */
     #confetti-canvas { position:fixed; inset:0; pointer-events:none; z-index:1000; }
 
     /* ── Calendar ── */
@@ -327,11 +333,9 @@
     .cal-day-task-pts   { font-size:12px; color:var(--success); font-weight:700; }
     .cal-day-task-arrow { font-size:15px; }
 
-    /* ── Clickable history items ── */
     .history-item.h-earn { cursor:pointer; }
     .history-item.h-earn:active { opacity:.65; }
 
-    /* ── Category drag-and-drop ── */
     .drag-handle { font-size:18px; color:var(--g400); padding:0 6px 0 0; cursor:grab; flex-shrink:0; touch-action:none; line-height:1; user-select:none; }
     .list-item.dragging  { opacity:.25; }
     .list-item.drag-over { box-shadow:0 -3px 0 var(--primary), var(--sh); }
@@ -339,1782 +343,345 @@
 </head>
 <body>
 
-  <div class="header">
-    <h1>🏠 CleanUp</h1>
-    <div class="pts-badge" id="header-points">⭐ 0 pts</div>
+  <div id="app-loading">
+    <div class="spinner"></div>
+    <p>Loading CleanUp...</p>
   </div>
 
-  <!-- Dashboard -->
-  <div class="view active" id="view-dashboard">
-    <div id="dashboard-content"></div>
-  </div>
+  <div id="app-root" style="display:none">
 
-  <!-- Rewards -->
-  <div class="view" id="view-rewards">
-    <div id="rewards-content"></div>
-    <button class="fab" id="fab-add-reward" style="display:none">+</button>
-  </div>
-
-  <!-- Calendar -->
-  <div class="view" id="view-calendar">
-    <div id="calendar-content"></div>
-  </div>
-
-  <!-- Options -->
-  <div class="view" id="view-options">
-    <div id="options-content"></div>
-  </div>
-
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-view="dashboard">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>Dashboard
-    </button>
-    <button class="nav-item" data-view="calendar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"/>
-        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>Calendar
-    </button>
-    <button class="nav-item" data-view="rewards">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="8" r="7"/>
-        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
-      </svg>Rewards
-    </button>
-    <button class="nav-item" data-view="options">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-      </svg>Options
-    </button>
-  </nav>
-
-  <!-- ── Done sheet ── -->
-  <div class="overlay" id="done-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title" id="done-task-name"></div>
-      <div class="done-pts-box">
-        <div class="num" id="done-pts">+10</div>
-        <div class="sub">points earned! 🎉</div>
-      </div>
-      <div class="interval-row">
-        <div class="interval-label">Check again in</div>
-        <div class="stepper">
-          <button class="stbtn" id="int-minus">−</button>
-          <div class="stval" id="int-val">7</div>
-          <button class="stbtn" id="int-plus">+</button>
-        </div>
-        <span class="stunit">days</span>
-      </div>
-      <button class="btn btn-primary btn-full" id="confirm-done">✓ Mark as done</button>
-      <button class="btn btn-secondary btn-full" id="cancel-done">Cancel</button>
+    <div class="header">
+      <h1>🏠 CleanUp</h1>
+      <div class="pts-badge" id="header-points">⭐ 0 pts</div>
     </div>
-  </div>
 
-  <!-- ── Task add/edit sheet ── -->
-  <div class="overlay" id="task-form-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title" id="task-form-title">Add Task</div>
-      <div class="form-group">
-        <label class="form-label">Task name</label>
-        <input class="form-input" id="f-name" placeholder="e.g. Take out trash" maxlength="60">
+    <!-- Dashboard -->
+    <div class="view active" id="view-dashboard">
+      <div id="dashboard-content"></div>
+    </div>
+
+    <!-- Rewards -->
+    <div class="view" id="view-rewards">
+      <div id="rewards-content"></div>
+      <button class="fab" id="fab-add-reward" style="display:none">+</button>
+    </div>
+
+    <!-- Calendar -->
+    <div class="view" id="view-calendar">
+      <div id="calendar-content"></div>
+    </div>
+
+    <!-- Options -->
+    <div class="view" id="view-options">
+      <div id="options-content"></div>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-action="nav-dashboard" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>Dashboard
+      </button>
+      <button class="nav-item" data-action="nav-calendar" data-view="calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>Calendar
+      </button>
+      <button class="nav-item" data-action="nav-rewards" data-view="rewards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="7"/>
+          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+        </svg>Rewards
+      </button>
+      <button class="nav-item" data-action="nav-options" data-view="options">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>Options
+      </button>
+    </nav>
+
+    <!-- ── Done sheet ── -->
+    <div class="overlay" id="done-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="done-task-name"></div>
+        <div class="done-pts-box">
+          <div class="num" id="done-pts">+10</div>
+          <div class="sub">points earned! 🎉</div>
+        </div>
+        <div class="interval-row">
+          <div class="interval-label">Check again in</div>
+          <div class="stepper">
+            <button class="stbtn" id="int-minus">−</button>
+            <div class="stval" id="int-val">7</div>
+            <button class="stbtn" id="int-plus">+</button>
+          </div>
+          <span class="stunit">days</span>
+        </div>
+        <button class="btn btn-primary btn-full" data-action="confirm-done">✓ Mark as done</button>
+        <button class="btn btn-secondary btn-full" data-action="close-sheets">Cancel</button>
       </div>
-      <div class="form-group">
-        <label class="form-label">Category</label>
-        <select class="form-select" id="f-cat"></select>
-      </div>
-      <div class="form-row">
+    </div>
+
+    <!-- ── Task form ── -->
+    <div class="overlay" id="task-form-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="task-form-title">Add Task</div>
         <div class="form-group">
-          <label class="form-label">Interval (days)</label>
-          <input class="form-input" id="f-interval" type="number" min="1" max="365" value="7">
+          <label class="form-label">Task name</label>
+          <input class="form-input" id="f-name" placeholder="e.g. Take out trash" maxlength="60">
         </div>
         <div class="form-group">
-          <label class="form-label">Points value</label>
-          <input class="form-input" id="f-pts" type="number" min="1" max="999" value="10">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="f-cat"></select>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Next check-in date</label>
-        <input class="form-input" id="f-nextdue" type="date">
-      </div>
-      <button class="btn btn-primary btn-full" id="save-task-btn">Save Task</button>
-      <button class="btn btn-secondary btn-full" id="cancel-task-btn">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── Categories management sheet ── -->
-  <div class="overlay" id="cats-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">📁 Categories</div>
-      <div id="cats-list"></div>
-      <button class="btn btn-primary btn-full" id="add-cat-btn" style="margin-top:8px;">+ Add Category</button>
-      <button class="btn btn-secondary btn-full" id="close-cats-btn">Done</button>
-    </div>
-  </div>
-
-  <!-- ── Category add/edit sheet ── -->
-  <div class="overlay" id="cat-form-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title" id="cat-form-title">Add Category</div>
-      <div class="form-row">
-        <div class="form-group" style="flex:0 0 80px">
-          <label class="form-label">Emoji</label>
-          <input class="form-input" id="cf-emoji" placeholder="📦" maxlength="4" style="text-align:center;font-size:22px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Interval (days)</label>
+            <input class="form-input" id="f-interval" type="number" min="1" max="365" value="7">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Points value</label>
+            <input class="form-input" id="f-pts" type="number" min="1" max="999" value="10">
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Category name</label>
-          <input class="form-input" id="cf-name" placeholder="e.g. Garden" maxlength="30">
+          <label class="form-label">Next check-in date</label>
+          <input class="form-input" id="f-nextdue" type="date">
         </div>
+        <button class="btn btn-primary btn-full" id="save-task-btn">Save Task</button>
+        <button class="btn btn-secondary btn-full" id="cancel-task-btn">Cancel</button>
       </div>
-      <button class="btn btn-primary btn-full" id="save-cat-btn">Save Category</button>
-      <button class="btn btn-secondary btn-full" id="cancel-cat-btn">Cancel</button>
     </div>
-  </div>
 
-  <!-- ── Delete category confirm ── -->
-  <div class="overlay" id="delete-cat-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">Delete category?</div>
-      <p id="delete-cat-desc" style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;"></p>
-      <button class="btn btn-danger btn-full" id="confirm-delete-cat">Delete</button>
-      <button class="btn btn-secondary btn-full" id="cancel-delete-cat">Cancel</button>
+    <!-- ── Categories sheet ── -->
+    <div class="overlay" id="cats-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">📁 Categories</div>
+        <div id="cats-list"></div>
+        <button class="btn btn-primary btn-full" data-action="add-cat" style="margin-top:8px;">+ Add Category</button>
+        <button class="btn btn-secondary btn-full" id="close-cats-btn">Done</button>
+      </div>
     </div>
-  </div>
 
-  <!-- ── Reward add/edit sheet ── -->
-  <div class="overlay" id="reward-form-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title" id="reward-form-title">Add Reward</div>
-      <div class="form-row">
-        <div class="form-group" style="flex:0 0 80px">
-          <label class="form-label">Emoji</label>
-          <input class="form-input" id="rf-emoji" placeholder="🍬" maxlength="4" style="text-align:center;font-size:22px;">
+    <!-- ── Category form ── -->
+    <div class="overlay" id="cat-form-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="cat-form-title">Add Category</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:0 0 80px">
+            <label class="form-label">Emoji</label>
+            <input class="form-input" id="cf-emoji" placeholder="📦" maxlength="4" style="text-align:center;font-size:22px;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category name</label>
+            <input class="form-input" id="cf-name" placeholder="e.g. Garden" maxlength="30">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" id="save-cat-btn">Save Category</button>
+        <button class="btn btn-secondary btn-full" id="cancel-cat-btn">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ── Delete category confirm ── -->
+    <div class="overlay" id="delete-cat-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Delete category?</div>
+        <p id="delete-cat-desc" style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;"></p>
+        <button class="btn btn-danger btn-full" data-action="confirm-delete-cat">Delete</button>
+        <button class="btn btn-secondary btn-full" id="cancel-delete-cat">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ── Reward form ── -->
+    <div class="overlay" id="reward-form-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="reward-form-title">Add Reward</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:0 0 80px">
+            <label class="form-label">Emoji</label>
+            <input class="form-input" id="rf-emoji" placeholder="🍬" maxlength="4" style="text-align:center;font-size:22px;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reward name</label>
+            <input class="form-input" id="rf-name" placeholder="e.g. Pack of Gummies" maxlength="40">
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Reward name</label>
-          <input class="form-input" id="rf-name" placeholder="e.g. Pack of Gummies" maxlength="40">
+          <label class="form-label">Points cost</label>
+          <input class="form-input" id="rf-cost" type="number" min="1" max="9999" value="50">
         </div>
+        <button class="btn btn-primary btn-full" id="save-reward-btn">Save Reward</button>
+        <button class="btn btn-secondary btn-full" id="cancel-reward-btn">Cancel</button>
       </div>
-      <div class="form-group">
-        <label class="form-label">Points cost</label>
-        <input class="form-input" id="rf-cost" type="number" min="1" max="9999" value="50">
+    </div>
+
+    <!-- ── Delete task ── -->
+    <div class="overlay" id="delete-task-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Delete task?</div>
+        <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;">This will permanently remove the task and its history.</p>
+        <button class="btn btn-danger btn-full" data-action="confirm-delete-task">Delete</button>
+        <button class="btn btn-secondary btn-full" id="cancel-delete-task">Cancel</button>
       </div>
-      <button class="btn btn-primary btn-full" id="save-reward-btn">Save Reward</button>
-      <button class="btn btn-secondary btn-full" id="cancel-reward-btn">Cancel</button>
     </div>
-  </div>
 
-  <!-- ── Delete task confirm ── -->
-  <div class="overlay" id="delete-task-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">Delete task?</div>
-      <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;">This will permanently remove the task and its history.</p>
-      <button class="btn btn-danger btn-full" id="confirm-delete-task">Delete</button>
-      <button class="btn btn-secondary btn-full" id="cancel-delete-task">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── Delete reward confirm ── -->
-  <div class="overlay" id="delete-reward-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">Delete reward?</div>
-      <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;">This will permanently remove this reward.</p>
-      <button class="btn btn-danger btn-full" id="confirm-delete-reward">Delete</button>
-      <button class="btn btn-secondary btn-full" id="cancel-delete-reward">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── Clear all confirm ── -->
-  <div class="overlay" id="clear-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">⚠️ Reset everything?</div>
-      <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.6;">
-        This will erase <strong>all progress, points, and history</strong> and reload the default tasks, categories and rewards from <code>data.json</code>. This cannot be undone.
-      </p>
-      <button class="btn btn-danger btn-full" id="confirm-clear">Yes, reset everything</button>
-      <button class="btn btn-secondary btn-full" id="cancel-clear">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── Import tasks confirm ── -->
-  <div class="overlay" id="import-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">📥 Import shared tasks?</div>
-      <p id="import-desc" style="color:var(--g500);margin-bottom:8px;font-size:13px;line-height:1.6;"></p>
-      <div id="import-preview" style="background:var(--g50);border-radius:var(--rs);padding:10px 12px;margin-bottom:16px;max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--g700);"></div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary btn-full" id="confirm-import-add">Add to my tasks</button>
-        <button class="btn btn-warning btn-full" id="confirm-import-replace">Replace all</button>
+    <!-- ── Delete reward ── -->
+    <div class="overlay" id="delete-reward-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Delete reward?</div>
+        <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.5;">This will permanently remove this reward.</p>
+        <button class="btn btn-danger btn-full" data-action="confirm-delete-reward">Delete</button>
+        <button class="btn btn-secondary btn-full" id="cancel-delete-reward">Cancel</button>
       </div>
-      <button class="btn btn-secondary btn-full" id="cancel-import">Cancel</button>
     </div>
-  </div>
 
-  <!-- ── Import full profile confirm ── -->
-  <div class="overlay" id="profile-import-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">👤 Import full profile?</div>
-      <p style="color:var(--g500);margin-bottom:12px;font-size:13px;line-height:1.6;">
-        This will <strong>completely replace</strong> your current data — tasks, categories, rewards, points, and history.
-      </p>
-      <div id="profile-import-summary" style="background:var(--primary-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--primary);font-weight:600;line-height:1.8;"></div>
-      <button class="btn btn-primary btn-full" id="confirm-profile-import">Import profile</button>
-      <button class="btn btn-secondary btn-full" id="cancel-profile-import">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── Calendar day detail ── -->
-  <div class="overlay" id="cal-day-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">📅 <span id="cal-day-date"></span></div>
-      <div id="cal-day-tasks"></div>
-      <button class="btn btn-primary btn-full" style="margin-top:8px;" onclick="openCalAddTask()">+ Add task completion</button>
-      <button class="btn btn-secondary btn-full" onclick="closeSheets()">Close</button>
-    </div>
-  </div>
-
-  <!-- ── Calendar add task overlay ── -->
-  <div class="overlay" id="cal-add-task-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">📅 Add completions — <span id="cal-add-date-label"></span></div>
-      <div id="cal-add-task-list"></div>
-      <button class="btn btn-primary btn-full" id="confirm-cal-add-btn">✓ Confirm</button>
-      <button class="btn btn-secondary btn-full" id="cancel-cal-add-btn">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── JSON import confirm ── -->
-  <div class="overlay" id="json-import-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">📥 Import data?</div>
-      <p style="color:var(--g500);margin-bottom:12px;font-size:13px;line-height:1.6;">
-        This will <strong>completely replace</strong> your current data — tasks, categories, rewards, points and history.
-      </p>
-      <div id="json-import-summary" style="background:var(--primary-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--primary);font-weight:600;line-height:1.8;"></div>
-      <button class="btn btn-primary btn-full" id="confirm-json-import">Import</button>
-      <button class="btn btn-secondary btn-full" id="cancel-json-import">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── Tasks management sheet ── -->
-  <div class="overlay" id="tasks-sheet-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title" style="display:flex;align-items:center;gap:8px;">
-        <span>📋 Tasks</span>
-        <span style="font-size:13px;color:var(--g400);font-weight:500;" id="tasks-sheet-count"></span>
+    <!-- ── Clear all ── -->
+    <div class="overlay" id="clear-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">⚠️ Reset everything?</div>
+        <p style="color:var(--g500);margin-bottom:20px;font-size:13px;line-height:1.6;">
+          This will erase <strong>all progress, points, and history</strong> and reload the default tasks, categories and rewards from <code>data.json</code>. This cannot be undone.
+        </p>
+        <button class="btn btn-danger btn-full" data-action="confirm-clear">Yes, reset everything</button>
+        <button class="btn btn-secondary btn-full" id="cancel-clear">Cancel</button>
       </div>
-      <div id="tasks-sheet-content"></div>
-      <button class="btn btn-primary btn-full" onclick="_reopenTasksSheet=true;openAddTask()" style="margin-top:8px;">+ Add Task</button>
-      <button class="btn btn-secondary btn-full" onclick="closeSheets()">Close</button>
     </div>
-  </div>
 
-  <!-- ── Delete history entry sheet ── -->
-  <div class="overlay" id="del-history-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title" id="del-hist-name"></div>
-      <div class="done-pts-box" style="background:linear-gradient(135deg,var(--danger-light),#450a0a);">
-        <div class="num" id="del-hist-pts" style="color:var(--danger);">−10</div>
-        <div class="sub" style="color:var(--danger);">points will be removed</div>
-      </div>
-      <div style="background:var(--g50);border-radius:var(--rs);padding:11px 14px;margin-bottom:16px;font-size:13px;color:var(--g400);">
-        📅 <span id="del-hist-date"></span> · Task progress and calendar will be updated
-      </div>
-      <button class="btn btn-danger btn-full" id="confirm-del-history">🗑 Remove activity</button>
-      <button class="btn btn-secondary btn-full" id="cancel-del-history">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── Edit history date sheet ── -->
-  <div class="overlay" id="edit-history-date-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">✏️ Edit date</div>
-      <div class="form-group">
-        <label class="form-label">Change completion date</label>
-        <input class="form-input" id="edit-hist-date-input" type="date">
-      </div>
-      <button class="btn btn-primary btn-full" id="confirm-edit-hist-date">Save</button>
-      <button class="btn btn-secondary btn-full" id="cancel-edit-hist-date">Cancel</button>
-    </div>
-  </div>
-
-  <div class="overlay" id="pending-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title" style="display:flex;align-items:center;gap:8px;">
-        <span>📋 Build Your Cycle</span>
-        <span id="pending-count" style="font-size:13px;color:var(--g400);font-weight:500;"></span>
-      </div>
-      <input class="form-input" id="cycle-name-input" placeholder="Cycle name (optional)…" style="margin-bottom:10px;">
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0 10px;color:var(--g700);">
-        <input type="checkbox" id="cycle-notif-list"> Send all at once (complete in any order)
-      </label>
-      <div id="pending-cats"></div>
-      <button class="btn btn-secondary btn-full" id="add-more-btn" style="margin-bottom:10px;">+ Add tasks</button>
-      <div id="pending-slist" class="slist" style="display:none;">
-        <div class="slh">Selected order</div>
-        <div id="pending-sitems"></div>
-      </div>
-      <div id="temp-task-row" style="display:flex;gap:8px;padding:8px 0;align-items:center;">
-        <input class="form-input" id="temp-task-name" placeholder="Quick task…" style="flex:1;padding:8px 10px;">
-        <input class="form-input" id="temp-task-pts" type="number" value="5" min="1" style="width:56px;padding:8px 6px;">
-        <button class="btn btn-primary" onclick="addTempTask()" style="padding:8px 12px;">+ Add</button>
-      </div>
-      <button class="btn btn-primary btn-full" id="begin-cycle-btn">▶ Begin cycle</button>
-      <button class="btn btn-secondary btn-full" id="cancel-pending-btn">Cancel</button>
-    </div>
-  </div>
-  <input type="file" id="json-import-input" accept=".json" style="display:none">
-  <div class="toast" id="toast"></div>
-  <canvas id="confetti-canvas"></canvas>
-
-<script>
-// ══════════════════════════════════════════
-//  FALLBACK DATA
-// ══════════════════════════════════════════
-// Default data — keep in sync with data.json
-const FALLBACK_CATS = [
-  {name:'Manteniment',emoji:'💪'},{name:'Cuina',emoji:'🍽'},
-  {name:'Bany',emoji:'🚿'},{name:'Habitacio',emoji:'🛏'},
-  {name:'General',emoji:'🧹'},{name:'Roba',emoji:'👕'},
-  {name:'Altres',emoji:'📦'},
-];
-const FALLBACK_TASKS = [
-  {name:'Treure basura',category:'Cuina',defaultInterval:2,pointValue:5},
-  {name:'Rentar plats',category:'Cuina',defaultInterval:1,pointValue:5},
-  {name:'Repas general (cuina)',category:'Cuina',defaultInterval:7,pointValue:10},
-  {name:'Netejar marbre',category:'Cuina',defaultInterval:3,pointValue:5},
-  {name:'Ordenar nevera',category:'Cuina',defaultInterval:14,pointValue:10},
-  {name:'Ordenar estanteries',category:'Cuina',defaultInterval:14,pointValue:5},
-  {name:'Netejar bater',category:'Bany',defaultInterval:7,pointValue:5},
-  {name:'Netejar pica',category:'Bany',defaultInterval:7,pointValue:5},
-  {name:'Netejar dutxa',category:'Bany',defaultInterval:14,pointValue:10},
-  {name:'Posar/Estendre rentadora',category:'Roba',defaultInterval:4,pointValue:10},
-  {name:'Ordenar Armari',category:'Roba',defaultInterval:14,pointValue:10},
-  {name:'Fregar terra',category:'General',defaultInterval:7,pointValue:10},
-  {name:'Netejar Rumi',category:'General',defaultInterval:2,pointValue:5},
-  {name:'Canviar llençols',category:'Habitacio',defaultInterval:14,pointValue:10},
-  {name:'Netejar escriptori',category:'Habitacio',defaultInterval:7,pointValue:5},
-  {name:'Treure la pols',category:'Habitacio',defaultInterval:14,pointValue:10},
-  {name:'Fer exercici',category:'Manteniment',defaultInterval:1,pointValue:10},
-  {name:'Programar',category:'Manteniment',defaultInterval:1,pointValue:10},
-  {name:'Dents',category:'Manteniment',defaultInterval:1,pointValue:5},
-  {name:'Dutxa',category:'Manteniment',defaultInterval:2,pointValue:5},
-  {name:'Fer tasca pendent',category:'Manteniment',defaultInterval:1,pointValue:5},
-];
-const FALLBACK_REWARDS = [
-  {id:'r1',name:'Kinder',emoji:'🍫',cost:10},
-  {id:'r2',name:'Croissants',emoji:'🥐',cost:60},
-  {id:'r3',name:'Galetes',emoji:'🍪',cost:60},
-];
-
-// ══════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════
-let state = { tasks:[], categories:[], totalPoints:0, availablePoints:0, history:[], rewards:[], activeCycles: [], notificationSubscribed: false };
-let expanded = JSON.parse(localStorage.getItem('cleanup_expanded')||'{}');
-function saveExpanded(){ localStorage.setItem('cleanup_expanded',JSON.stringify(expanded)); }
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem('cleanup_v2');
-    if(raw){ state={...state,...JSON.parse(raw)}; if(!state.rewards?.length) state.rewards=FALLBACK_REWARDS; if(!state.categories?.length) state.categories=FALLBACK_CATS; }
-    if(state.activeCycle!==undefined&&!state.activeCycles){ state.activeCycles=state.activeCycle?[state.activeCycle]:[]; delete state.activeCycle; }
-    if(!Array.isArray(state.activeCycles)) state.activeCycles=[];
-    return !raw;
-  } catch(e){ return true; }
-}
-function saveState(){ try{ localStorage.setItem('cleanup_v2',JSON.stringify(state)); }catch(e){} syncStateToIDB(); }
-
-// ── IndexedDB & Notifications ──
-const VAPID_PUBLIC_KEY='BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg';
-let PUSH_SERVER=''; // Set after deploying the Deno server (e.g. 'https://cleanup-push.deno.dev')
-
-function urlB64ToUint8Array(b64){ const s=b64.replace(/-/g,'+').replace(/_/g,'/'); const raw=atob(s); return new Uint8Array([...raw].map(c=>c.charCodeAt(0))); }
-
-async function openAppDB(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open('cleanup_idb',1);
-    req.onupgradeneeded=e=>{
-      const db=e.target.result;
-      if(!db.objectStoreNames.contains('state')) db.createObjectStore('state');
-      if(!db.objectStoreNames.contains('cycle')) db.createObjectStore('cycle');
-      if(!db.objectStoreNames.contains('pending_ops')) db.createObjectStore('pending_ops',{autoIncrement:true});
-      if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
-    };
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-}
-
-async function syncStateToIDB(){
-  if(!('indexedDB' in window)) return;
-  try{
-    const db=await openAppDB();
-    const tx=db.transaction(['state','cycle'],'readwrite');
-    tx.objectStore('state').put(JSON.stringify(state),'current');
-    if(state.activeCycles.length) tx.objectStore('cycle').put(JSON.stringify(state.activeCycles),'active');
-    else tx.objectStore('cycle').delete('active');
-    await new Promise(r=>{tx.oncomplete=r;});
-    db.close();
-  }catch(e){}
-}
-
-let _reconciling=false;
-async function reconcilePendingOps(){
-  if(!('indexedDB' in window)||!state.tasks.length) return;
-  if(_reconciling) return;
-  _reconciling=true;
-  try{
-    const db=await openAppDB();
-    const readTx=db.transaction('pending_ops','readonly');
-    const ops=await new Promise(r=>{ const req=readTx.objectStore('pending_ops').getAll(); req.onsuccess=()=>r(req.result); req.onerror=()=>r([]); });
-    for(const op of ops){
-      if(op.action==='done'){
-        const t=op.taskId?state.tasks.find(x=>x.id===op.taskId):null;
-        if(t){
-          completeTask(t,t.defaultInterval,{silent:true});
-        }else if(op.taskName){
-          // Orphan op (task no longer exists): record points/history directly.
-          state.totalPoints+=op.pointValue||5; state.availablePoints+=op.pointValue||5;
-          state.history.push({name:op.taskName,pts:op.pointValue||5,date:today(),type:'earn',catEmoji:op.catEmoji||''});
-        }
-      }else if(op.action==='snooze'&&op.taskId){
-        const t=state.tasks.find(x=>x.id===op.taskId);
-        if(t) t.nextDue=t.nextDue<today()?today():addDays(t.nextDue,1);
-      }
-    }
-    const cycleTx=db.transaction('cycle','readonly');
-    let cycle=await new Promise(r=>{ const req=cycleTx.objectStore('cycle').get('active'); req.onsuccess=()=>r(req.result); });
-    if(typeof cycle==='string'){ try{ cycle=JSON.parse(cycle); }catch(e){ cycle=[]; } }
-    state.activeCycles=Array.isArray(cycle)?cycle:(cycle?[cycle]:[]);
-    const live=new Set(state.activeCycles.flatMap(c=>c.tasks.map(t=>t.taskId)));
-    state.tasks=state.tasks.filter(t=>t.category!=='__temp__'||live.has(t.id));
-    const clearTx=db.transaction('pending_ops','readwrite');
-    clearTx.objectStore('pending_ops').clear();
-    await new Promise(r=>{clearTx.oncomplete=r;});
-    db.close();
-    saveState();
-    if(ops.length) showToast('Synced notification changes');
-  }catch(e){}
-  finally{ _reconciling=false; }
-}
-
-async function requestNotificationPermission(){
-  if(!('Notification' in window)){ showToast('Notifications not supported'); return; }
-  if(Notification.permission==='granted'){ subscribeToPush(); return; }
-  if(Notification.permission==='denied'){ showToast('Notifications blocked. Enable in browser settings.'); return; }
-  const result=await Notification.requestPermission();
-  if(result==='granted'){ subscribeToPush(); }
-  else{ showToast('Notification permission denied'); }
-  render();
-}
-
-async function subscribeToPush(){
-  if(!('serviceWorker' in navigator)||!VAPID_PUBLIC_KEY||!PUSH_SERVER) return;
-  try{
-    const reg=await navigator.serviceWorker.ready;
-    const sub=await reg.pushManager.subscribe({
-      userVisibleOnly:true,
-      applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-    const res=await fetch(PUSH_SERVER+'/subscribe',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(sub.toJSON())
-    });
-    if(res.ok){ state.notificationSubscribed=true; saveState(); showToast('Notifications enabled!'); }
-    else showToast('Failed to register with push server');
-  }catch(e){ showToast('Could not subscribe: '+e.message); }
-  render();
-}
-
-async function seedFromJson() {
-  let cats=FALLBACK_CATS, tasks=FALLBACK_TASKS, rewards=FALLBACK_REWARDS;
-  try {
-    // cache:'reload' bypasses the service worker cache so edits to data.json are always picked up on reset
-    const res=await fetch('data.json?t='+Date.now(), {cache:'no-store'});
-    if(res.ok){ const d=await res.json(); cats=d.categories||cats; tasks=d.tasks||tasks; rewards=d.rewards||rewards; }
-  } catch(e){}
-  const t=today();
-  state.categories = cats;
-  state.tasks = tasks.map(d=>({id:uid(),name:d.name,category:d.category,defaultInterval:d.defaultInterval,pointValue:d.pointValue,nextDue:t,lastDone:null}));
-  state.rewards = rewards.map(r=>({...r,id:r.id||uid()}));
-  saveState();
-}
-
-async function clearAll() {
-  state={tasks:[],categories:[],totalPoints:0,availablePoints:0,history:[],rewards:[],activeCycles:[]};
-  expanded={}; localStorage.removeItem('cleanup_v2'); localStorage.removeItem('cleanup_expanded');
-  await seedFromJson(); render();
-}
-
-// ══════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════
-function today()  { return new Date().toISOString().split('T')[0]; }
-function uid()    { return Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
-function addDays(s,n){ const d=new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
-function diffDays(s){ const a=new Date(today()+'T12:00:00'),b=new Date(s+'T12:00:00'); return Math.round((b-a)/86400000); }
-function urgency(nextDue){ const d=diffDays(nextDue); if(d<0)return{type:'overdue',d}; if(d===0)return{type:'today',d}; if(d===1)return{type:'soon',d}; return{type:'upcoming',d}; }
-function urgencyLabel(u){ if(u.type==='overdue')return`${Math.abs(u.d)}d overdue`; if(u.type==='today')return'Due today'; if(u.type==='soon')return'Due tomorrow'; return`In ${u.d} days`; }
-const UCARD  = {overdue:'overdue',today:'due-today',soon:'due-soon',upcoming:'upcoming'};
-const UBADGE = {overdue:'badge-overdue',today:'badge-today',soon:'badge-soon',upcoming:'badge-upcoming'};
-
-function catEmoji(name){ if(name==='__temp__') return '⚡'; const c=state.categories.find(x=>x.name===name); return c?c.emoji:'📦'; }
-function isHidden(t){ return t.category==='__temp__'; }
-function fmtDate(s){ if(!s)return'Never'; const[y,m,d]=s.split('-'); return`${d}/${m}/${String(y).slice(2)}`; }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-// ── Populate the category <select> in task form ──
-function populateCatSelect(selectedVal) {
-  const sel = document.getElementById('f-cat');
-  sel.innerHTML = state.categories.map(c =>
-    `<option value="${esc(c.name)}" ${c.name===selectedVal?'selected':''}>${c.emoji} ${esc(c.name)}</option>`
-  ).join('');
-}
-
-// ══════════════════════════════════════════
-//  NAVIGATION
-// ══════════════════════════════════════════
-let currentView='dashboard';
-function navigate(view){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('view-'+view).classList.add('active');
-  document.querySelector(`[data-view="${view}"]`).classList.add('active');
-  document.getElementById('fab-add-reward').style.display=view==='rewards'?'flex':'none';
-  currentView=view; render();
-}
-document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click',()=>navigate(btn.dataset.view)));
-
-// ══════════════════════════════════════════
-//  RENDER
-// ══════════════════════════════════════════
-function render(){
-  document.getElementById('header-points').textContent=`⭐ ${state.availablePoints} pts`;
-  if(currentView==='dashboard') renderDashboard();
-  if(currentView==='rewards')   renderRewards();
-  if(currentView==='calendar')  renderCalendar();
-  if(currentView==='options')   renderOptions();
-}
-
-// ── Dashboard: grouped by category, collapsible ──
-function renderDashboard(){
-  const el=document.getElementById('dashboard-content');
-  if(!state.tasks.length){ el.innerHTML=`<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Tap <b>Edit Tasks</b> to add some!</p></div>`; return; }
-
-  const cats={};
-  state.tasks.filter(t=>!isHidden(t)).forEach(t=>{ (cats[t.category]||(cats[t.category]=[])).push(t); });
-
-  const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
-  const catKeys=Object.keys(cats).sort((a,b)=>(catOrder[a]??999)-(catOrder[b]??999));
-
-  let html='';
-  catKeys.forEach(cat=>{
-    const tasks=cats[cat].sort((a,b)=>diffDays(a.nextDue)-diffDays(b.nextDue));
-    const isOpen=expanded[cat]===true; // default closed
-    const uc={overdue:0,today:0,soon:0};
-    tasks.forEach(t=>{ const u=urgency(t.nextDue).type; if(u in uc)uc[u]++; });
-    let badges='';
-    if(uc.overdue) badges+=`<span class="badge badge-overdue">${uc.overdue} overdue</span>`;
-    if(uc.today)   badges+=`<span class="badge badge-today">${uc.today} today</span>`;
-    if(uc.soon)    badges+=`<span class="badge badge-soon">${uc.soon} tomorrow</span>`;
-
-    html+=`
-      <div class="cat-section">
-        <div class="cat-header ${isOpen?'open':''}" onclick="toggleCat('${esc(cat)}')">
-          <span class="cat-title">${catEmoji(cat)} ${esc(cat)} <span style="color:var(--g400);font-weight:500;font-size:12px;">(${tasks.length})</span></span>
-          <div class="cat-summary">${badges}</div>
-          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    <!-- ── Import sheets ── -->
+    <div class="overlay" id="import-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">📥 Import shared tasks?</div>
+        <p id="import-desc" style="color:var(--g500);margin-bottom:8px;font-size:13px;line-height:1.6;"></p>
+        <div id="import-preview" style="background:var(--g50);border-radius:var(--rs);padding:10px 12px;margin-bottom:16px;max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--g700);"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-full" id="confirm-import-add">Add to my tasks</button>
+          <button class="btn btn-warning btn-full" id="confirm-import-replace">Replace all</button>
         </div>
-        <div class="cat-body ${isOpen?'open':''}">
-          <div class="cat-body-inner">${tasks.map(t=>taskCard(t)).join('')}</div>
-        </div>
-      </div>`;
-  });
-  html+=`<button class="manage-cats-btn" onclick="openTasksSheet()" style="margin-top:12px;">
-    <span>📋 Edit Tasks</span>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-  </button>`;
-  el.innerHTML=html;
-}
-
-function toggleCat(cat){ expanded[cat]=!expanded[cat]; saveExpanded(); renderDashboard(); }
-
-function taskCard(t){
-  const u=urgency(t.nextDue);
-  const last=t.lastDone?`Last done ${fmtDate(t.lastDone)}`:'Never done';
-  return `
-    <div class="task-card ${UCARD[u.type]}">
-      <div class="task-name">${esc(t.name)}</div>
-      <div class="task-meta">${last}</div>
-      <div class="badge-row">
-        <span class="badge ${UBADGE[u.type]}">${urgencyLabel(u)}</span>
-        <span class="badge badge-pts">⭐ ${t.pointValue} pts</span>
+        <button class="btn btn-secondary btn-full" id="cancel-import">Cancel</button>
       </div>
-      <div class="task-actions">
-        <button class="btn btn-done" onclick="openDoneSheet('${t.id}')">✓ Done</button>
-        <button class="btn btn-snooze" onclick="snoozeTask('${t.id}')">📅 Snooze</button>
-      </div>
-    </div>`;
-}
-
-// ── Tasks management ──
-function renderTasksSheetContent(){
-  const el=document.getElementById('tasks-sheet-content');
-  if(!state.tasks.length){
-    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--g400);font-size:13px;">No tasks yet.</div>`;
-    document.getElementById('tasks-sheet-count').textContent='';
-    return;
-  }
-  document.getElementById('tasks-sheet-count').textContent=`(${state.tasks.filter(t=>!isHidden(t)).length})`;
-  const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
-  const grouped={};
-  state.tasks.filter(t=>!isHidden(t)).forEach(t=>{ (grouped[t.category]||(grouped[t.category]=[])).push(t); });
-  const catKeys=Object.keys(grouped).sort((a,b)=>(catOrder[a]??999)-(catOrder[b]??999));
-  let html='';
-  catKeys.forEach(cat=>{
-    const tasks=grouped[cat].sort((a,b)=>a.name.localeCompare(b.name));
-    html+=`<div class="cat-section" style="margin-bottom:4px;">
-      <div class="cat-header open" style="padding:8px 12px;cursor:default;">
-        <span class="cat-title" style="font-size:13px;">${catEmoji(cat)} ${esc(cat)} <span style="color:var(--g400);font-weight:500;font-size:11px;">(${tasks.length})</span></span>
-      </div>
-      <div style="background:var(--g100);border-radius:0 0 var(--r) var(--r);border-top:1px solid var(--g200);">
-        <div style="padding:4px 10px 10px;">${tasks.map(t=>`
-          <div class="list-item" style="margin-bottom:4px;">
-            <div class="list-item-info">
-              <div class="list-item-name">${esc(t.name)}</div>
-              <div class="list-item-sub">every ${t.defaultInterval}d · ⭐${t.pointValue} pts · next ${fmtDate(t.nextDue)}</div>
-            </div>
-            <div class="list-item-actions">
-              <button class="icon-btn icon-btn-edit" onclick="openEditTask('${t.id}')">✏️</button>
-              <button class="icon-btn icon-btn-delete" onclick="openDeleteTaskSheet('${t.id}')">🗑️</button>
-            </div>
-          </div>`).join('')}</div>
-      </div>
-    </div>`;
-  });
-  // Add Manage Categories
-  html+=`<button class="manage-cats-btn" onclick="openCatsSheet()" style="margin-bottom:0;">
-    <span>📁 Manage Categories</span>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-  </button>`;
-  el.innerHTML=html;
-}
-
-function openTasksSheet(){
-  renderTasksSheetContent();
-  document.getElementById('tasks-sheet-overlay').classList.add('open');
-}
-
-// ── Rewards ──
-function renderRewards(){
-  const el=document.getElementById('rewards-content');
-  let html=`
-    <div class="pts-hero">
-      <div class="pts-num" id="pts-num" onclick="startEditPts()" title="Tap to edit">${state.availablePoints}</div>
-      <div class="pts-label">Available Points <span style="opacity:.5;font-size:10px;">(tap to edit)</span></div>
-      <div class="pts-sub">Total earned all time: ${state.totalPoints} pts</div>
     </div>
-    <div class="slabel">🍬 Candy Rewards</div>`;
 
-  state.rewards.forEach(r=>{
-    const can=state.availablePoints>=r.cost;
-    html+=`
-      <div class="reward-card">
-        <div class="reward-emoji">${r.emoji}</div>
-        <div class="reward-info"><div class="reward-name">${esc(r.name)}</div><div class="reward-cost">⭐ ${r.cost} pts</div></div>
-        <div class="reward-actions">
-          <button class="btn-redeem" ${can?'':'disabled'} onclick="redeemReward('${r.id}')">${can?'Redeem':`Need ${r.cost-state.availablePoints} more`}</button>
-          <button class="icon-btn icon-btn-edit"   onclick="openEditReward('${r.id}')" style="font-size:13px;">✏️</button>
-          <button class="icon-btn icon-btn-delete" onclick="openDeleteRewardSheet('${r.id}')" style="font-size:13px;">🗑️</button>
-        </div>
-      </div>`;
-  });
-
-  html+=`
-    <div class="slabel" style="margin-top:20px;">🔄 Cycle</div>
-    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary" onclick="openPendingTasksSheet()" style="flex:1;justify-content:center;">▶ Begin cycle</button>
+    <div class="overlay" id="profile-import-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">👤 Import full profile?</div>
+        <p style="color:var(--g500);margin-bottom:12px;font-size:13px;line-height:1.6;">This will <strong>completely replace</strong> your current data.</p>
+        <div id="profile-import-summary" style="background:var(--primary-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--primary);font-weight:600;line-height:1.8;"></div>
+        <button class="btn btn-primary btn-full" id="confirm-profile-import">Import profile</button>
+        <button class="btn btn-secondary btn-full" id="cancel-profile-import">Cancel</button>
       </div>
-      <div id="active-cycles-list" style="margin-top:10px;"></div>
-    </div>`;
-
-  el.innerHTML=html;
-  renderActiveCycles();
-}
-
-function renderActiveCycles(){
-  const el=document.getElementById('active-cycles-list');
-  if(!state.activeCycles.length){ el.innerHTML=''; return; }
-  el.innerHTML=state.activeCycles.map(c=>{
-    const done=c.notifMode==='simultaneous'?c.tasks.filter(t=>t.done).length:c.currentIdx;
-    const total=c.tasks.length;
-    const pct=total?Math.round(done/total*100):0;
-    return `
-      <div class="cycle-item" style="background:var(--g50);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <strong style="font-size:13px;">${esc(c.name||'Cycle')}</strong>
-          <span style="font-size:11px;color:var(--g400);">${done}/${total} tasks</span>
-        </div>
-        <div style="height:4px;background:var(--g200);border-radius:2px;margin:6px 0;overflow:hidden;">
-          <div style="height:100%;width:${pct}%;background:var(--primary);border-radius:2px;transition:width .3s;"></div>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:6px;">
-          <button class="btn btn-danger" style="padding:5px 10px;font-size:11px;" onclick="cancelCycle('${c.cycleId}')">✕ Cancel</button>
-          <button class="btn btn-primary" style="padding:5px 10px;font-size:11px;" onclick="openAddTasksToCycle('${c.cycleId}')">✏️ Edit</button>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function cancelCycle(cycleId){
-  const cycle=state.activeCycles.find(c=>c.cycleId===cycleId);
-  if(cycle) cleanupTempTasks(cycle);
-  state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==cycleId);
-  saveState(); renderRewards(); showToast('Cycle cancelled');
-}
-
-function openAddTasksToCycle(cycleId){
-  _pendingSelection=new Set();
-  _pendingOrder=[];
-  _pendingTempTasks=[];
-  _pendingCycleId=cycleId;
-  const cycle=state.activeCycles.find(c=>c.cycleId===cycleId);
-  if(cycle){
-    cycle.tasks.forEach(t=>{
-      if(t.taskId) _pendingSelection.add(t.taskId);
-    });
-    _pendingOrder=cycle.tasks.map(t=>t.taskId).filter(Boolean);
-    document.getElementById('cycle-name-input').value=cycle.name||'';
-    document.getElementById('cycle-notif-list').checked=cycle.notifMode==='simultaneous';
-  }
-  _pendingExpanded={};
-  renderPendingTasksSheet();
-  document.getElementById('pending-overlay').classList.add('open');
-}
-
-function updateCycle(cycleId){
-  const items=_pendingOrder.filter(id=>_pendingSelection.has(id));
-  if(!items.length){ showToast('Select at least one task'); return; }
-  const cycle=state.activeCycles.find(c=>c.cycleId===cycleId);
-  if(!cycle) return;
-  const currentTaskIdx=Math.min(cycle.currentIdx,items.length-1);
-  cycle.tasks=items.map(id=>{
-    const t=state.tasks.find(x=>x.id===id);
-    if(!t) return null;
-    const isTemp=!!_pendingTempTasks.find(x=>x.id===id);
-    return{taskId:t.id,isTemp,done:false,name:t.name,catEmoji:catEmoji(t.category),pointValue:t.pointValue};
-  }).filter(Boolean);
-  cycle.currentIdx=currentTaskIdx;
-  cycle.name=document.getElementById('cycle-name-input').value.trim()||cycle.name||'Cycle';
-  cycle.notifMode=document.getElementById('cycle-notif-list').checked?'simultaneous':'individual';
-  saveState(); closeSheets(); showToast('Cycle updated');
-  _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; _pendingCycleId=null;
-  render();
-}
-
-// ── Options view ──
-function renderOptions(){
-  const el=document.getElementById('options-content');
-  let html='';
-
-  // Backup
-  html+=`
-    <div class="slabel" style="margin-top:4px;">💾 Backup</div>
-    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📤 Export data</div>
-      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Save everything — tasks, rewards, points and history — to a JSON file.</div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="exportJson()">Download JSON backup</button>
     </div>
-    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📥 Import data</div>
-      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Restore from a previously exported JSON file. Replaces all current data.</div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="triggerFileImport()">Choose JSON file</button>
-    </div>`;
 
-  // Recent Activity
-  if(state.history.length){
-    const recent=[...state.history].reverse().slice(0,30);
-    html+=`<div class="slabel" style="margin-top:20px;">📋 Recent Activity</div>`;
-    html+=recent.map((h,di)=>{
-      const origIdx=state.history.length-1-di;
-      return `
-      <div class="history-item">
-        <div class="hdot ${h.type}"></div>
-        <div class="hname">${h.catEmoji&&h.type==='earn'?h.catEmoji+' ':''}${esc(h.name)}</div>
-        <div class="hpts ${h.type}">${h.type==='redeem'?'−':'+'}${h.pts} pts</div>
-        <div class="hdate">${fmtDate(h.date)}</div>
-        ${h.type==='earn'?`<button class="icon-btn icon-btn-edit" onclick="openEditHistoryDate(${origIdx})" style="width:28px;height:28px;font-size:12px;">✏️</button>`:''}
-        ${h.type==='earn'?`<button class="icon-btn icon-btn-delete" onclick="openDeleteHistorySheet(${origIdx})" style="width:28px;height:28px;font-size:12px;">🗑️</button>`:''}
-      </div>`;
-    }).join('');
-  }
-
-  // Danger Zone
-  html+=`
-    <div class="danger-zone" style="margin-top:20px;">
-      <h3>⚠️ Danger Zone</h3>
-      <p style="font-size:12px;color:var(--g700);margin-bottom:12px;">Clears all data and resets to the defaults in <code>data.json</code>.</p>
-      <button class="btn btn-danger" style="width:100%;justify-content:center;padding:10px;" onclick="openClearConfirm()">🗑 Reset all data to defaults</button>
-    </div>`;
-
-  el.innerHTML=html;
-}
-
-// ══════════════════════════════════════════
-//  DONE SHEET
-// ══════════════════════════════════════════
-let doneTaskId=null, doneInt=7;
-function openDoneSheet(id){
-  const t=state.tasks.find(x=>x.id===id); if(!t)return;
-  doneTaskId=id; doneInt=t.defaultInterval;
-  document.getElementById('done-task-name').textContent='✓ '+t.name;
-  document.getElementById('done-pts').textContent='+'+t.pointValue;
-  document.getElementById('int-val').textContent=doneInt;
-  document.getElementById('done-overlay').classList.add('open');
-}
-document.getElementById('int-minus').addEventListener('click',()=>{ if(doneInt>1){doneInt--;document.getElementById('int-val').textContent=doneInt;} });
-document.getElementById('int-plus').addEventListener('click',()=>{ doneInt++;document.getElementById('int-val').textContent=doneInt; });
-// Single canonical "complete a task today" path. Used by the in-app Done sheet
-// and by reconcilePendingOps() (notification Done). Mutates state but does NOT
-// saveState/render — the caller decides when to persist/repaint. interval falls
-// back to the task's default. Pass {silent:true} to skip toast/confetti (batch).
-function completeTask(t, interval, opts){
-  if(!t) return false;
-  opts=opts||{};
-  const prev=state.availablePoints;
-  const iv=interval||t.defaultInterval;
-  t.lastDone=today(); t.nextDue=addDays(today(),iv);
-  state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
-  state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn',catEmoji:catEmoji(t.category)});
-  if(!opts.silent){
-    showToast(`✓ Done! +${t.pointValue} pts`); bumpPts();
-    if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
-  }
-  return true;
-}
-document.getElementById('confirm-done').addEventListener('click',()=>{
-  const t=state.tasks.find(x=>x.id===doneTaskId); if(!t)return;
-  completeTask(t,doneInt);
-  saveState(); closeSheets(); render();
-});
-document.getElementById('cancel-done').addEventListener('click',closeSheets);
-document.getElementById('done-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
-
-// ══════════════════════════════════════════
-//  SNOOZE
-// ══════════════════════════════════════════
-function snoozeTask(id){
-  const t=state.tasks.find(x=>x.id===id); if(!t)return;
-  const td=today();
-  if(t.nextDue<td){ t.nextDue=td; showToast('Snoozed — reset to today'); }
-  else{ t.nextDue=addDays(t.nextDue,1); showToast('Snoozed +1 day'); }
-  saveState(); render();
-}
-
-// ══════════════════════════════════════════
-//  TASK FORM
-// ══════════════════════════════════════════
-let editTaskId=null;
-let _reopenTasksSheet=false;
-
-function openAddTask(){
-  editTaskId=null;
-  document.getElementById('task-form-title').textContent='Add Task';
-  populateCatSelect(state.categories[0]?.name||'');
-  document.getElementById('f-name').value='';
-  document.getElementById('f-interval').value='7';
-  document.getElementById('f-pts').value='10';
-  document.getElementById('f-nextdue').value=today();
-  document.getElementById('task-form-overlay').classList.add('open');
-  setTimeout(()=>document.getElementById('f-name').focus(),300);
-}
-function openEditTask(id){
-  const t=state.tasks.find(x=>x.id===id); if(!t)return;
-  editTaskId=id;
-  document.getElementById('task-form-title').textContent='Edit Task';
-  populateCatSelect(t.category);
-  document.getElementById('f-name').value=t.name;
-  document.getElementById('f-interval').value=t.defaultInterval;
-  document.getElementById('f-pts').value=t.pointValue;
-  document.getElementById('f-nextdue').value=t.nextDue;
-  document.getElementById('task-form-overlay').classList.add('open');
-}
-document.getElementById('save-task-btn').addEventListener('click',()=>{
-  const name=document.getElementById('f-name').value.trim();
-  if(!name){showToast('Please enter a task name');return;}
-  const data={
-    name,category:document.getElementById('f-cat').value,
-    defaultInterval:Math.max(1,parseInt(document.getElementById('f-interval').value)||7),
-    pointValue:Math.max(1,parseInt(document.getElementById('f-pts').value)||10),
-    nextDue:document.getElementById('f-nextdue').value||today(),
-  };
-  if(editTaskId){ const t=state.tasks.find(x=>x.id===editTaskId); if(t)Object.assign(t,data); showToast('Task updated!'); }
-  else{ state.tasks.push({id:uid(),lastDone:null,...data}); showToast('Task added!'); }
-  saveState(); closeSheets(); render();
-  if(_reopenPendingAfterSave){ _reopenPendingAfterSave=false; setTimeout(()=>{ openPendingTasksSheet(); },100); }
-  if(_reopenTasksSheet){ _reopenTasksSheet=false; setTimeout(()=>{ openTasksSheet(); },100); }
-});
-document.getElementById('cancel-task-btn').addEventListener('click',closeSheets);
-document.getElementById('task-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
-
-// ══════════════════════════════════════════
-//  CATEGORIES MANAGEMENT
-// ══════════════════════════════════════════
-let editCatName=null; // original name of category being edited
-let deleteCatName=null;
-
-function openCatsSheet(){
-  renderCatsList();
-  document.getElementById('cats-overlay').classList.add('open');
-}
-
-function renderCatsList(){
-  const el=document.getElementById('cats-list');
-  if(!state.categories.length){ el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No categories yet.</div>`; return; }
-  el.innerHTML=state.categories.map((c,i)=>{
-    const taskCount=state.tasks.filter(t=>t.category===c.name).length;
-    return `
-      <div class="list-item" data-cat-idx="${i}">
-        <div class="drag-handle">⠿</div>
-        <div style="font-size:24px;flex-shrink:0;">${c.emoji}</div>
-        <div class="list-item-info">
-          <div class="list-item-name">${esc(c.name)}</div>
-          <div class="list-item-sub">${taskCount} task${taskCount!==1?'s':''}</div>
-        </div>
-        <div class="list-item-actions">
-          <button class="icon-btn icon-btn-edit"   onclick="openEditCat('${esc(c.name)}')">✏️</button>
-          <button class="icon-btn icon-btn-delete" onclick="openDeleteCatSheet('${esc(c.name)}')">🗑️</button>
-        </div>
-      </div>`;
-  }).join('');
-  initCatDrag(el);
-}
-
-function initCatDrag(container){
-  let dragIdx=-1, clone=null, startY=0;
-
-  function items(){ return [...container.querySelectorAll('[data-cat-idx]')]; }
-  function py(e){ return (e.touches?e.touches[0]:e).clientY; }
-  function others(){ return items().filter(el=>parseInt(el.dataset.catIdx)!==dragIdx); }
-
-  function start(e, item){
-    dragIdx=parseInt(item.dataset.catIdx);
-    startY=py(e);
-    item.classList.add('dragging');
-    const r=item.getBoundingClientRect();
-    clone=item.cloneNode(true);
-    Object.assign(clone.style,{position:'fixed',top:r.top+'px',left:r.left+'px',
-      width:r.width+'px',zIndex:9999,opacity:.9,margin:'0',
-      boxShadow:'0 8px 28px rgba(0,0,0,.22)',pointerEvents:'none'});
-    document.body.appendChild(clone);
-  }
-
-  function move(e){
-    if(!clone)return;
-    e.preventDefault();
-    const dy=py(e)-startY;
-    const r=items()[dragIdx].getBoundingClientRect();
-    clone.style.top=(r.top+dy)+'px';
-    others().forEach(el=>el.classList.remove('drag-over'));
-    const y=py(e);
-    for(const el of others()){
-      const br=el.getBoundingClientRect();
-      if(y<br.top+br.height*0.5){ el.classList.add('drag-over'); break; }
-    }
-  }
-
-  function end(e){
-    if(!clone)return;
-    const y=(e.changedTouches?e.changedTouches[0]:e).clientY;
-    let insertOrigIdx=null;
-    for(const el of others()){
-      const br=el.getBoundingClientRect();
-      if(y<br.top+br.height*0.5){ insertOrigIdx=parseInt(el.dataset.catIdx); break; }
-    }
-    const cats=[...state.categories];
-    const [moved]=cats.splice(dragIdx,1);
-    if(insertOrigIdx===null){ cats.push(moved); }
-    else{ cats.splice(insertOrigIdx>dragIdx?insertOrigIdx-1:insertOrigIdx,0,moved); }
-    state.categories=cats;
-    clone.remove(); clone=null;
-    items().forEach(el=>el.classList.remove('dragging','drag-over'));
-    document.removeEventListener('mousemove',move);
-    document.removeEventListener('mouseup',end);
-    saveState(); renderCatsList(); render();
-  }
-
-  container.addEventListener('touchstart',e=>{
-    const item=e.target.closest('.drag-handle')?.closest('[data-cat-idx]');
-    if(!item)return;
-    e.preventDefault();
-    start(e,item);
-  },{passive:false});
-  container.addEventListener('touchmove',move,{passive:false});
-  container.addEventListener('touchend',end);
-
-  container.addEventListener('mousedown',e=>{
-    const item=e.target.closest('.drag-handle')?.closest('[data-cat-idx]');
-    if(!item)return;
-    start(e,item);
-    document.addEventListener('mousemove',move);
-    document.addEventListener('mouseup',end);
-  });
-}
-
-document.getElementById('add-cat-btn').addEventListener('click',openAddCat);
-document.getElementById('close-cats-btn').addEventListener('click',closeSheets);
-document.getElementById('cats-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
-
-function openAddCat(){
-  editCatName=null;
-  document.getElementById('cat-form-title').textContent='Add Category';
-  document.getElementById('cf-emoji').value='📦';
-  document.getElementById('cf-name').value='';
-  document.getElementById('cat-form-overlay').classList.add('open');
-  setTimeout(()=>document.getElementById('cf-name').focus(),300);
-}
-function openEditCat(name){
-  const c=state.categories.find(x=>x.name===name); if(!c)return;
-  editCatName=name;
-  document.getElementById('cat-form-title').textContent='Edit Category';
-  document.getElementById('cf-emoji').value=c.emoji;
-  document.getElementById('cf-name').value=c.name;
-  document.getElementById('cat-form-overlay').classList.add('open');
-}
-document.getElementById('save-cat-btn').addEventListener('click',()=>{
-  const name=document.getElementById('cf-name').value.trim();
-  if(!name){showToast('Please enter a category name');return;}
-  const emoji=document.getElementById('cf-emoji').value.trim()||'📦';
-
-  if(editCatName){
-    // Rename category in all tasks too
-    state.tasks.forEach(t=>{ if(t.category===editCatName) t.category=name; });
-    const c=state.categories.find(x=>x.name===editCatName);
-    if(c){ c.name=name; c.emoji=emoji; }
-    // Update collapse key
-    if(expanded[editCatName]!==undefined){ expanded[name]=expanded[editCatName]; delete expanded[editCatName]; saveExpanded(); }
-    showToast('Category updated!');
-  } else {
-    if(state.categories.find(x=>x.name===name)){showToast('Category already exists');return;}
-    state.categories.push({name,emoji});
-    showToast('Category added!');
-  }
-  saveState();
-  document.getElementById('cat-form-overlay').classList.remove('open');
-  renderCatsList(); // refresh the cats sheet (keep it open)
-  render();
-});
-document.getElementById('cancel-cat-btn').addEventListener('click',()=>{ document.getElementById('cat-form-overlay').classList.remove('open'); });
-document.getElementById('cat-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget) document.getElementById('cat-form-overlay').classList.remove('open'); });
-
-function openDeleteCatSheet(name){
-  deleteCatName=name;
-  const taskCount=state.tasks.filter(t=>t.category===name).length;
-  document.getElementById('delete-cat-desc').textContent =
-    taskCount>0
-      ? `"${name}" has ${taskCount} task${taskCount>1?'s':''} assigned to it. Those tasks will be moved to "Other".`
-      : `"${name}" has no tasks assigned. It will be permanently removed.`;
-  document.getElementById('delete-cat-overlay').classList.add('open');
-}
-document.getElementById('confirm-delete-cat').addEventListener('click',()=>{
-  // Move orphaned tasks to "Other" (or first available category)
-  const fallback = state.categories.find(c=>c.name!==deleteCatName)?.name || 'Other';
-  state.tasks.forEach(t=>{ if(t.category===deleteCatName) t.category=fallback; });
-  state.categories=state.categories.filter(c=>c.name!==deleteCatName);
-  // Ensure "Other" exists if we used it as fallback
-  if(fallback==='Other' && !state.categories.find(c=>c.name==='Other')){
-    state.categories.push({name:'Other',emoji:'📦'});
-  }
-  delete expanded[deleteCatName]; saveExpanded();
-  saveState();
-  document.getElementById('delete-cat-overlay').classList.remove('open');
-  renderCatsList();
-  showToast('Category deleted');
-  render();
-});
-document.getElementById('cancel-delete-cat').addEventListener('click',()=>{ document.getElementById('delete-cat-overlay').classList.remove('open'); });
-document.getElementById('delete-cat-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget) document.getElementById('delete-cat-overlay').classList.remove('open'); });
-
-// ══════════════════════════════════════════
-//  REWARD FORM
-// ══════════════════════════════════════════
-let editRewardId=null;
-document.getElementById('fab-add-reward').addEventListener('click',openAddReward);
-function openAddReward(){
-  editRewardId=null;
-  document.getElementById('reward-form-title').textContent='Add Reward';
-  document.getElementById('rf-emoji').value='🎁';
-  document.getElementById('rf-name').value='';
-  document.getElementById('rf-cost').value='50';
-  document.getElementById('reward-form-overlay').classList.add('open');
-  setTimeout(()=>document.getElementById('rf-name').focus(),300);
-}
-function openEditReward(id){
-  const r=state.rewards.find(x=>x.id===id); if(!r)return;
-  editRewardId=id;
-  document.getElementById('reward-form-title').textContent='Edit Reward';
-  document.getElementById('rf-emoji').value=r.emoji;
-  document.getElementById('rf-name').value=r.name;
-  document.getElementById('rf-cost').value=r.cost;
-  document.getElementById('reward-form-overlay').classList.add('open');
-}
-document.getElementById('save-reward-btn').addEventListener('click',()=>{
-  const name=document.getElementById('rf-name').value.trim();
-  if(!name){showToast('Please enter a reward name');return;}
-  const data={emoji:document.getElementById('rf-emoji').value.trim()||'🎁',name,cost:Math.max(1,parseInt(document.getElementById('rf-cost').value)||50)};
-  if(editRewardId){ const r=state.rewards.find(x=>x.id===editRewardId); if(r)Object.assign(r,data); showToast('Reward updated!'); }
-  else{ state.rewards.push({id:uid(),...data}); showToast('Reward added!'); }
-  saveState(); closeSheets(); render();
-});
-document.getElementById('cancel-reward-btn').addEventListener('click',closeSheets);
-document.getElementById('reward-form-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
-
-// ══════════════════════════════════════════
-//  DELETE TASK
-// ══════════════════════════════════════════
-let deleteTaskId=null;
-function openDeleteTaskSheet(id){ deleteTaskId=id; document.getElementById('delete-task-overlay').classList.add('open'); }
-document.getElementById('confirm-delete-task').addEventListener('click',()=>{ state.tasks=state.tasks.filter(t=>t.id!==deleteTaskId); saveState(); closeSheets(); showToast('Task deleted'); render(); });
-document.getElementById('cancel-delete-task').addEventListener('click',closeSheets);
-document.getElementById('delete-task-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
-
-// ══════════════════════════════════════════
-//  DELETE REWARD
-// ══════════════════════════════════════════
-let deleteRewardId=null;
-function openDeleteRewardSheet(id){ deleteRewardId=id; document.getElementById('delete-reward-overlay').classList.add('open'); }
-document.getElementById('confirm-delete-reward').addEventListener('click',()=>{ state.rewards=state.rewards.filter(r=>r.id!==deleteRewardId); saveState(); closeSheets(); showToast('Reward deleted'); render(); });
-document.getElementById('cancel-delete-reward').addEventListener('click',closeSheets);
-document.getElementById('delete-reward-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
-
-// ══════════════════════════════════════════
-//  REDEEM
-// ══════════════════════════════════════════
-function redeemReward(id){
-  const r=state.rewards.find(x=>x.id===id); if(!r||state.availablePoints<r.cost)return;
-  state.availablePoints-=r.cost;
-  state.history.push({name:r.name,pts:r.cost,date:today(),type:'redeem'});
-  saveState(); triggerConfetti(); showToast(`🎉 Enjoy your ${r.name}!`); render();
-}
-
-// ══════════════════════════════════════════
-//  DELETE HISTORY ENTRY
-// ══════════════════════════════════════════
-let deleteHistoryEntry = null;
-
-function openDeleteHistorySheet(origIdx) {
-  const h = state.history[origIdx];
-  if (!h || h.type !== 'earn') return;
-  deleteHistoryEntry = h;
-  document.getElementById('del-hist-name').textContent = h.name;
-  document.getElementById('del-hist-pts').textContent = '−' + h.pts;
-  document.getElementById('del-hist-date').textContent = fmtDate(h.date);
-  document.getElementById('del-history-overlay').classList.add('open');
-}
-document.getElementById('confirm-del-history').addEventListener('click', () => {
-  const h = deleteHistoryEntry; if (!h) return;
-  const idx = state.history.indexOf(h); if (idx === -1) { closeSheets(); return; }
-
-  state.history.splice(idx, 1);
-  state.availablePoints = Math.max(0, state.availablePoints - h.pts);
-  state.totalPoints     = Math.max(0, state.totalPoints     - h.pts);
-
-  recalcTaskFromHistory(h.name);
-
-  deleteHistoryEntry = null;
-  saveState(); closeSheets(); showToast('Activity removed'); render();
-});
-document.getElementById('cancel-del-history').addEventListener('click', closeSheets);
-document.getElementById('del-history-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
-
-// ── Edit history date ──
-function openEditHistoryDate(origIdx){
-  const h=state.history[origIdx];
-  if(!h||h.type!=='earn') return;
-  editHistoryIdx=origIdx;
-  document.getElementById('edit-hist-date-input').value=h.date;
-  document.getElementById('edit-history-date-overlay').classList.add('open');
-}
-document.getElementById('confirm-edit-hist-date').addEventListener('click',()=>{
-  if(editHistoryIdx===null) return;
-  const newDate=document.getElementById('edit-hist-date-input').value;
-  if(!newDate){ showToast('Select a date'); return; }
-  const h=state.history[editHistoryIdx];
-  if(!h) return;
-  h.date=newDate;
-  recalcTaskFromHistory(h.name);
-  editHistoryIdx=null;
-  saveState(); closeSheets(); showToast('Date updated'); render();
-});
-document.getElementById('cancel-edit-hist-date').addEventListener('click', closeSheets);
-document.getElementById('edit-history-date-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheets(); });
-
-// ══════════════════════════════════════════
-//  PENDING TASKS CYCLE
-// ══════════════════════════════════════════
-let _pendingSelection=new Set();
-let _pendingOrder=[];
-let _pendingTempTasks=[];
-let _pendingExpanded={};
-let _reopenPendingAfterSave=false;
-let _pendingCycleId=null;
-let _calAddSelection=new Set();
-
-function openPendingTasksSheet(){
-  _pendingSelection=new Set();
-  _pendingOrder=[];
-  _pendingTempTasks=[];
-  _pendingExpanded={};
-  _pendingCycleId=null;
-  document.getElementById('cycle-name-input').value='';
-  document.getElementById('cycle-notif-list').checked=false;
-  renderPendingTasksSheet();
-  document.getElementById('pending-overlay').classList.add('open');
-}
-
-function renderPendingTasksSheet(){
-  const catsEl=document.getElementById('pending-cats');
-  const td=today();
-  let html='';
-  state.categories.forEach(c=>{
-    const catTasks=state.tasks.filter(t=>t.category===c.name);
-    if(!catTasks.length) return;
-    const selCount=catTasks.filter(t=>_pendingSelection.has(t.id)).length;
-    const isOpen=_pendingExpanded[c.name]===true;
-    html+=`<div style="margin-bottom:4px;">
-      <div class="cat-header ${isOpen?'open':''}" onclick="togglePendingCat('${esc(c.name)}')" style="padding:8px 12px;">
-        <span class="cat-title" style="font-size:13px;">${c.emoji} ${esc(c.name)} <span style="color:var(--g400);font-size:11px;">(${selCount}/${catTasks.length})</span></span>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    <!-- ── JSON import ── -->
+    <div class="overlay" id="json-import-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">📥 Import data?</div>
+        <p style="color:var(--g500);margin-bottom:12px;font-size:13px;line-height:1.6;">This will <strong>completely replace</strong> your current data.</p>
+        <div id="json-import-summary" style="background:var(--primary-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--primary);font-weight:600;line-height:1.8;"></div>
+        <button class="btn btn-primary btn-full" id="confirm-json-import">Import</button>
+        <button class="btn btn-secondary btn-full" id="cancel-json-import">Cancel</button>
       </div>
-      <div class="cat-body ${isOpen?'open':''}"><div class="cat-body-inner" style="padding:4px 8px 8px;">`;
-    catTasks.sort((a,b)=>a.name.localeCompare(b.name));
-    catTasks.forEach(t=>{
-      const ch=_pendingSelection.has(t.id)?'checked':'';
-      const urg=t.nextDue<td?'🔴 ':t.nextDue===td?'🟡 ':'';
-      html+=`<div class="prow"><input class="pcb" type="checkbox" ${ch} onchange="togglePendingTask('${t.id}')">
-        <span class="ptn">${urg}${esc(t.name)}</span><span class="ppts">⭐${t.pointValue}</span></div>`;
-    });
-    html+=`</div></div></div>`;
-  });
-  catsEl.innerHTML=html;
-
-  const sEl=document.getElementById('pending-slist');
-  const siEl=document.getElementById('pending-sitems');
-  if(_pendingSelection.size){
-    sEl.style.display='block';
-    siEl.innerHTML=_pendingOrder.map((id,i)=>{
-      let t=state.tasks.find(x=>x.id===id);
-      if(!t) t=_pendingTempTasks.find(x=>x.id===id);
-      if(!t) return '';
-      return `<div class="srow"><span style="color:var(--g400);font-size:11px;width:16px;">${i+1}.</span>
-        <span class="snm">${esc(t.name)}</span><span class="spt">⭐${t.pointValue}</span>
-        <button class="srm" onclick="removeFromPending('${id}')">✕</button></div>`;
-    }).join('');
-  }else{ sEl.style.display='none'; }
-  document.getElementById('pending-count').textContent=_pendingSelection.size?`(${_pendingSelection.size} selected) `:'';
-  const _btn=document.getElementById('begin-cycle-btn');
-  const _label=_pendingCycleId?'Update cycle':'Begin cycle';
-  _btn.textContent=`▶ ${_label}${_pendingSelection.size?` (${_pendingSelection.size})`:''}`;
-  _btn.onclick=_pendingCycleId?()=>updateCycle(_pendingCycleId):beginCycle;
-}
-
-function togglePendingCat(name){ _pendingExpanded[name]=!_pendingExpanded[name]; renderPendingTasksSheet(); }
-
-function togglePendingTask(id){
-  if(_pendingSelection.has(id)){ _pendingSelection.delete(id); _pendingOrder=_pendingOrder.filter(x=>x!==id); }
-  else{ _pendingSelection.add(id); if(!_pendingOrder.includes(id)) _pendingOrder.push(id); }
-  renderPendingTasksSheet();
-}
-
-function removeFromPending(id){
-  _pendingSelection.delete(id);
-  _pendingOrder=_pendingOrder.filter(x=>x!==id);
-  const tempIdx=_pendingTempTasks.findIndex(t=>t.id===id);
-  if(tempIdx!==-1){
-    state.tasks=state.tasks.filter(t=>t.id!==id);
-    _pendingTempTasks.splice(tempIdx,1);
-  }
-  renderPendingTasksSheet();
-}
-
-function addTempTask(){
-  const name=document.getElementById('temp-task-name').value.trim();
-  if(!name){ showToast('Enter a task name'); return; }
-  const pts=Math.max(1,parseInt(document.getElementById('temp-task-pts').value)||5);
-  const task={id:uid(),name,category:'__temp__',defaultInterval:1,pointValue:pts,nextDue:'9999-12-31',lastDone:null};
-  state.tasks.push(task);
-  _pendingTempTasks.push(task);
-  _pendingSelection.add(task.id);
-  _pendingOrder.push(task.id);
-  document.getElementById('temp-task-name').value='';
-  renderPendingTasksSheet();
-}
-
-function cleanupTempTasks(cycle){
-  const ids=new Set(cycle.tasks.filter(ct=>ct.isTemp).map(ct=>ct.taskId).filter(Boolean));
-  if(ids.size) state.tasks=state.tasks.filter(t=>!ids.has(t.id));
-}
-
-document.getElementById('add-more-btn').addEventListener('click',()=>{
-  _reopenPendingAfterSave=true; closeSheets(); openAddTask();
-});
-
-async function beginCycle(){
-  const items=_pendingOrder.filter(id=>_pendingSelection.has(id));
-  if(!items.length){ showToast('Select at least one task'); return; }
-  const td=today();
-  const cycle={
-    cycleId:uid(),
-    name:document.getElementById('cycle-name-input').value.trim()||'Cycle',
-    notifMode:document.getElementById('cycle-notif-list').checked?'simultaneous':'individual',
-    tasks:items.map(id=>{
-      const t=state.tasks.find(x=>x.id===id);
-      if(!t) return null;
-      const isTemp=!!_pendingTempTasks.find(x=>x.id===id);
-      return{taskId:t.id,isTemp,done:false,name:t.name,catEmoji:catEmoji(t.category),pointValue:t.pointValue};
-    }).filter(Boolean),
-    currentIdx:0,startedAt:td
-  };
-  state.activeCycles.push(cycle);
-  saveState();
-  closeSheets();
-  try{
-    const reg=await navigator.serviceWorker.ready;
-    if(cycle.notifMode==='simultaneous'){
-      for(let i=0;i<cycle.tasks.length;i++){
-        const t=cycle.tasks[i];
-        reg.showNotification(`${t.catEmoji||''} ${t.name}`,{
-          body:`⭐ ${t.pointValue} pts · tap Done when finished`,
-          icon:'/icon.svg',tag:`cycle-${cycle.cycleId}-task-${i}`,requireInteraction:true,
-          actions:[{action:'done',title:'✓ Done'},{action:'snooze',title:'📅 Skip'}],
-          data:{type:'cycle-task',cycleId:cycle.cycleId,taskIndex:i}
-        });
-      }
-    }else{
-      const first=cycle.tasks[0];
-      reg.showNotification(`Task 1/${cycle.tasks.length}`,{
-        body:`${first.catEmoji} ${first.name} · ⭐ ${first.pointValue} pts`,
-        icon:'/icon.svg',tag:'cycle-task-'+cycle.cycleId,requireInteraction:true,
-        actions:[{action:'done',title:'✓ Done'},{action:'snooze',title:'📅 Snooze +1d'}],
-        data:{type:'cycle-task',cycleId:cycle.cycleId,taskIndex:0}
-      });
-    }
-  }catch(e){}
-  showToast(`Cycle started — ${cycle.tasks.length} tasks`);
-  _pendingTempTasks.forEach(t=>{ if(!_pendingSelection.has(t.id)) state.tasks=state.tasks.filter(x=>x.id!==t.id); });
-  _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; _pendingCycleId=null;
-}
-
-document.getElementById('cancel-pending-btn').addEventListener('click',()=>{ _pendingTempTasks.forEach(t=>{ state.tasks=state.tasks.filter(x=>x.id!==t.id); }); if(_pendingTempTasks.length) saveState(); _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); });
-document.getElementById('pending-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget){ _pendingTempTasks.forEach(t=>{ state.tasks=state.tasks.filter(x=>x.id!==t.id); }); if(_pendingTempTasks.length) saveState(); _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); } });
-
-// ══════════════════════════════════════════
-//  EDIT POINTS
-// ══════════════════════════════════════════
-function startEditPts(){
-  const numEl=document.getElementById('pts-num'); if(!numEl)return;
-  const input=document.createElement('input');
-  input.className='pts-edit'; input.type='number'; input.value=state.availablePoints; input.min='0';
-  numEl.replaceWith(input); input.focus(); input.select();
-  function commit(){
-    const val=Math.max(0,parseInt(input.value)||0);
-    const diff=val-state.availablePoints;
-    state.availablePoints=val;
-    if(diff!==0) state.history.push({name:'Manual adjustment',pts:Math.abs(diff),date:today(),type:diff>=0?'earn':'redeem'});
-    saveState(); render();
-  }
-  input.addEventListener('keydown',e=>{ if(e.key==='Enter')commit(); if(e.key==='Escape')render(); });
-  input.addEventListener('blur',commit);
-}
-
-// ══════════════════════════════════════════
-//  CLEAR ALL
-// ══════════════════════════════════════════
-function openClearConfirm(){ document.getElementById('clear-overlay').classList.add('open'); }
-document.getElementById('confirm-clear').addEventListener('click',async()=>{ closeSheets(); showToast('Resetting…'); await clearAll(); showToast('✓ Reset to defaults'); });
-document.getElementById('cancel-clear').addEventListener('click',closeSheets);
-document.getElementById('clear-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeSheets(); });
-
-// ══════════════════════════════════════════
-//  SHARE
-// ══════════════════════════════════════════
-function b64enc(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
-function b64dec(s)  { return JSON.parse(decodeURIComponent(escape(atob(s)))); }
-function copyUrl(url){ navigator.clipboard.writeText(url).catch(()=>prompt('Copy this link:',url)); }
-
-function shareTasksUrl(){
-  const payload={ tasks:state.tasks.map(t=>({name:t.name,category:t.category,defaultInterval:t.defaultInterval,pointValue:t.pointValue})), categories:state.categories };
-  copyUrl(location.origin+location.pathname+'?import='+b64enc(payload));
-  showToast('✓ Task list link copied!');
-}
-
-function shareProfileUrl(){
-  const payload={ tasks:state.tasks, categories:state.categories, rewards:state.rewards, availablePoints:state.availablePoints, totalPoints:state.totalPoints, history:state.history.slice(-100) };
-  copyUrl(location.origin+location.pathname+'?profile='+b64enc(payload));
-  showToast('✓ Full profile link copied!');
-}
-
-function checkImportParam(){
-  const params=new URLSearchParams(location.search);
-
-  // ── Full profile import ──
-  const profEncoded=params.get('profile');
-  if(profEncoded){
-    try{
-      const p=b64dec(profEncoded);
-      document.getElementById('profile-import-summary').innerHTML=
-        `📋 ${(p.tasks||[]).length} tasks<br>`+
-        `📁 ${(p.categories||[]).length} categories<br>`+
-        `🍬 ${(p.rewards||[]).length} rewards<br>`+
-        `⭐ ${p.availablePoints||0} available points`;
-      document.getElementById('confirm-profile-import').onclick=()=>{
-        state.tasks           = p.tasks           || [];
-        state.categories      = p.categories      || FALLBACK_CATS;
-        state.rewards         = p.rewards         || FALLBACK_REWARDS;
-        state.availablePoints = p.availablePoints || 0;
-        state.totalPoints     = p.totalPoints     || 0;
-        state.history         = p.history         || [];
-        saveState(); closeSheets(); showToast('✓ Profile imported!');
-        history.replaceState({},'',location.pathname); render();
-      };
-      document.getElementById('cancel-profile-import').onclick=()=>{ closeSheets(); history.replaceState({},'',location.pathname); };
-      document.getElementById('profile-import-overlay').classList.add('open');
-    }catch(e){ console.warn('Profile import error',e); }
-    return;
-  }
-
-  // ── Task list import ──
-  const encoded=params.get('import'); if(!encoded)return;
-  try{
-    const raw=b64dec(encoded);
-    // Support old format (plain array) and new format ({tasks, categories})
-    const tasks    = Array.isArray(raw) ? raw : (raw.tasks      || []);
-    const cats     = Array.isArray(raw) ? []  : (raw.categories || []);
-    if(!tasks.length) return;
-
-    const catNote = cats.length ? ` and ${cats.length} categor${cats.length>1?'ies':'y'}` : '';
-    document.getElementById('import-desc').textContent=`Someone shared ${tasks.length} task${tasks.length>1?'s':''}${catNote} with you:`;
-    document.getElementById('import-preview').innerHTML=tasks.map(t=>`• ${esc(t.name)} <span style="color:var(--g400)">(${esc(t.category)}, every ${t.defaultInterval}d, ⭐${t.pointValue}pts)</span>`).join('<br>');
-
-    const doImport=(replace)=>{
-      const t=today();
-      if(replace) state.tasks=[];
-      tasks.forEach(d=>{ if(!state.tasks.find(x=>x.name===d.name)) state.tasks.push({id:uid(),name:d.name,category:d.category,defaultInterval:d.defaultInterval,pointValue:d.pointValue,nextDue:t,lastDone:null}); });
-      // Merge new categories without overwriting existing ones
-      cats.forEach(c=>{ if(!state.categories.find(x=>x.name===c.name)) state.categories.push(c); });
-      saveState(); closeSheets(); showToast(`✓ Imported!`);
-      history.replaceState({},'',location.pathname); render();
-    };
-    document.getElementById('confirm-import-add').onclick=()=>doImport(false);
-    document.getElementById('confirm-import-replace').onclick=()=>doImport(true);
-    document.getElementById('cancel-import').onclick=()=>{ closeSheets(); history.replaceState({},'',location.pathname); };
-    document.getElementById('import-overlay').classList.add('open');
-  }catch(e){ console.warn('Import error',e); }
-}
-
-// ══════════════════════════════════════════
-//  CALENDAR
-// ══════════════════════════════════════════
-let calYear = new Date().getFullYear();
-let calMonth = new Date().getMonth();
-let calTaskFilter = null; // null = all tasks, string = specific task name
-
-const CAL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const CAL_DAYS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-
-function buildDayMap(taskName) {
-  const map = {};
-  state.history
-    .filter(h => h.type === 'earn' && (!taskName || h.name === taskName))
-    .forEach(h => { (map[h.date] = map[h.date] || []).push(h); });
-  return map;
-}
-
-function renderCalendar() {
-  const el = document.getElementById('calendar-content');
-  const dayMap  = buildDayMap(calTaskFilter);
-  const todayStr = today();
-  const firstDay = new Date(calYear, calMonth, 1);
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-  let startDow = firstDay.getDay(); // 0 = Sun
-  startDow = startDow === 0 ? 6 : startDow - 1; // Mon = 0
-
-  let html = '';
-
-  if (calTaskFilter) {
-    html += `<button class="cal-back" onclick="calTaskFilter=null;renderCalendar()">← All tasks</button>`;
-    html += `<div class="cal-task-name">📅 ${esc(calTaskFilter)}</div>`;
-  }
-
-  html += `
-    <div class="cal-header">
-      <button class="cal-arrow" onclick="calPrev()">‹</button>
-      <div class="cal-title">${CAL_MONTHS[calMonth]} ${calYear}</div>
-      <button class="cal-arrow" onclick="calNext()">›</button>
     </div>
-    <div class="cal-grid">`;
 
-  CAL_DAYS.forEach(d => { html += `<div class="cal-dh">${d}</div>`; });
-  for (let i = 0; i < startDow; i++) html += `<div class="cal-day empty"></div>`;
+    <!-- ── Calendar day detail ── -->
+    <div class="overlay" id="cal-day-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">📅 <span id="cal-day-date"></span></div>
+        <div id="cal-day-tasks"></div>
+        <button class="btn btn-primary btn-full" data-action="cal-add-completion" style="margin-top:8px;">+ Add task completion</button>
+        <button class="btn btn-secondary btn-full" onclick="document.getElementById('cal-day-overlay').classList.remove('open')">Close</button>
+      </div>
+    </div>
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const entries = dayMap[dateStr] || [];
-    const count   = entries.length;
-    const isToday = dateStr === todayStr;
-    let cls = calTaskFilter
-      ? (count > 0 ? 'ct' : 'c0')
-      : (count === 0 ? 'c0' : count === 1 ? 'c1' : count === 2 ? 'c2' : count === 3 ? 'c3' : 'c4');
-    if (isToday) cls += ' today';
-    const click = `onclick="openCalDay('${dateStr}')"`;
-    html += `<div class="cal-day ${cls}" ${click}>${day}${count > 0 ? `<span class="cal-count">${count}</span>` : ''}</div>`;
-  }
+    <!-- ── Calendar add task ── -->
+    <div class="overlay" id="cal-add-task-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">📅 Add completions — <span id="cal-add-date-label"></span></div>
+        <div id="cal-add-task-list"></div>
+        <button class="btn btn-primary btn-full" id="confirm-cal-add-btn">✓ Confirm</button>
+        <button class="btn btn-secondary btn-full" id="cancel-cal-add-btn">Cancel</button>
+      </div>
+    </div>
 
-  html += `</div>`;
+    <!-- ── Cycle builder ── -->
+    <div class="overlay" id="pending-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" style="display:flex;align-items:center;gap:8px;">
+          <span>📋 Build Your Cycle</span>
+          <span id="pending-count" style="font-size:13px;color:var(--g400);font-weight:500;"></span>
+        </div>
+        <input class="form-input" id="cycle-name-input" placeholder="Cycle name (optional)…" style="margin-bottom:10px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0 10px;color:var(--g700);">
+          <input type="checkbox" id="cycle-notif-list"> Send all at once (complete in any order)
+        </label>
+        <div id="pending-cats"></div>
+        <button class="btn btn-secondary btn-full" data-action="add-more-to-cycle" style="margin-bottom:10px;">+ Add tasks</button>
+        <div id="pending-slist" class="slist" style="display:none;">
+          <div class="slh">Selected order</div>
+          <div id="pending-sitems"></div>
+        </div>
+        <div id="temp-task-row" style="display:flex;gap:8px;padding:8px 0;align-items:center;">
+          <input class="form-input" id="temp-task-name" placeholder="Quick task…" style="flex:1;padding:8px 10px;">
+          <input class="form-input" id="temp-task-pts" type="number" value="5" min="1" style="width:56px;padding:8px 6px;">
+          <button class="btn btn-primary" data-action="add-temp-task" style="padding:8px 12px;">+ Add</button>
+        </div>
+        <button class="btn btn-primary btn-full" id="begin-cycle-btn">▶ Begin cycle</button>
+        <button class="btn btn-secondary btn-full" id="cancel-pending-btn">Cancel</button>
+      </div>
+    </div>
 
-  if (!calTaskFilter) {
-    html += `
-      <div class="cal-legend">
-        <span style="font-size:11px;color:var(--g500);margin-right:2px;">Tasks done:</span>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:var(--g100);"></div>0</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#0a2e1c;"></div>1</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#14532d;"></div>2</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#15803d;"></div>3</div>
-        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#22c55e;"></div>4+</div>
-      </div>`;
-  }
+    <!-- ── Delete history ── -->
+    <div class="overlay" id="del-history-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="del-hist-name"></div>
+        <div class="done-pts-box" style="background:linear-gradient(135deg,var(--danger-light),#450a0a);">
+          <div class="num" id="del-hist-pts" style="color:var(--danger);">−10</div>
+          <div class="sub" style="color:var(--danger);">points will be removed</div>
+        </div>
+        <div style="background:var(--g50);border-radius:var(--rs);padding:11px 14px;margin-bottom:16px;font-size:13px;color:var(--g400);">
+          📅 <span id="del-hist-date"></span> · Task progress and calendar will be updated
+        </div>
+        <button class="btn btn-danger btn-full" data-action="confirm-del-history">🗑 Remove activity</button>
+        <button class="btn btn-secondary btn-full" id="cancel-del-history">Cancel</button>
+      </div>
+    </div>
 
-  el.innerHTML = html;
-}
+    <!-- ── Edit history date ── -->
+    <div class="overlay" id="edit-history-date-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">✏️ Edit date</div>
+        <div class="form-group">
+          <label class="form-label">Change completion date</label>
+          <input class="form-input" id="edit-hist-date-input" type="date">
+        </div>
+        <button class="btn btn-primary btn-full" id="confirm-edit-hist-date">Save</button>
+        <button class="btn btn-secondary btn-full" id="cancel-edit-hist-date">Cancel</button>
+      </div>
+    </div>
 
-function calPrev() { if(calMonth===0){calMonth=11;calYear--;}else calMonth--; renderCalendar(); }
-function calNext() { if(calMonth===11){calMonth=0;calYear++;}else calMonth++; renderCalendar(); }
+    <input type="file" id="json-import-input" accept=".json" style="display:none">
+    <div class="toast" id="toast"></div>
+    <canvas id="confetti-canvas"></canvas>
+  </div>
 
-function openCalDay(dateStr) {
-  const entries = state.history.filter(h => h.type === 'earn' && h.date === dateStr);
-  const [y, m, d] = dateStr.split('-');
-  document.getElementById('cal-day-date').textContent = `${d}/${m}/${y.slice(2)}`;
-  calAddDate = dateStr;
-  if(entries.length){
-    document.getElementById('cal-day-tasks').innerHTML = entries.map(h => {
-      const task=state.tasks.find(t=>t.name===h.name);
-      const emoji=h.catEmoji||(task?catEmoji(task.category):'');
-      return `<div class="cal-day-task" onclick="openTaskCalendar('${esc(h.name).replace(/'/g,"\\'")}')">
-        <div class="cal-day-task-name">${emoji?emoji+' ':''}${esc(h.name)}</div>
-        <div class="cal-day-task-pts">+${h.pts} pts</div>
-        <div class="cal-day-task-arrow">📅</div>
-      </div>`;
-    }).join('');
-  }else{
-    document.getElementById('cal-day-tasks').innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks done on this day.</div>';
-  }
-  document.getElementById('cal-day-overlay').classList.add('open');
-}
-
-function openTaskCalendar(name) {
-  calTaskFilter = name;
-  closeSheets();
-  if (currentView !== 'calendar') navigate('calendar');
-  else renderCalendar();
-}
-
-function openCalAddTask(){
-  if(!calAddDate){ showToast('No date selected'); return; }
-  const [y,m,d]=calAddDate.split('-');
-  document.getElementById('cal-add-date-label').textContent=`${d}/${m}/${y.slice(2)}`;
-  _calAddSelection=new Set();
-  state.history.filter(h=>h.type==='earn'&&h.date===calAddDate).forEach(h=>{
-    const t=state.tasks.find(x=>x.name===h.name);
-    if(t) _calAddSelection.add(t.id);
-  });
-  renderCalAddList();
-  document.getElementById('cal-add-task-overlay').classList.add('open');
-}
-
-function toggleCalAdd(id){
-  if(_calAddSelection.has(id)) _calAddSelection.delete(id);
-  else _calAddSelection.add(id);
-  renderCalAddList();
-}
-
-function renderCalAddList(){
-  const el=document.getElementById('cal-add-task-list');
-  const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
-  const sorted=[...state.tasks.filter(t=>!isHidden(t))].sort((a,b)=>a.name.localeCompare(b.name));
-  if(!sorted.length){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks available.</div>'; return; }
-  const grouped={};
-  sorted.forEach(t=>{ (grouped[t.category]||(grouped[t.category]=[])).push(t); });
-  const catKeys=Object.keys(grouped).sort((a,b)=>(catOrder[a]??999)-(catOrder[b]??999));
-  let html='';
-  catKeys.forEach(cat=>{
-    html+=`<div style="margin-bottom:4px;"><div style="font-size:12px;font-weight:700;color:var(--g400);padding:6px 4px;">${catEmoji(cat)} ${esc(cat)}</div>`;
-    grouped[cat].forEach(t=>{
-      const ch=_calAddSelection.has(t.id)?'checked':'';
-      html+=`<div class="prow"><input class="pcb" type="checkbox" ${ch} onchange="toggleCalAdd('${t.id}')">
-        <span class="ptn">${esc(t.name)}</span><span class="ppts">⭐${t.pointValue}</span></div>`;
-    });
-    html+=`</div>`;
-  });
-  el.innerHTML=html;
-}
-
-function confirmCalAdd(){
-  if(!_calAddSelection.size||!calAddDate) return;
-  const prev=state.availablePoints;
-  _calAddSelection.forEach(id=>{
-    const t=state.tasks.find(x=>x.id===id);
-    if(!t) return;
-    state.history.push({name:t.name,pts:t.pointValue,date:calAddDate,type:'earn',catEmoji:catEmoji(t.category)});
-    state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
-    recalcTaskFromHistory(t.name);
-  });
-  saveState();
-  document.getElementById('cal-add-task-overlay').classList.remove('open');
-  openCalDay(calAddDate);
-  renderCalendar();
-  render();
-  showToast(`✓ ${_calAddSelection.size} task(s) added`);
-  if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
-}
-
-document.getElementById('confirm-cal-add-btn').addEventListener('click', confirmCalAdd);
-document.getElementById('cancel-cal-add-btn').addEventListener('click',()=>{ document.getElementById('cal-add-task-overlay').classList.remove('open'); });
-
-// ══════════════════════════════════════════
-//  JSON EXPORT / IMPORT
-// ══════════════════════════════════════════
-function exportJson() {
-  const payload = { tasks:state.tasks, categories:state.categories, rewards:state.rewards, availablePoints:state.availablePoints, totalPoints:state.totalPoints, history:state.history };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = `cleanup-backup-${today()}.json`; a.click();
-  URL.revokeObjectURL(url);
-  showToast('✓ Backup downloaded!');
-}
-
-function triggerFileImport() { document.getElementById('json-import-input').click(); }
-
-let pendingImport = null;
-document.getElementById('json-import-input').addEventListener('change', function() {
-  const file = this.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if(!data.tasks || !Array.isArray(data.tasks)) { showToast('Invalid backup file'); return; }
-      pendingImport = data;
-      document.getElementById('json-import-summary').innerHTML =
-        `📋 ${data.tasks.length} tasks<br>`+
-        `📁 ${(data.categories||[]).length} categories<br>`+
-        `🍬 ${(data.rewards||[]).length} rewards<br>`+
-        `⭐ ${data.availablePoints||0} available points<br>`+
-        `📜 ${(data.history||[]).length} history entries`;
-      document.getElementById('json-import-overlay').classList.add('open');
-    } catch(err) { showToast('Could not read file'); }
-    this.value = '';
-  };
-  reader.readAsText(file);
-});
-document.getElementById('confirm-json-import').addEventListener('click', () => {
-  if(!pendingImport) return;
-  state.tasks           = pendingImport.tasks           || [];
-  state.categories      = pendingImport.categories      || FALLBACK_CATS;
-  state.rewards         = pendingImport.rewards         || FALLBACK_REWARDS;
-  state.availablePoints = pendingImport.availablePoints || 0;
-  state.totalPoints     = pendingImport.totalPoints     || 0;
-  state.history         = pendingImport.history         || [];
-  pendingImport = null;
-  saveState(); closeSheets(); showToast('✓ Data imported!'); render();
-});
-document.getElementById('cancel-json-import').addEventListener('click', closeSheets);
-document.getElementById('json-import-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeSheets(); });
-
-// ══════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════
-let editHistoryIdx=null;
-let calAddDate=null;
-
-function recalcTaskFromHistory(taskName){
-  const task=state.tasks.find(t=>t.name===taskName);
-  if(!task) return;
-  const remaining=state.history
-    .filter(e=>e.type==='earn'&&e.name===taskName)
-    .sort((a,b)=>b.date.localeCompare(a.date));
-  if(remaining.length>0){
-    task.lastDone=remaining[0].date;
-    task.nextDue=addDays(remaining[0].date,task.defaultInterval);
-  }else{
-    task.lastDone=null;
-    task.nextDue=today();
-  }
-}
-
-function closeSheets(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); doneTaskId=null; deleteTaskId=null; deleteRewardId=null; deleteCatName=null; editHistoryIdx=null; calAddDate=null; _calAddSelection=new Set(); }
-let toastTimer;
-function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
-function bumpPts(){ const el=document.getElementById('header-points'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
-
-// ══════════════════════════════════════════
-//  CONFETTI
-// ══════════════════════════════════════════
-function triggerConfetti(){
-  const canvas=document.getElementById('confetti-canvas'),ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-  const COLS=['#4f46e5','#7c3aed','#10b981','#f59e0b','#ef4444','#ec4899','#06b6d4'];
-  const p=Array.from({length:90},()=>({x:Math.random()*canvas.width,y:-10-Math.random()*40,w:Math.random()*8+5,h:Math.random()*5+3,color:COLS[Math.floor(Math.random()*COLS.length)],vx:(Math.random()-.5)*5,vy:Math.random()*3+2,rot:Math.random()*360,rv:(Math.random()-.5)*12}));
-  let f=0;
-  function draw(){ ctx.clearRect(0,0,canvas.width,canvas.height); p.forEach(p=>{ ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.color;ctx.globalAlpha=Math.max(0,1-f/110);ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.rot+=p.rv; }); f++; if(f<130)requestAnimationFrame(draw); else ctx.clearRect(0,0,canvas.width,canvas.height); }
-  draw();
-}
-
-// ══════════════════════════════════════════
-//  SERVICE WORKER
-// ══════════════════════════════════════════
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-  navigator.serviceWorker.addEventListener('message',async e=>{
-    if(e.data.type==='task-action'){
-      await reconcilePendingOps(); render();
-    }else if(e.data.type==='cycle-complete'){
-      await reconcilePendingOps(); render(); showToast(`🎉 All ${e.data.count} tasks done!`);
-    }else if(e.data.type==='navigate'){
-      if(e.data.view) navigate(e.data.view);
-    }
-  });
-  document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='visible') reconcilePendingOps().then(render);
-  });
-}
-
-// ══════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════
-async function init(){ const firstRun=loadState(); if(firstRun)await seedFromJson(); await reconcilePendingOps(); checkImportParam(); render(); const p=new URLSearchParams(location.search); if(p.get('view')==='pending'){ history.replaceState({},'',location.pathname); openPendingTasksSheet(); } }
-init();
-</script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
