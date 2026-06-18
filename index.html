@@ -591,9 +591,10 @@
   <div class="overlay" id="cal-add-task-overlay">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-title">📅 Add task completion</div>
+      <div class="sheet-title">📅 Add completions — <span id="cal-add-date-label"></span></div>
       <div id="cal-add-task-list"></div>
-      <button class="btn btn-secondary btn-full" onclick="closeSheets()">Cancel</button>
+      <button class="btn btn-primary btn-full" id="confirm-cal-add-btn">✓ Confirm</button>
+      <button class="btn btn-secondary btn-full" id="cancel-cal-add-btn">Cancel</button>
     </div>
   </div>
 
@@ -876,7 +877,8 @@ function urgencyLabel(u){ if(u.type==='overdue')return`${Math.abs(u.d)}d overdue
 const UCARD  = {overdue:'overdue',today:'due-today',soon:'due-soon',upcoming:'upcoming'};
 const UBADGE = {overdue:'badge-overdue',today:'badge-today',soon:'badge-soon',upcoming:'badge-upcoming'};
 
-function catEmoji(name){ const c=state.categories.find(x=>x.name===name); return c?c.emoji:'📦'; }
+function catEmoji(name){ if(name==='__temp__') return '⚡'; const c=state.categories.find(x=>x.name===name); return c?c.emoji:'📦'; }
+function isHidden(t){ return t.category==='__temp__'; }
 function fmtDate(s){ if(!s)return'Never'; const[y,m,d]=s.split('-'); return`${d}/${m}/${String(y).slice(2)}`; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -919,7 +921,7 @@ function renderDashboard(){
   if(!state.tasks.length){ el.innerHTML=`<div class="empty-state"><div class="icon">🏠</div><p>No tasks yet.<br>Tap <b>Edit Tasks</b> to add some!</p></div>`; return; }
 
   const cats={};
-  state.tasks.forEach(t=>{ (cats[t.category]||(cats[t.category]=[])).push(t); });
+  state.tasks.filter(t=>!isHidden(t)).forEach(t=>{ (cats[t.category]||(cats[t.category]=[])).push(t); });
 
   const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
   const catKeys=Object.keys(cats).sort((a,b)=>(catOrder[a]??999)-(catOrder[b]??999));
@@ -982,10 +984,10 @@ function renderTasksSheetContent(){
     document.getElementById('tasks-sheet-count').textContent='';
     return;
   }
-  document.getElementById('tasks-sheet-count').textContent=`(${state.tasks.length})`;
+  document.getElementById('tasks-sheet-count').textContent=`(${state.tasks.filter(t=>!isHidden(t)).length})`;
   const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
   const grouped={};
-  state.tasks.forEach(t=>{ (grouped[t.category]||(grouped[t.category]=[])).push(t); });
+  state.tasks.filter(t=>!isHidden(t)).forEach(t=>{ (grouped[t.category]||(grouped[t.category]=[])).push(t); });
   const catKeys=Object.keys(grouped).sort((a,b)=>(catOrder[a]??999)-(catOrder[b]??999));
   let html='';
   catKeys.forEach(cat=>{
@@ -1085,6 +1087,8 @@ function renderActiveCycles(){
 }
 
 function cancelCycle(cycleId){
+  const cycle=state.activeCycles.find(c=>c.cycleId===cycleId);
+  if(cycle) cleanupTempTasks(cycle);
   state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==cycleId);
   saveState(); renderRewards(); showToast('Cycle cancelled');
 }
@@ -1115,10 +1119,10 @@ function updateCycle(cycleId){
   if(!cycle) return;
   const currentTaskIdx=Math.min(cycle.currentIdx,items.length-1);
   cycle.tasks=items.map(id=>{
-    const t=state.tasks.find(x=>x.id===id)||_pendingTempTasks.find(x=>x.id===id);
+    const t=state.tasks.find(x=>x.id===id);
     if(!t) return null;
-    const cat=t.isTemp?null:state.categories.find(c=>c.name===t.category);
-    return{taskId:t.isTemp?null:t.id,isTemp:!!t.isTemp,name:t.name,catEmoji:cat?cat.emoji:t.catEmoji||'',pointValue:t.pointValue};
+    const isTemp=!!_pendingTempTasks.find(x=>x.id===id);
+    return{taskId:t.id,isTemp,name:t.name,catEmoji:catEmoji(t.category),pointValue:t.pointValue};
   }).filter(Boolean);
   cycle.currentIdx=currentTaskIdx;
   cycle.name=document.getElementById('cycle-name-input').value.trim()||cycle.name||'Cycle';
@@ -1561,6 +1565,7 @@ let _pendingTempTasks=[];
 let _pendingExpanded={};
 let _reopenPendingAfterSave=false;
 let _pendingCycleId=null;
+let _calAddSelection=new Set();
 
 function openPendingTasksSheet(){
   _pendingSelection=new Set();
@@ -1632,7 +1637,10 @@ function removeFromPending(id){
   _pendingSelection.delete(id);
   _pendingOrder=_pendingOrder.filter(x=>x!==id);
   const tempIdx=_pendingTempTasks.findIndex(t=>t.id===id);
-  if(tempIdx!==-1) _pendingTempTasks.splice(tempIdx,1);
+  if(tempIdx!==-1){
+    state.tasks=state.tasks.filter(t=>t.id!==id);
+    _pendingTempTasks.splice(tempIdx,1);
+  }
   renderPendingTasksSheet();
 }
 
@@ -1640,12 +1648,18 @@ function addTempTask(){
   const name=document.getElementById('temp-task-name').value.trim();
   if(!name){ showToast('Enter a task name'); return; }
   const pts=Math.max(1,parseInt(document.getElementById('temp-task-pts').value)||5);
-  const task={id:'temp-'+uid(),name,pointValue:pts,isTemp:true,catEmoji:'⚡'};
+  const task={id:uid(),name,category:'__temp__',defaultInterval:1,pointValue:pts,nextDue:'9999-12-31',lastDone:null};
+  state.tasks.push(task);
   _pendingTempTasks.push(task);
   _pendingSelection.add(task.id);
   _pendingOrder.push(task.id);
   document.getElementById('temp-task-name').value='';
   renderPendingTasksSheet();
+}
+
+function cleanupTempTasks(cycle){
+  const ids=new Set(cycle.tasks.filter(ct=>ct.isTemp).map(ct=>ct.taskId).filter(Boolean));
+  if(ids.size) state.tasks=state.tasks.filter(t=>!ids.has(t.id));
 }
 
 document.getElementById('add-more-btn').addEventListener('click',()=>{
@@ -1661,10 +1675,10 @@ async function beginCycle(){
     name:document.getElementById('cycle-name-input').value.trim()||'Cycle',
     notifMode:document.getElementById('cycle-notif-list').checked?'list':'individual',
     tasks:items.map(id=>{
-      const t=state.tasks.find(x=>x.id===id)||_pendingTempTasks.find(x=>x.id===id);
+      const t=state.tasks.find(x=>x.id===id);
       if(!t) return null;
-      const cat=t.isTemp?null:state.categories.find(c=>c.name===t.category);
-      return{taskId:t.isTemp?null:t.id,isTemp:!!t.isTemp,name:t.name,catEmoji:cat?cat.emoji:t.catEmoji||'',pointValue:t.pointValue};
+      const isTemp=!!_pendingTempTasks.find(x=>x.id===id);
+      return{taskId:t.id,isTemp,name:t.name,catEmoji:catEmoji(t.category),pointValue:t.pointValue};
     }).filter(Boolean),
     currentIdx:0,startedAt:td
   };
@@ -1682,11 +1696,12 @@ async function beginCycle(){
     });
   }catch(e){}
   showToast(`Cycle started — ${cycle.tasks.length} tasks`);
+  _pendingTempTasks.forEach(t=>{ if(!_pendingSelection.has(t.id)) state.tasks=state.tasks.filter(x=>x.id!==t.id); });
   _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; _pendingCycleId=null;
 }
 
-document.getElementById('cancel-pending-btn').addEventListener('click',()=>{ _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); });
-document.getElementById('pending-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget){ _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); } });
+document.getElementById('cancel-pending-btn').addEventListener('click',()=>{ _pendingTempTasks.forEach(t=>{ state.tasks=state.tasks.filter(x=>x.id!==t.id); }); if(_pendingTempTasks.length) saveState(); _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); });
+document.getElementById('pending-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget){ _pendingTempTasks.forEach(t=>{ state.tasks=state.tasks.filter(x=>x.id!==t.id); }); if(_pendingTempTasks.length) saveState(); _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); } });
 
 // ══════════════════════════════════════════
 //  EDIT POINTS
@@ -1900,33 +1915,65 @@ function openTaskCalendar(name) {
 
 function openCalAddTask(){
   if(!calAddDate){ showToast('No date selected'); return; }
-  const el=document.getElementById('cal-add-task-list');
-  const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
-  const sorted=[...state.tasks].sort((a,b)=>a.name.localeCompare(b.name));
-  if(!sorted.length){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks available.</div>'; }
-  else {
-    el.innerHTML=sorted.map(t=>`
-      <div class="cal-day-task" onclick="confirmCalAddTask('${t.id}')">
-        <div class="cal-day-task-name">${esc(t.name)}</div>
-        <div class="cal-day-task-pts">+${t.pointValue} pts</div>
-        <div class="cal-day-task-arrow">✓</div>
-      </div>`).join('');
-  }
+  const [y,m,d]=calAddDate.split('-');
+  document.getElementById('cal-add-date-label').textContent=`${d}/${m}/${y.slice(2)}`;
+  _calAddSelection=new Set();
+  state.history.filter(h=>h.type==='earn'&&h.date===calAddDate).forEach(h=>{
+    const t=state.tasks.find(x=>x.name===h.name);
+    if(t) _calAddSelection.add(t.id);
+  });
+  renderCalAddList();
   document.getElementById('cal-add-task-overlay').classList.add('open');
 }
 
-function confirmCalAddTask(taskId){
-  const t=state.tasks.find(x=>x.id===taskId);
-  if(!t||!calAddDate) return;
+function toggleCalAdd(id){
+  if(_calAddSelection.has(id)) _calAddSelection.delete(id);
+  else _calAddSelection.add(id);
+  renderCalAddList();
+}
+
+function renderCalAddList(){
+  const el=document.getElementById('cal-add-task-list');
+  const catOrder=Object.fromEntries(state.categories.map((c,i)=>[c.name,i]));
+  const sorted=[...state.tasks.filter(t=>!isHidden(t))].sort((a,b)=>a.name.localeCompare(b.name));
+  if(!sorted.length){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks available.</div>'; return; }
+  const grouped={};
+  sorted.forEach(t=>{ (grouped[t.category]||(grouped[t.category]=[])).push(t); });
+  const catKeys=Object.keys(grouped).sort((a,b)=>(catOrder[a]??999)-(catOrder[b]??999));
+  let html='';
+  catKeys.forEach(cat=>{
+    html+=`<div style="margin-bottom:4px;"><div style="font-size:12px;font-weight:700;color:var(--g400);padding:6px 4px;">${catEmoji(cat)} ${esc(cat)}</div>`;
+    grouped[cat].forEach(t=>{
+      const ch=_calAddSelection.has(t.id)?'checked':'';
+      html+=`<div class="prow"><input class="pcb" type="checkbox" ${ch} onchange="toggleCalAdd('${t.id}')">
+        <span class="ptn">${esc(t.name)}</span><span class="ppts">⭐${t.pointValue}</span></div>`;
+    });
+    html+=`</div>`;
+  });
+  el.innerHTML=html;
+}
+
+function confirmCalAdd(){
+  if(!_calAddSelection.size||!calAddDate) return;
   const prev=state.availablePoints;
-  state.history.push({name:t.name,pts:t.pointValue,date:calAddDate,type:'earn',catEmoji:catEmoji(t.category)});
-  state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
-  recalcTaskFromHistory(t.name);
-  saveState(); closeSheets(); showToast(`✓ ${t.name} done! +${t.pointValue} pts`);
-  if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
+  _calAddSelection.forEach(id=>{
+    const t=state.tasks.find(x=>x.id===id);
+    if(!t) return;
+    state.history.push({name:t.name,pts:t.pointValue,date:calAddDate,type:'earn',catEmoji:catEmoji(t.category)});
+    state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
+    recalcTaskFromHistory(t.name);
+  });
+  saveState();
+  document.getElementById('cal-add-task-overlay').classList.remove('open');
+  openCalDay(calAddDate);
   renderCalendar();
   render();
+  showToast(`✓ ${_calAddSelection.size} task(s) added`);
+  if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
 }
+
+document.getElementById('confirm-cal-add-btn').addEventListener('click', confirmCalAdd);
+document.getElementById('cancel-cal-add-btn').addEventListener('click',()=>{ document.getElementById('cal-add-task-overlay').classList.remove('open'); });
 
 // ══════════════════════════════════════════
 //  JSON EXPORT / IMPORT
@@ -1999,7 +2046,7 @@ function recalcTaskFromHistory(taskName){
   }
 }
 
-function closeSheets(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); doneTaskId=null; deleteTaskId=null; deleteRewardId=null; deleteCatName=null; editHistoryIdx=null; calAddDate=null; }
+function closeSheets(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); doneTaskId=null; deleteTaskId=null; deleteRewardId=null; deleteCatName=null; editHistoryIdx=null; calAddDate=null; _calAddSelection=new Set(); }
 let toastTimer;
 function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
 function bumpPts(){ const el=document.getElementById('header-points'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
@@ -2044,6 +2091,7 @@ if('serviceWorker' in navigator){
       }
       saveState(); render();
     }else if(e.data.type==='cycle-complete'){
+      cleanupTempTasks(state.activeCycles.find(c=>c.cycleId===e.data.cycleId));
       state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId); saveState(); render(); showToast(`🎉 All ${e.data.count} tasks done!`);
     }else if(e.data.type==='navigate'){
       if(e.data.view) navigate(e.data.view);
