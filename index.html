@@ -666,7 +666,7 @@
       </div>
       <input class="form-input" id="cycle-name-input" placeholder="Cycle name (optional)…" style="margin-bottom:10px;">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0 10px;color:var(--g700);">
-        <input type="checkbox" id="cycle-notif-list"> Show all tasks in one notification
+        <input type="checkbox" id="cycle-notif-list"> Send all at once (complete in any order)
       </label>
       <div id="pending-cats"></div>
       <button class="btn btn-secondary btn-full" id="add-more-btn" style="margin-bottom:10px;">+ Add tasks</button>
@@ -1066,7 +1066,7 @@ function renderActiveCycles(){
   const el=document.getElementById('active-cycles-list');
   if(!state.activeCycles.length){ el.innerHTML=''; return; }
   el.innerHTML=state.activeCycles.map(c=>{
-    const done=c.currentIdx;
+    const done=c.notifMode==='simultaneous'?c.tasks.filter(t=>t.done).length:c.currentIdx;
     const total=c.tasks.length;
     const pct=total?Math.round(done/total*100):0;
     return `
@@ -1105,7 +1105,7 @@ function openAddTasksToCycle(cycleId){
     });
     _pendingOrder=cycle.tasks.map(t=>t.taskId).filter(Boolean);
     document.getElementById('cycle-name-input').value=cycle.name||'';
-    document.getElementById('cycle-notif-list').checked=cycle.notifMode==='list';
+    document.getElementById('cycle-notif-list').checked=cycle.notifMode==='simultaneous';
   }
   _pendingExpanded={};
   renderPendingTasksSheet();
@@ -1122,11 +1122,11 @@ function updateCycle(cycleId){
     const t=state.tasks.find(x=>x.id===id);
     if(!t) return null;
     const isTemp=!!_pendingTempTasks.find(x=>x.id===id);
-    return{taskId:t.id,isTemp,name:t.name,catEmoji:catEmoji(t.category),pointValue:t.pointValue};
+    return{taskId:t.id,isTemp,done:false,name:t.name,catEmoji:catEmoji(t.category),pointValue:t.pointValue};
   }).filter(Boolean);
   cycle.currentIdx=currentTaskIdx;
   cycle.name=document.getElementById('cycle-name-input').value.trim()||cycle.name||'Cycle';
-  cycle.notifMode=document.getElementById('cycle-notif-list').checked?'list':'individual';
+  cycle.notifMode=document.getElementById('cycle-notif-list').checked?'simultaneous':'individual';
   saveState(); closeSheets(); showToast('Cycle updated');
   _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; _pendingCycleId=null;
   render();
@@ -1673,27 +1673,39 @@ async function beginCycle(){
   const cycle={
     cycleId:uid(),
     name:document.getElementById('cycle-name-input').value.trim()||'Cycle',
-    notifMode:document.getElementById('cycle-notif-list').checked?'list':'individual',
+    notifMode:document.getElementById('cycle-notif-list').checked?'simultaneous':'individual',
     tasks:items.map(id=>{
       const t=state.tasks.find(x=>x.id===id);
       if(!t) return null;
       const isTemp=!!_pendingTempTasks.find(x=>x.id===id);
-      return{taskId:t.id,isTemp,name:t.name,catEmoji:catEmoji(t.category),pointValue:t.pointValue};
+      return{taskId:t.id,isTemp,done:false,name:t.name,catEmoji:catEmoji(t.category),pointValue:t.pointValue};
     }).filter(Boolean),
     currentIdx:0,startedAt:td
   };
   state.activeCycles.push(cycle);
   saveState();
   closeSheets();
-  const first=cycle.tasks[0];
   try{
     const reg=await navigator.serviceWorker.ready;
-    reg.showNotification(`Task 1/${cycle.tasks.length}`,{
-      body:`${first.catEmoji} ${first.name} · ⭐ ${first.pointValue} pts`,
-      icon:'/icon.svg',tag:'cycle-task-'+cycle.cycleId,requireInteraction:true,
-      actions:[{action:'done',title:'✓ Done'},{action:'snooze',title:'📅 Snooze +1d'}],
-      data:{type:'cycle-task',cycleId:cycle.cycleId,taskIndex:0}
-    });
+    if(cycle.notifMode==='simultaneous'){
+      for(let i=0;i<cycle.tasks.length;i++){
+        const t=cycle.tasks[i];
+        reg.showNotification(`${t.catEmoji||''} ${t.name}`,{
+          body:`⭐ ${t.pointValue} pts · tap Done when finished`,
+          icon:'/icon.svg',tag:`cycle-${cycle.cycleId}-task-${i}`,requireInteraction:true,
+          actions:[{action:'done',title:'✓ Done'},{action:'snooze',title:'📅 Skip'}],
+          data:{type:'cycle-task',cycleId:cycle.cycleId,taskIndex:i}
+        });
+      }
+    }else{
+      const first=cycle.tasks[0];
+      reg.showNotification(`Task 1/${cycle.tasks.length}`,{
+        body:`${first.catEmoji} ${first.name} · ⭐ ${first.pointValue} pts`,
+        icon:'/icon.svg',tag:'cycle-task-'+cycle.cycleId,requireInteraction:true,
+        actions:[{action:'done',title:'✓ Done'},{action:'snooze',title:'📅 Snooze +1d'}],
+        data:{type:'cycle-task',cycleId:cycle.cycleId,taskIndex:0}
+      });
+    }
   }catch(e){}
   showToast(`Cycle started — ${cycle.tasks.length} tasks`);
   _pendingTempTasks.forEach(t=>{ if(!_pendingSelection.has(t.id)) state.tasks=state.tasks.filter(x=>x.id!==t.id); });
@@ -2086,8 +2098,20 @@ if('serviceWorker' in navigator){
       }
       const cycle=state.activeCycles.find(c=>c.cycleId===e.data.cycleId);
       if(cycle){
-        cycle.currentIdx++;
-        if(cycle.currentIdx>=cycle.tasks.length) state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId);
+        if(cycle.notifMode==='simultaneous'){
+          const ct=cycle.tasks[e.data.taskIndex];
+          if(ct&&e.data.action==='done') ct.done=true;
+          if(cycle.tasks.every(t=>t.done)){
+            cleanupTempTasks(cycle);
+            state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId);
+          }
+        }else{
+          cycle.currentIdx++;
+          if(cycle.currentIdx>=cycle.tasks.length){
+            cleanupTempTasks(cycle);
+            state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId);
+          }
+        }
       }
       saveState(); render();
     }else if(e.data.type==='cycle-complete'){

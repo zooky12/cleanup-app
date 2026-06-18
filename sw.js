@@ -187,15 +187,15 @@ function findCycle(cycles, cycleId) {
 async function cycleDone(data) {
   const cycles = await getCycles();
   const cycle = findCycle(cycles, data.cycleId);
-  if (!cycle || !cycle.tasks[cycle.currentIdx]) return;
+  if (!cycle || !cycle.tasks[data.taskIndex]) return;
 
-  const task = cycle.tasks[cycle.currentIdx];
+  const task = cycle.tasks[data.taskIndex];
 
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
   let pageAlive = false;
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
-      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", cycleId: cycle.cycleId });
+      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", cycleId: cycle.cycleId, taskIndex: data.taskIndex });
       pageAlive = true;
       break;
     }
@@ -203,18 +203,44 @@ async function cycleDone(data) {
 
   if (!pageAlive) {
     await putToIDB("pending_ops", undefined, {
-      taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", time: Date.now(),
+      taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", time: Date.now(), taskIndex: data.taskIndex,
     });
   }
 
-  cycle.currentIdx++;
-  await advanceCycle(cycle, cycles);
+  if (cycle.notifMode === 'simultaneous') {
+    task.done = true;
+    if (cycle.tasks.every(t => t.done)) {
+      const remaining = cycles.filter(c => c.cycleId !== cycle.cycleId);
+      await saveCycles(remaining);
+      self.registration.showNotification("🎉 All done!", {
+        body: `Completed ${cycle.tasks.length} tasks. Well done!`,
+        icon: "/icon.svg",
+        tag: `cycle-complete-${cycle.cycleId}`,
+        data: { type: "cycle-complete", cycleId: cycle.cycleId, count: cycle.tasks.length },
+      });
+      for (const c of clients) {
+        if (c.url.startsWith(self.location.origin)) {
+          c.postMessage({ type: "cycle-complete", cycleId: cycle.cycleId, count: cycle.tasks.length });
+          break;
+        }
+      }
+    } else {
+      await saveCycles(cycles);
+    }
+  } else {
+    cycle.currentIdx++;
+    await advanceCycle(cycle, cycles);
+  }
 }
 
 async function cycleSnooze(data) {
   const cycles = await getCycles();
   const cycle = findCycle(cycles, data.cycleId);
-  if (!cycle || !cycle.tasks[cycle.currentIdx]) return;
+  if (!cycle || !cycle.tasks[data.taskIndex]) return;
+
+  if (cycle.notifMode === 'simultaneous') {
+    return;
+  }
 
   const task = cycle.tasks[cycle.currentIdx];
 
@@ -261,16 +287,9 @@ async function advanceCycle(cycle, cycles) {
   await saveCycles(cycles);
 
   const next = cycle.tasks[cycle.currentIdx];
-  let title, body;
-  if (cycle.notifMode === 'list') {
-    const remaining = cycle.tasks.slice(cycle.currentIdx);
-    title = `${cycle.name||'Cycle'} — ${remaining.length} task${remaining.length!==1?'s':''} left`;
-    body = remaining.map((t,i) => `${i===0?'▶ ':'  '}${t.catEmoji||''} ${t.name} · ⭐${t.pointValue}`).join('\n');
-  } else {
-    const emoji = next.catEmoji || "";
-    title = `Task ${cycle.currentIdx + 1}/${cycle.tasks.length}`;
-    body = `${emoji} ${next.name} · ⭐ ${next.pointValue} pts`;
-  }
+  const emoji = next.catEmoji || "";
+  const title = `Task ${cycle.currentIdx + 1}/${cycle.tasks.length}`;
+  const body = `${emoji} ${next.name} · ⭐ ${next.pointValue} pts`;
   self.registration.showNotification(title, {
     body,
     icon: "/icon.svg",
