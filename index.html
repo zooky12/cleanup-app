@@ -779,13 +779,15 @@ async function syncStateToIDB(){
   }catch(e){}
 }
 
+let _reconciling=false;
 async function reconcilePendingOps(){
   if(!('indexedDB' in window)||!state.tasks.length) return;
+  if(_reconciling) return;
+  _reconciling=true;
   try{
     const db=await openAppDB();
     const readTx=db.transaction('pending_ops','readonly');
     const ops=await new Promise(r=>{ const req=readTx.objectStore('pending_ops').getAll(); req.onsuccess=()=>r(req.result); req.onerror=()=>r([]); });
-    if(!ops.length){ db.close(); return; }
     for(const op of ops){
       if(op.action==='done'){
         if(op.taskId){
@@ -793,11 +795,11 @@ async function reconcilePendingOps(){
           if(t){
             t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
             state.totalPoints+=op.pointValue||t.pointValue; state.availablePoints+=op.pointValue||t.pointValue;
-            state.history.push({name:t.name,pts:op.pointValue||t.pointValue,date:today(),type:'earn'});
+            state.history.push({name:t.name,pts:op.pointValue||t.pointValue,date:today(),type:'earn',catEmoji:op.catEmoji||catEmoji(t.category)});
           }
         }else if(op.taskName){
           state.totalPoints+=op.pointValue||5; state.availablePoints+=op.pointValue||5;
-          state.history.push({name:op.taskName,pts:op.pointValue||5,date:today(),type:'earn'});
+          state.history.push({name:op.taskName,pts:op.pointValue||5,date:today(),type:'earn',catEmoji:op.catEmoji||''});
         }
       }else if(op.action==='snooze'&&op.taskId){
         const t=state.tasks.find(x=>x.id===op.taskId);
@@ -808,13 +810,16 @@ async function reconcilePendingOps(){
     let cycle=await new Promise(r=>{ const req=cycleTx.objectStore('cycle').get('active'); req.onsuccess=()=>r(req.result); });
     if(typeof cycle==='string'){ try{ cycle=JSON.parse(cycle); }catch(e){ cycle=[]; } }
     state.activeCycles=Array.isArray(cycle)?cycle:(cycle?[cycle]:[]);
+    const live=new Set(state.activeCycles.flatMap(c=>c.tasks.map(t=>t.taskId)));
+    state.tasks=state.tasks.filter(t=>t.category!=='__temp__'||live.has(t.id));
     const clearTx=db.transaction('pending_ops','readwrite');
     clearTx.objectStore('pending_ops').clear();
     await new Promise(r=>{clearTx.oncomplete=r;});
     db.close();
     saveState();
-    showToast('Synced notification changes');
+    if(ops.length) showToast('Synced notification changes');
   }catch(e){}
+  finally{ _reconciling=false; }
 }
 
 async function requestNotificationPermission(){
@@ -2081,45 +2086,17 @@ function triggerConfetti(){
 // ══════════════════════════════════════════
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-  navigator.serviceWorker.addEventListener('message',e=>{
+  navigator.serviceWorker.addEventListener('message',async e=>{
     if(e.data.type==='task-action'){
-      const t=e.data.taskId?state.tasks.find(x=>x.id===e.data.taskId):null;
-      if(t){
-        if(e.data.action==='done'){
-          t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
-          state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
-          state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn',catEmoji:catEmoji(t.category)});
-        }else if(e.data.action==='snooze'){
-          t.nextDue=t.nextDue<today()?today():addDays(t.nextDue,1);
-        }
-      }else if(e.data.action==='done'&&e.data.taskName){
-        state.totalPoints+=e.data.pointValue||5; state.availablePoints+=e.data.pointValue||5;
-        state.history.push({name:e.data.taskName,pts:e.data.pointValue||5,date:today(),type:'earn',catEmoji:e.data.catEmoji||''});
-      }
-      const cycle=state.activeCycles.find(c=>c.cycleId===e.data.cycleId);
-      if(cycle){
-        if(cycle.notifMode==='simultaneous'){
-          const ct=cycle.tasks[e.data.taskIndex];
-          if(ct&&e.data.action==='done') ct.done=true;
-          if(cycle.tasks.every(t=>t.done)){
-            cleanupTempTasks(cycle);
-            state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId);
-          }
-        }else{
-          cycle.currentIdx++;
-          if(cycle.currentIdx>=cycle.tasks.length){
-            cleanupTempTasks(cycle);
-            state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId);
-          }
-        }
-      }
-      saveState(); render();
+      await reconcilePendingOps(); render();
     }else if(e.data.type==='cycle-complete'){
-      cleanupTempTasks(state.activeCycles.find(c=>c.cycleId===e.data.cycleId));
-      state.activeCycles=state.activeCycles.filter(c=>c.cycleId!==e.data.cycleId); saveState(); render(); showToast(`🎉 All ${e.data.count} tasks done!`);
+      await reconcilePendingOps(); render(); showToast(`🎉 All ${e.data.count} tasks done!`);
     }else if(e.data.type==='navigate'){
       if(e.data.view) navigate(e.data.view);
     }
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') reconcilePendingOps().then(render);
   });
 }
 

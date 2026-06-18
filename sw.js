@@ -191,20 +191,16 @@ async function cycleDone(data) {
 
   const task = cycle.tasks[data.taskIndex];
 
+  await putToIDB("pending_ops", undefined, {
+    taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", time: Date.now(), taskIndex: data.taskIndex,
+  });
+
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-  let pageAlive = false;
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
       c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", cycleId: cycle.cycleId, taskIndex: data.taskIndex });
-      pageAlive = true;
       break;
     }
-  }
-
-  if (!pageAlive) {
-    await putToIDB("pending_ops", undefined, {
-      taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", time: Date.now(), taskIndex: data.taskIndex,
-    });
   }
 
   if (cycle.notifMode === 'simultaneous') {
@@ -244,20 +240,16 @@ async function cycleSnooze(data) {
 
   const task = cycle.tasks[cycle.currentIdx];
 
+  await putToIDB("pending_ops", undefined, {
+    taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "snooze", time: Date.now(),
+  });
+
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-  let pageAlive = false;
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
       c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "snooze", cycleId: cycle.cycleId });
-      pageAlive = true;
       break;
     }
-  }
-
-  if (!pageAlive) {
-    await putToIDB("pending_ops", undefined, {
-      taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "snooze", time: Date.now(),
-    });
   }
 
   cycle.currentIdx++;
