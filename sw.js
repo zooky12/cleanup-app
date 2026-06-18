@@ -195,7 +195,7 @@ async function cycleDone(data) {
   let pageAlive = false;
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
-      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "done", cycleId: cycle.cycleId });
+      c.postMessage({ type: "task-action", taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", cycleId: cycle.cycleId });
       pageAlive = true;
       break;
     }
@@ -203,7 +203,7 @@ async function cycleDone(data) {
 
   if (!pageAlive) {
     await putToIDB("pending_ops", undefined, {
-      taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, action: "done", time: Date.now(),
+      taskId: task.taskId, taskName: task.name, pointValue: task.pointValue, catEmoji: task.catEmoji||'', action: "done", time: Date.now(),
     });
   }
 
@@ -261,9 +261,18 @@ async function advanceCycle(cycle, cycles) {
   await saveCycles(cycles);
 
   const next = cycle.tasks[cycle.currentIdx];
-  const emoji = next.catEmoji || "";
-  self.registration.showNotification(`Task ${cycle.currentIdx + 1}/${cycle.tasks.length}`, {
-    body: `${emoji} ${next.name} · ⭐ ${next.pointValue} pts`,
+  let title, body;
+  if (cycle.notifMode === 'list') {
+    const remaining = cycle.tasks.slice(cycle.currentIdx);
+    title = `${cycle.name||'Cycle'} — ${remaining.length} task${remaining.length!==1?'s':''} left`;
+    body = remaining.map((t,i) => `${i===0?'▶ ':'  '}${t.catEmoji||''} ${t.name} · ⭐${t.pointValue}`).join('\n');
+  } else {
+    const emoji = next.catEmoji || "";
+    title = `Task ${cycle.currentIdx + 1}/${cycle.tasks.length}`;
+    body = `${emoji} ${next.name} · ⭐ ${next.pointValue} pts`;
+  }
+  self.registration.showNotification(title, {
+    body,
     icon: "/icon.svg",
     tag: `cycle-task-${cycle.cycleId}`,
     requireInteraction: true,

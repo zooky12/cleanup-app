@@ -297,9 +297,9 @@
       transition:transform .1s; -webkit-tap-highlight-color:transparent;
     }
     .cal-day.empty { cursor:default; pointer-events:none; }
-    .cal-day:not(.empty):not(.c0):active { transform:scale(0.88); }
+    .cal-day:not(.empty):active { transform:scale(0.88); }
     .cal-day.today { box-shadow:0 0 0 2px var(--primary); }
-    .cal-day.c0 { background:var(--g100); color:var(--g400); cursor:default; pointer-events:none; }
+    .cal-day.c0 { background:var(--g100); color:var(--g400); }
     .cal-day.c1 { background:#0a2e1c; color:#6ee7b7; }
     .cal-day.c2 { background:#14532d; color:#a7f3d0; }
     .cal-day.c3 { background:#15803d; color:#d1fae5; }
@@ -663,6 +663,10 @@
         <span>📋 Build Your Cycle</span>
         <span id="pending-count" style="font-size:13px;color:var(--g400);font-weight:500;"></span>
       </div>
+      <input class="form-input" id="cycle-name-input" placeholder="Cycle name (optional)…" style="margin-bottom:10px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0 10px;color:var(--g700);">
+        <input type="checkbox" id="cycle-notif-list"> Show all tasks in one notification
+      </label>
       <div id="pending-cats"></div>
       <button class="btn btn-secondary btn-full" id="add-more-btn" style="margin-bottom:10px;">+ Add tasks</button>
       <div id="pending-slist" class="slist" style="display:none;">
@@ -1046,12 +1050,9 @@ function renderRewards(){
   html+=`
     <div class="slabel" style="margin-top:20px;">🔄 Cycle</div>
     <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:600;">Status: ${Notification.permission==='granted'?'✅ Enabled':'🔕 Not enabled'}</div>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button class="btn btn-primary" onclick="requestNotificationPermission()" style="flex:1;justify-content:center;">${Notification.permission==='granted'?'🔔 Notifications on':'Enable notifications'}</button>
+      <div style="display:flex;gap:8px;">
         <button class="btn btn-primary" onclick="openPendingTasksSheet()" style="flex:1;justify-content:center;">▶ Begin cycle</button>
       </div>
-      ${!state.notificationSubscribed?'<div style="font-size:11px;color:var(--g500);margin-top:6px;">Set PUSH_SERVER in the code after deploying the server, then enable notifications.</div>':''}
       <div id="active-cycles-list" style="margin-top:10px;"></div>
     </div>`;
 
@@ -1069,7 +1070,7 @@ function renderActiveCycles(){
     return `
       <div class="cycle-item" style="background:var(--g50);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <strong style="font-size:13px;">Cycle #${c.cycleId.slice(0,5)}</strong>
+          <strong style="font-size:13px;">${esc(c.name||'Cycle')}</strong>
           <span style="font-size:11px;color:var(--g400);">${done}/${total} tasks</span>
         </div>
         <div style="height:4px;background:var(--g200);border-radius:2px;margin:6px 0;overflow:hidden;">
@@ -1077,8 +1078,7 @@ function renderActiveCycles(){
         </div>
         <div style="display:flex;gap:6px;margin-top:6px;">
           <button class="btn btn-danger" style="padding:5px 10px;font-size:11px;" onclick="cancelCycle('${c.cycleId}')">✕ Cancel</button>
-          <button class="btn btn-primary" style="padding:5px 10px;font-size:11px;" onclick="openAddTasksToCycle('${c.cycleId}')">+ Add tasks</button>
-          <button class="btn btn-primary" style="padding:5px 10px;font-size:11px;" onclick="openReorderCycle('${c.cycleId}')">⇅ Reorder</button>
+          <button class="btn btn-primary" style="padding:5px 10px;font-size:11px;" onclick="openAddTasksToCycle('${c.cycleId}')">✏️ Edit</button>
         </div>
       </div>`;
   }).join('');
@@ -1093,22 +1093,19 @@ function openAddTasksToCycle(cycleId){
   _pendingSelection=new Set();
   _pendingOrder=[];
   _pendingTempTasks=[];
+  _pendingCycleId=cycleId;
   const cycle=state.activeCycles.find(c=>c.cycleId===cycleId);
   if(cycle){
     cycle.tasks.forEach(t=>{
       if(t.taskId) _pendingSelection.add(t.taskId);
     });
     _pendingOrder=cycle.tasks.map(t=>t.taskId).filter(Boolean);
+    document.getElementById('cycle-name-input').value=cycle.name||'';
+    document.getElementById('cycle-notif-list').checked=cycle.notifMode==='list';
   }
   _pendingExpanded={};
   renderPendingTasksSheet();
   document.getElementById('pending-overlay').classList.add('open');
-  document.getElementById('begin-cycle-btn').textContent='▶ Update cycle';
-  document.getElementById('begin-cycle-btn').onclick=()=>updateCycle(cycleId);
-}
-
-function openReorderCycle(cycleId){
-  openAddTasksToCycle(cycleId);
 }
 
 function updateCycle(cycleId){
@@ -1124,9 +1121,10 @@ function updateCycle(cycleId){
     return{taskId:t.isTemp?null:t.id,isTemp:!!t.isTemp,name:t.name,catEmoji:cat?cat.emoji:t.catEmoji||'',pointValue:t.pointValue};
   }).filter(Boolean);
   cycle.currentIdx=currentTaskIdx;
+  cycle.name=document.getElementById('cycle-name-input').value.trim()||cycle.name||'Cycle';
+  cycle.notifMode=document.getElementById('cycle-notif-list').checked?'list':'individual';
   saveState(); closeSheets(); showToast('Cycle updated');
-  _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[];
-  document.getElementById('begin-cycle-btn').onclick=beginCycle;
+  _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; _pendingCycleId=null;
   render();
 }
 
@@ -1158,7 +1156,7 @@ function renderOptions(){
       return `
       <div class="history-item">
         <div class="hdot ${h.type}"></div>
-        <div class="hname">${esc(h.name)}</div>
+        <div class="hname">${h.catEmoji&&h.type==='earn'?h.catEmoji+' ':''}${esc(h.name)}</div>
         <div class="hpts ${h.type}">${h.type==='redeem'?'−':'+'}${h.pts} pts</div>
         <div class="hdate">${fmtDate(h.date)}</div>
         ${h.type==='earn'?`<button class="icon-btn icon-btn-edit" onclick="openEditHistoryDate(${origIdx})" style="width:28px;height:28px;font-size:12px;">✏️</button>`:''}
@@ -1197,7 +1195,7 @@ document.getElementById('confirm-done').addEventListener('click',()=>{
   const prev=state.availablePoints;
   t.lastDone=today(); t.nextDue=addDays(today(),doneInt);
   state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
-  state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn'});
+  state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn',catEmoji:catEmoji(t.category)});
   saveState(); closeSheets(); showToast(`✓ Done! +${t.pointValue} pts`); bumpPts();
   if(Math.floor(state.availablePoints/50)>Math.floor(prev/50)) triggerConfetti();
   render();
@@ -1562,15 +1560,17 @@ let _pendingOrder=[];
 let _pendingTempTasks=[];
 let _pendingExpanded={};
 let _reopenPendingAfterSave=false;
+let _pendingCycleId=null;
 
 function openPendingTasksSheet(){
   _pendingSelection=new Set();
   _pendingOrder=[];
   _pendingTempTasks=[];
   _pendingExpanded={};
+  _pendingCycleId=null;
+  document.getElementById('cycle-name-input').value='';
+  document.getElementById('cycle-notif-list').checked=false;
   renderPendingTasksSheet();
-  document.getElementById('begin-cycle-btn').onclick=beginCycle;
-  document.getElementById('begin-cycle-btn').textContent='▶ Begin cycle';
   document.getElementById('pending-overlay').classList.add('open');
 }
 
@@ -1614,7 +1614,10 @@ function renderPendingTasksSheet(){
     }).join('');
   }else{ sEl.style.display='none'; }
   document.getElementById('pending-count').textContent=_pendingSelection.size?`(${_pendingSelection.size} selected) `:'';
-  document.getElementById('begin-cycle-btn').textContent=`▶ Begin cycle${_pendingSelection.size?` (${_pendingSelection.size})`:''}`;
+  const _btn=document.getElementById('begin-cycle-btn');
+  const _label=_pendingCycleId?'Update cycle':'Begin cycle';
+  _btn.textContent=`▶ ${_label}${_pendingSelection.size?` (${_pendingSelection.size})`:''}`;
+  _btn.onclick=_pendingCycleId?()=>updateCycle(_pendingCycleId):beginCycle;
 }
 
 function togglePendingCat(name){ _pendingExpanded[name]=!_pendingExpanded[name]; renderPendingTasksSheet(); }
@@ -1655,6 +1658,8 @@ async function beginCycle(){
   const td=today();
   const cycle={
     cycleId:uid(),
+    name:document.getElementById('cycle-name-input').value.trim()||'Cycle',
+    notifMode:document.getElementById('cycle-notif-list').checked?'list':'individual',
     tasks:items.map(id=>{
       const t=state.tasks.find(x=>x.id===id)||_pendingTempTasks.find(x=>x.id===id);
       if(!t) return null;
@@ -1677,10 +1682,9 @@ async function beginCycle(){
     });
   }catch(e){}
   showToast(`Cycle started — ${cycle.tasks.length} tasks`);
-  _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[];
+  _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; _pendingCycleId=null;
 }
 
-document.getElementById('begin-cycle-btn').addEventListener('click',beginCycle);
 document.getElementById('cancel-pending-btn').addEventListener('click',()=>{ _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); });
 document.getElementById('pending-overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget){ _pendingSelection=new Set(); _pendingOrder=[]; _pendingTempTasks=[]; closeSheets(); } });
 
@@ -1872,12 +1876,15 @@ function openCalDay(dateStr) {
   document.getElementById('cal-day-date').textContent = `${d}/${m}/${y.slice(2)}`;
   calAddDate = dateStr;
   if(entries.length){
-    document.getElementById('cal-day-tasks').innerHTML = entries.map(h => `
-      <div class="cal-day-task" onclick="openTaskCalendar('${esc(h.name).replace(/'/g,"\\'")}')">
-        <div class="cal-day-task-name">${esc(h.name)}</div>
+    document.getElementById('cal-day-tasks').innerHTML = entries.map(h => {
+      const task=state.tasks.find(t=>t.name===h.name);
+      const emoji=h.catEmoji||(task?catEmoji(task.category):'');
+      return `<div class="cal-day-task" onclick="openTaskCalendar('${esc(h.name).replace(/'/g,"\\'")}')">
+        <div class="cal-day-task-name">${emoji?emoji+' ':''}${esc(h.name)}</div>
         <div class="cal-day-task-pts">+${h.pts} pts</div>
         <div class="cal-day-task-arrow">📅</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }else{
     document.getElementById('cal-day-tasks').innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks done on this day.</div>';
   }
@@ -1912,7 +1919,7 @@ function confirmCalAddTask(taskId){
   const t=state.tasks.find(x=>x.id===taskId);
   if(!t||!calAddDate) return;
   const prev=state.availablePoints;
-  state.history.push({name:t.name,pts:t.pointValue,date:calAddDate,type:'earn'});
+  state.history.push({name:t.name,pts:t.pointValue,date:calAddDate,type:'earn',catEmoji:catEmoji(t.category)});
   state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
   recalcTaskFromHistory(t.name);
   saveState(); closeSheets(); showToast(`✓ ${t.name} done! +${t.pointValue} pts`);
@@ -2022,13 +2029,13 @@ if('serviceWorker' in navigator){
         if(e.data.action==='done'){
           t.lastDone=today(); t.nextDue=addDays(today(),t.defaultInterval);
           state.totalPoints+=t.pointValue; state.availablePoints+=t.pointValue;
-          state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn'});
+          state.history.push({name:t.name,pts:t.pointValue,date:today(),type:'earn',catEmoji:catEmoji(t.category)});
         }else if(e.data.action==='snooze'){
           t.nextDue=t.nextDue<today()?today():addDays(t.nextDue,1);
         }
       }else if(e.data.action==='done'&&e.data.taskName){
         state.totalPoints+=e.data.pointValue||5; state.availablePoints+=e.data.pointValue||5;
-        state.history.push({name:e.data.taskName,pts:e.data.pointValue||5,date:today(),type:'earn'});
+        state.history.push({name:e.data.taskName,pts:e.data.pointValue||5,date:today(),type:'earn',catEmoji:e.data.catEmoji||''});
       }
       const cycle=state.activeCycles.find(c=>c.cycleId===e.data.cycleId);
       if(cycle){
