@@ -1,6 +1,6 @@
 // CleanUp Service Worker
 // Bump CACHE_NAME whenever js/*.js or index.html changes to force re-cache
-const CACHE_NAME = "cleanup-v5";
+const CACHE_NAME = "cleanup-v6";
 
 const VAPID_PUBLIC_KEY = 'BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg';
 const PUSH_SERVER = ''; // Set after deploying the Deno push server
@@ -214,6 +214,32 @@ async function cycleDone(data) {
     taskIndex: data.taskIndex,
   });
 
+  if (cycle.notifMode === 'simultaneous') {
+    task.done = true;
+    if (cycle.tasks.every(t => t.done)) {
+      const remaining = cycles.filter(c => c.cycleId !== cycle.cycleId);
+      await saveCycles(remaining);
+      self.registration.showNotification("🎉 All done!", {
+        body: `Completed ${cycle.tasks.length} tasks. Well done!`,
+        icon: "/icon.svg",
+        tag: `cycle-complete-${cycle.cycleId}`,
+        data: { type: "cycle-complete", cycleId: cycle.cycleId, count: cycle.tasks.length },
+      });
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const c of clients) {
+        if (c.url.startsWith(self.location.origin)) {
+          c.postMessage({ type: "cycle-complete", cycleId: cycle.cycleId, count: cycle.tasks.length });
+          break;
+        }
+      }
+    } else {
+      await saveCycles(cycles);
+    }
+  } else {
+    cycle.currentIdx++;
+    await advanceCycle(cycle, cycles);
+  }
+
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
@@ -229,31 +255,6 @@ async function cycleDone(data) {
       });
       break;
     }
-  }
-
-  if (cycle.notifMode === 'simultaneous') {
-    task.done = true;
-    if (cycle.tasks.every(t => t.done)) {
-      const remaining = cycles.filter(c => c.cycleId !== cycle.cycleId);
-      await saveCycles(remaining);
-      self.registration.showNotification("🎉 All done!", {
-        body: `Completed ${cycle.tasks.length} tasks. Well done!`,
-        icon: "/icon.svg",
-        tag: `cycle-complete-${cycle.cycleId}`,
-        data: { type: "cycle-complete", cycleId: cycle.cycleId, count: cycle.tasks.length },
-      });
-      for (const c of clients) {
-        if (c.url.startsWith(self.location.origin)) {
-          c.postMessage({ type: "cycle-complete", cycleId: cycle.cycleId, count: cycle.tasks.length });
-          break;
-        }
-      }
-    } else {
-      await saveCycles(cycles);
-    }
-  } else {
-    cycle.currentIdx++;
-    await advanceCycle(cycle, cycles);
   }
 }
 
@@ -276,6 +277,9 @@ async function cycleSnooze(data) {
     time: Date.now(),
   });
 
+  cycle.currentIdx++;
+  await advanceCycle(cycle, cycles);
+
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
@@ -290,9 +294,6 @@ async function cycleSnooze(data) {
       break;
     }
   }
-
-  cycle.currentIdx++;
-  await advanceCycle(cycle, cycles);
 }
 
 async function advanceCycle(cycle, cycles) {

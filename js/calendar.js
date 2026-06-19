@@ -12,6 +12,9 @@ export let calTaskFilter = null;
 export let calAddDate = null;
 export const calAddSelection = new Set();
 
+export function resetCalAddDate()    { calAddDate = null; }
+export function resetCalTaskFilter() { calTaskFilter = null; }
+
 export function buildDayMap(taskName) {
   const map = {};
   state.history

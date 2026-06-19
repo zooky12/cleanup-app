@@ -11,7 +11,7 @@ import { completeTask, snoozeTask, saveTask, deleteTask } from './tasks.js';
 import { beginCycle, updateCycle, cancelCycle, addTempTask } from './cycles.js';
 import { redeemReward, saveReward, deleteReward, editPoints } from './rewards.js';
 import { deleteHistoryEntry, updateHistoryDate } from './history.js';
-import { renderCalendar, calPrev, calNext, openCalDay, openTaskCalendar, calTaskFilter, calYear, calMonth, calAddDate, calAddSelection, confirmCalTasks } from './calendar.js';
+import { renderCalendar, calPrev, calNext, openCalDay, openTaskCalendar, openCalTaskPicker, calTaskFilter, calYear, calMonth, calAddDate, calAddSelection, confirmCalTasks, resetCalAddDate, resetCalTaskFilter } from './calendar.js';
 import { requestPermission } from './notifications.js';
 import { shareTasksUrl, shareProfileUrl, exportJson, triggerFileImport } from './sharing.js';
 
@@ -64,7 +64,7 @@ export function closeSheets() {
   deleteRewardId = null;
   deleteCatName = null;
   editHistoryIdx = null;
-  calAddDate = null;
+  resetCalAddDate();
   editTaskId = null;
   editCatName = null;
   _returnSheet = null;
@@ -545,7 +545,7 @@ export function initEvents() {
   on(A.CAL_DAY, (el) => openCalDay(el.dataset.date));
   on(A.TASK_CAL_FILTER, (el) => openTaskCalendar(el.dataset.name));
   on(A.ALL_DONE_FILTER, () => {
-    calTaskFilter = null;
+    resetCalTaskFilter();
     render();
   });
   on(A.CAL_ADD_COMPLETION, () => {
