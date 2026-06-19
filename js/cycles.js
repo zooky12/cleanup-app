@@ -38,7 +38,7 @@ export async function beginCycle({ name, notifMode, taskIds }) {
           icon: '/icon.svg',
           tag: `cycle-${cycle.cycleId}-task-${i}`,
           requireInteraction: true,
-          actions: [{ action: 'done', title: '✓ Done' }, { action: 'snooze', title: '📅 Skip' }],
+          actions: [{ action: 'snooze', title: '📅 Skip' }, { action: 'done', title: '✓ Done' }],
           data: { type: 'cycle-task', cycleId: cycle.cycleId, taskIndex: i },
         });
       }
@@ -49,7 +49,7 @@ export async function beginCycle({ name, notifMode, taskIds }) {
         icon: '/icon.svg',
         tag: 'cycle-task-' + cycle.cycleId,
         requireInteraction: true,
-        actions: [{ action: 'done', title: '✓ Done' }, { action: 'snooze', title: '📅 Snooze +1d' }],
+        actions: [{ action: 'snooze', title: '📅 Snooze +1d' }, { action: 'done', title: '✓ Done' }],
         data: { type: 'cycle-task', cycleId: cycle.cycleId, taskIndex: 0 },
       });
     }

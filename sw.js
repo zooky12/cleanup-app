@@ -1,6 +1,6 @@
 // CleanUp Service Worker
 // Bump CACHE_NAME whenever js/*.js or index.html changes to force re-cache
-const CACHE_NAME = "cleanup-v9";
+const CACHE_NAME = "cleanup-v10";
 
 const VAPID_PUBLIC_KEY = 'BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg';
 const PUSH_SERVER = ''; // Set after deploying the Deno push server
@@ -360,8 +360,8 @@ async function advanceCycle(cycle, cycles) {
     tag: `cycle-task-${cycle.cycleId}`,
     requireInteraction: true,
     actions: [
-      { action: "done", title: "✓ Done" },
       { action: "snooze", title: "📅 Snooze +1d" },
+      { action: "done", title: "✓ Done" },
     ],
     data: { type: "cycle-task", cycleId: cycle.cycleId, taskIndex: cycle.currentIdx },
   });
