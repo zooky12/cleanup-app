@@ -78,8 +78,8 @@ export async function testNotification() {
       icon: '/icon.svg',
       requireInteraction: true,
       actions: [
-        { action: 'done', title: '✓ Done' },
         { action: 'snooze', title: '📅 Snoozed' },
+        { action: 'done', title: '✓ Done' },
       ],
       data: { type: 'test', time: Date.now() },
     });
