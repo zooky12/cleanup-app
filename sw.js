@@ -1,6 +1,6 @@
 // CleanUp Service Worker
 // Bump CACHE_NAME whenever js/*.js or index.html changes to force re-cache
-const CACHE_NAME = "cleanup-v12";
+const CACHE_NAME = "cleanup-v13";
 
 const VAPID_PUBLIC_KEY = 'BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg';
 const PUSH_SERVER = ''; // Set after deploying the Deno push server
@@ -176,21 +176,17 @@ self.addEventListener("notificationclick", (e) => {
     return;
   }
 
-  // On Linux/Wayland notification daemons, action buttons may fire with e.action=""
-  // (body click) or only "snooze" is passed through. Treat body-click on a cycle
-  // notification as "done" so it always does something useful.
-  const effectiveAction = action || (data.type === "cycle-task" ? "done" : "");
-
-  if (effectiveAction === "done") {
+  if (action === "done") {
     e.waitUntil(cycleDone(data));
     return;
   }
 
-  if (effectiveAction === "snooze") {
+  if (action === "snooze") {
     e.waitUntil(cycleSnooze(data));
     return;
   }
 
+  // Body tap (action = ""): just bring the app into focus
   e.waitUntil(openOrFocus("./"));
 });
 

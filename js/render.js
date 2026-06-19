@@ -336,6 +336,21 @@ export function openCycleBuilder(cycleId) {
       });
       document.getElementById('cycle-name-input').value = cycle.name || '';
       document.getElementById('cycle-notif-list').checked = cycle.notifMode === 'simultaneous';
+
+      // Pre-populate _pendingTempTasks so ✕ removal properly cleans state.tasks
+      _pendingTempTasks = cycle.tasks
+        .filter(ct => ct.isTemp && ct.taskId)
+        .map(ct => state.tasks.find(t => t.id === ct.taskId))
+        .filter(Boolean);
+
+      // Auto-expand categories that contain at least one selected task
+      _cycleExpanded = {};
+      for (const ct of cycle.tasks) {
+        const task = state.tasks.find(t => t.id === ct.taskId);
+        if (task && task.category && task.category !== '__temp__') {
+          _cycleExpanded[task.category] = true;
+        }
+      }
     }
   }
 

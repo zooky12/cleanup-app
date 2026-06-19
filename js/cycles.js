@@ -85,6 +85,45 @@ export async function updateCycle(cycleId, { name, notifMode, taskIds }) {
     c.name = name || c.name || 'Cycle';
     c.notifMode = notifMode || c.notifMode;
   });
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const updated = state.activeCycles.find(c => c.cycleId === cycleId);
+    if (updated) {
+      if (updated.notifMode === 'simultaneous') {
+        for (let i = 0; i < 50; i++) {
+          (await reg.getNotifications({ tag: `cycle-${cycleId}-task-${i}` })).forEach(n => n.close());
+        }
+        for (let i = 0; i < updated.tasks.length; i++) {
+          const t = updated.tasks[i];
+          if (!t.done) {
+            reg.showNotification(`${t.catEmoji || ''} ${t.name}`, {
+              body: `⭐ ${t.pointValue} pts · tap Done when finished`,
+              icon: '/icon.svg',
+              tag: `cycle-${cycleId}-task-${i}`,
+              requireInteraction: true,
+              actions: [{ action: 'done', title: '✓ Done' }],
+              data: { type: 'cycle-task', cycleId, taskIndex: i },
+            });
+          }
+        }
+      } else {
+        (await reg.getNotifications({ tag: `cycle-task-${cycleId}` })).forEach(n => n.close());
+        const cur = updated.tasks[updated.currentIdx];
+        if (cur) {
+          reg.showNotification(`Task ${updated.currentIdx + 1}/${updated.tasks.length}`, {
+            body: `${cur.catEmoji || ''} ${cur.name} · ⭐ ${cur.pointValue} pts`,
+            icon: '/icon.svg',
+            tag: `cycle-task-${cycleId}`,
+            requireInteraction: true,
+            actions: [{ action: 'done', title: '✓ Done' }],
+            data: { type: 'cycle-task', cycleId, taskIndex: updated.currentIdx },
+          });
+        }
+      }
+    }
+  } catch (e) { /* SW may not be active */ }
+
   const { showToast } = await import('./components.js');
   showToast('Cycle updated');
 }
