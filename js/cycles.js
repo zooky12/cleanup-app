@@ -38,7 +38,7 @@ export async function beginCycle({ name, notifMode, taskIds }) {
           icon: '/icon.svg',
           tag: `cycle-${cycle.cycleId}-task-${i}`,
           requireInteraction: true,
-          actions: [{ action: 'snooze', title: '📅 Skip' }, { action: 'done', title: '✓ Done' }],
+          actions: [{ action: 'done', title: '✓ Done' }],
           data: { type: 'cycle-task', cycleId: cycle.cycleId, taskIndex: i },
         });
       }
@@ -49,7 +49,7 @@ export async function beginCycle({ name, notifMode, taskIds }) {
         icon: '/icon.svg',
         tag: 'cycle-task-' + cycle.cycleId,
         requireInteraction: true,
-        actions: [{ action: 'snooze', title: '📅 Snooze +1d' }, { action: 'done', title: '✓ Done' }],
+        actions: [{ action: 'done', title: '✓ Done' }],
         data: { type: 'cycle-task', cycleId: cycle.cycleId, taskIndex: 0 },
       });
     }
@@ -126,6 +126,18 @@ export async function reconcilePendingOps() {
       return;
     }
 
+    // Read cycle state BEFORE processing ops so that completeTask's mutate
+    // writes the correct (already-advanced) activeCycles back to IDB,
+    // rather than the stale in-memory copy from before the SW's update.
+    let cycle = await idb.dbGet('cycle', 'active');
+    if (typeof cycle === 'string') {
+      try { cycle = JSON.parse(cycle); } catch (e) { cycle = []; }
+    }
+    state.activeCycles = Array.isArray(cycle) ? cycle : cycle ? [cycle] : [];
+
+    const live = new Set(state.activeCycles.flatMap(c => c.tasks.map(t => t.taskId)));
+    state.tasks = state.tasks.filter(t => t.category !== '__temp__' || live.has(t.id));
+
     const doneNames = [];
     const snoozedNames = [];
 
@@ -154,15 +166,6 @@ export async function reconcilePendingOps() {
         if (t) { await snoozeTask(t); snoozedNames.push(t.name); }
       }
     }
-
-    let cycle = await idb.dbGet('cycle', 'active');
-    if (typeof cycle === 'string') {
-      try { cycle = JSON.parse(cycle); } catch (e) { cycle = []; }
-    }
-    state.activeCycles = Array.isArray(cycle) ? cycle : cycle ? [cycle] : [];
-
-    const live = new Set(state.activeCycles.flatMap(c => c.tasks.map(t => t.taskId)));
-    state.tasks = state.tasks.filter(t => t.category !== '__temp__' || live.has(t.id));
 
     await idb.dbClear('pending_ops');
     await mutate(() => {}, { immediate: true });
