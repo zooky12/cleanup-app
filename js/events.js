@@ -57,6 +57,10 @@ export const A = {
   NAV_REWARDS: 'nav-rewards',
   NAV_OPTIONS: 'nav-options',
   TEST_NOTIFICATION: 'test-notification',
+  OPEN_TASK_MANAGER: 'open-task-manager',
+  EDIT_TASK_MGR: 'edit-task-mgr',
+  DELETE_TASK_MGR: 'delete-task-mgr',
+  ADD_TASK_MGR: 'add-task-mgr',
 };
 
 const _handlers = new Map();

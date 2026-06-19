@@ -74,6 +74,7 @@ export function closeSheets() {
   editCatName = null;
   _returnSheet = null;
   _cycleSelection = null;
+  _taskManagerContext = false;
 }
 
 /* ── Dashboard ── */
@@ -84,7 +85,7 @@ export function renderDashboard() {
   const visibleTasks = state.tasks.filter(t => !isTemp(t));
   if (!visibleTasks.length) {
     el.innerHTML = renderEmptyState('🏠', 'No tasks yet.<br>Tap <b>Edit Tasks</b> to add some!') +
-      `<button class="manage-cats-btn" data-action="open-task-editor" style="margin-top:12px;">
+      `<button class="manage-cats-btn" data-action="open-task-manager" style="margin-top:12px;">
         <span>📋 Edit Tasks</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>`;
@@ -114,7 +115,7 @@ export function renderDashboard() {
     renderRow: (t) => renderTaskCard(t),
   });
 
-  el.innerHTML = html + `<button class="manage-cats-btn" data-action="open-task-editor" style="margin-top:12px;">
+  el.innerHTML = html + `<button class="manage-cats-btn" data-action="open-task-manager" style="margin-top:12px;">
     <span>📋 Edit Tasks</span>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
   </button>`;
@@ -259,6 +260,48 @@ export function confirmDone() {
   });
 }
 
+/* ── Task manager state ── */
+let _taskManagerContext = false;
+
+function renderTasksList() {
+  const el = document.getElementById('tasks-list');
+  if (!el) return;
+  const visibleTasks = state.tasks.filter(t => !isTemp(t));
+  if (!visibleTasks.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks yet. Add one below.</div>';
+    return;
+  }
+  const catOrder = new Map(state.categories.map((c, i) => [c.name, i]));
+  const groups = {};
+  state.categories.forEach(c => {
+    const catTasks = visibleTasks.filter(t => t.category === c.name);
+    if (catTasks.length) groups[c.name] = catTasks;
+  });
+  visibleTasks.filter(t => !groups[t.category]).forEach(t => {
+    (groups[t.category] = groups[t.category] || []).push(t);
+  });
+  const sorted = Object.entries(groups).sort(([a], [b]) => (catOrder.get(a) ?? 999) - (catOrder.get(b) ?? 999));
+  let html = '';
+  for (const [cat, tasks] of sorted) {
+    const emoji = catEmoji(state.categories, cat);
+    html += `<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:700;color:var(--g400);padding:6px 0 4px;letter-spacing:.06em;text-transform:uppercase;">${emoji} ${esc(cat)}</div>`;
+    for (const t of tasks) {
+      html += `<div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-name">${esc(t.name)}</div>
+          <div class="list-item-sub">every ${t.defaultInterval}d · ⭐${t.pointValue} pts</div>
+        </div>
+        <div class="list-item-actions">
+          <button class="icon-btn icon-btn-edit" data-action="edit-task-mgr" data-id="${t.id}">✏️</button>
+          <button class="icon-btn icon-btn-delete" data-action="delete-task-mgr" data-id="${t.id}">🗑️</button>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  el.innerHTML = html;
+}
+
 /* ── Cycle builder state ── */
 let _cycleSelection = null;
 let _pendingTempTasks = [];
@@ -313,6 +356,8 @@ export function saveTaskForm() {
     if (_reopenPendingAfterSave) {
       _reopenPendingAfterSave = false;
       setTimeout(() => openCycleBuilder(), 100);
+    } else if (_taskManagerContext) {
+      setTimeout(() => { renderTasksList(); openSheet('tasks-overlay'); }, 100);
     } else {
       render();
     }
@@ -559,6 +604,27 @@ export function initEvents() {
     openTaskEditor();
   });
 
+  // ── Task manager ──
+  on(A.OPEN_TASK_MANAGER, () => {
+    _taskManagerContext = true;
+    renderTasksList();
+    openSheet('tasks-overlay');
+  });
+  on(A.ADD_TASK_MGR, () => {
+    _taskManagerContext = true;
+    openTaskEditor();
+  });
+  on(A.EDIT_TASK_MGR, (el) => {
+    _taskManagerContext = true;
+    openTaskEditor(el.dataset.id);
+  });
+  on(A.DELETE_TASK_MGR, (el) => {
+    _taskManagerContext = true;
+    deleteTaskId = el.dataset.id;
+    openSheet('delete-task-overlay');
+  });
+  document.getElementById('close-tasks-btn')?.addEventListener('click', () => closeSheet('tasks-overlay'));
+
   // ── Task editor ──
   on(A.OPEN_TASK_EDITOR, () => openTaskEditor());
   on(A.EDIT_TASK, (el) => openTaskEditor(el.dataset.id));
@@ -571,7 +637,12 @@ export function initEvents() {
     openSheet('delete-task-overlay');
   });
   on(A.CONFIRM_DELETE_TASK, () => {
-    if (deleteTaskId) deleteTask(deleteTaskId).then(() => { closeSheets(); render(); });
+    const fromMgr = _taskManagerContext;
+    if (deleteTaskId) deleteTask(deleteTaskId).then(() => {
+      closeSheets();
+      if (fromMgr) { setTimeout(() => { renderTasksList(); openSheet('tasks-overlay'); }, 100); }
+      else render();
+    });
   });
   document.getElementById('cancel-delete-task')?.addEventListener('click', () => closeSheet('delete-task-overlay'));
 
@@ -645,7 +716,11 @@ export function initEvents() {
   // ── Category management ──
   on(A.OPEN_CATS, () => {
     renderCatsList();
-    openSheet('cats-overlay');
+    if (_taskManagerContext) {
+      openSheet('cats-overlay', { onClose: () => { renderTasksList(); openSheet('tasks-overlay'); } });
+    } else {
+      openSheet('cats-overlay');
+    }
   });
   on(A.ADD_CAT, () => {
     editCatName = null;
