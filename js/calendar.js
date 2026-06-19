@@ -1,6 +1,7 @@
 import { state, mutate } from './store.js';
 import { esc, fmtDate, catEmoji, isTemp, today } from './utils.js';
 import { completeTask, recalcTaskFromHistory } from './tasks.js';
+import { deleteHistoryEntry } from './history.js';
 import { showToast, triggerConfetti } from './components.js';
 
 const CAL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -11,6 +12,7 @@ export let calMonth = new Date().getMonth();
 export let calTaskFilter = null;
 export let calAddDate = null;
 export const calAddSelection = new Set();
+export const calAddOriginal = new Set();
 
 export function resetCalAddDate()    { calAddDate = null; }
 export function resetCalTaskFilter() { calTaskFilter = null; }
@@ -129,6 +131,13 @@ export async function openTaskCalendar(name) {
 
 export function openCalTaskPicker(dateStr) {
   if (!dateStr) { showToast('No date selected'); return; }
+
+  calAddSelection.clear();
+  calAddOriginal.clear();
+  state.history
+    .filter(h => h.type === 'earn' && h.date === dateStr && h.taskId)
+    .forEach(h => { calAddSelection.add(h.taskId); calAddOriginal.add(h.taskId); });
+
   const [y, m, d] = dateStr.split('-');
   document.getElementById('cal-add-date-label').textContent = `${d}/${m}/${y.slice(2)}`;
 
@@ -163,14 +172,25 @@ export function openCalTaskPicker(dateStr) {
 }
 
 export async function confirmCalTasks(selection, dateStr) {
-  if (!selection.size || !dateStr) return;
+  if (!dateStr) return;
   const prev = state.availablePoints;
 
   for (const id of selection) {
-    const t = state.tasks.find(x => x.id === id);
-    if (t) {
-      await completeTask(t, { date: dateStr, silent: true });
-      recalcTaskFromHistory(t);
+    if (!calAddOriginal.has(id)) {
+      const t = state.tasks.find(x => x.id === id);
+      if (t) {
+        await completeTask(t, { date: dateStr, silent: true });
+        recalcTaskFromHistory(t);
+      }
+    }
+  }
+
+  for (const id of calAddOriginal) {
+    if (!selection.has(id)) {
+      const entry = [...state.history].reverse().find(
+        h => h.type === 'earn' && h.taskId === id && h.date === dateStr
+      );
+      if (entry) await deleteHistoryEntry(entry);
     }
   }
 
@@ -180,6 +200,14 @@ export async function confirmCalTasks(selection, dateStr) {
   openCalDay(dateStr);
   const { render } = await import('./render.js');
   render();
-  showToast(`✓ ${selection.size} task(s) added`);
+
+  const added = [...selection].filter(id => !calAddOriginal.has(id)).length;
+  const removed = [...calAddOriginal].filter(id => !selection.has(id)).length;
+  if (added || removed) {
+    const parts = [];
+    if (added) parts.push(`+${added} added`);
+    if (removed) parts.push(`−${removed} removed`);
+    showToast(parts.join(', '));
+  }
   if (Math.floor(state.availablePoints / 50) > Math.floor(prev / 50)) triggerConfetti();
 }

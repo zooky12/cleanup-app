@@ -191,10 +191,17 @@ export function renderOptions() {
         <div class="hpts ${h.type}">${h.type === 'redeem' ? '−' : '+'}${h.pts} pts</div>
         <div class="hdate">${fmtDate(h.date)}</div>
         ${h.type === 'earn' ? `<button class="icon-btn icon-btn-edit" data-action="edit-history-date" data-idx="${origIdx}" style="width:28px;height:28px;font-size:12px;">✏️</button>` : ''}
-        ${h.type === 'earn' ? `<button class="icon-btn icon-btn-delete" data-action="delete-history" data-idx="${origIdx}" style="width:28px;height:28px;font-size:12px;">🗑️</button>` : ''}
+        <button class="icon-btn icon-btn-delete" data-action="delete-history" data-idx="${origIdx}" style="width:28px;height:28px;font-size:12px;">🗑️</button>
       </div>`;
     }).join('');
   }
+
+  html += `
+    <div class="slabel" style="margin-top:20px;">🔔 Notifications</div>
+    <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
+      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Fires a real 1-task cycle notification using your first task. Tap Done on the notification — if the task completes and points update, notifications are working.</div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" data-action="test-notification">🔔 Send Test Notification</button>
+    </div>`;
 
   html += `
     <div class="danger-zone" style="margin-top:20px;">
@@ -687,10 +694,10 @@ export function initEvents() {
   on(A.DELETE_HISTORY, (el) => {
     const idx = parseInt(el.dataset.idx);
     const h = state.history[idx];
-    if (!h || h.type !== 'earn') return;
+    if (!h) return;
     editHistoryIdx = idx;
     document.getElementById('del-hist-name').textContent = h.name;
-    document.getElementById('del-hist-pts').textContent = '−' + h.pts;
+    document.getElementById('del-hist-pts').textContent = (h.type === 'redeem' ? '+' : '−') + h.pts;
     document.getElementById('del-hist-date').textContent = fmtDate(h.date);
     openSheet('del-history-overlay');
   });
@@ -740,6 +747,15 @@ export function initEvents() {
 
   // ── Notifications ──
   on(A.NOTIF_REQUEST, () => requestPermission());
+  on(A.TEST_NOTIFICATION, async () => {
+    if (Notification.permission !== 'granted') {
+      showToast('Enable notifications first');
+      return;
+    }
+    const tasks = state.tasks.filter(t => !isTemp(t));
+    if (!tasks.length) { showToast('Add a task first'); return; }
+    await beginCycle({ name: 'Test', notifMode: 'individual', taskIds: [tasks[0].id] });
+  });
 
   // ── Sharing ──
   on(A.SHARE_TASKS, () => shareTasksUrl());

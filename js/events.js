@@ -56,6 +56,7 @@ export const A = {
   NAV_CALENDAR: 'nav-calendar',
   NAV_REWARDS: 'nav-rewards',
   NAV_OPTIONS: 'nav-options',
+  TEST_NOTIFICATION: 'test-notification',
 };
 
 const _handlers = new Map();
