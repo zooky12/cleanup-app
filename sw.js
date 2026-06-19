@@ -1,6 +1,6 @@
 // CleanUp Service Worker
 // Bump CACHE_NAME whenever js/*.js or index.html changes to force re-cache
-const CACHE_NAME = "cleanup-v8";
+const CACHE_NAME = "cleanup-v9";
 
 const VAPID_PUBLIC_KEY = 'BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg';
 const PUSH_SERVER = ''; // Set after deploying the Deno push server
@@ -159,7 +159,7 @@ self.addEventListener("notificationclick", (e) => {
 
   if (data.type === "test") {
     e.waitUntil((async () => {
-      const result = { action: action || "click", time: Date.now() };
+      const result = { action: action || "click", raw: action, time: Date.now() };
       await putToIDB("meta", "lastTestAction", JSON.stringify(result));
       const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       let notified = false;
@@ -176,12 +176,17 @@ self.addEventListener("notificationclick", (e) => {
     return;
   }
 
-  if (action === "done") {
+  // On Linux/Wayland notification daemons, action buttons may fire with e.action=""
+  // (body click) or only "snooze" is passed through. Treat body-click on a cycle
+  // notification as "done" so it always does something useful.
+  const effectiveAction = action || (data.type === "cycle-task" ? "done" : "");
+
+  if (effectiveAction === "done") {
     e.waitUntil(cycleDone(data));
     return;
   }
 
-  if (action === "snooze") {
+  if (effectiveAction === "snooze") {
     e.waitUntil(cycleSnooze(data));
     return;
   }
@@ -260,8 +265,10 @@ async function cycleDone(data) {
   }
 
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  let sent = false;
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
+      await c.focus();
       c.postMessage({
         type: "task-action",
         taskId: task.taskId,
@@ -272,9 +279,11 @@ async function cycleDone(data) {
         cycleId: cycle.cycleId,
         taskIndex: data.taskIndex,
       });
+      sent = true;
       break;
     }
   }
+  if (!sent) await self.clients.openWindow("./");
 }
 
 async function cycleSnooze(data) {
@@ -300,8 +309,10 @@ async function cycleSnooze(data) {
   await advanceCycle(cycle, cycles);
 
   const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  let sent = false;
   for (const c of clients) {
     if (c.url.startsWith(self.location.origin)) {
+      await c.focus();
       c.postMessage({
         type: "task-action",
         taskId: task.taskId,
@@ -310,9 +321,11 @@ async function cycleSnooze(data) {
         action: "snooze",
         cycleId: cycle.cycleId,
       });
+      sent = true;
       break;
     }
   }
+  if (!sent) await self.clients.openWindow("./");
 }
 
 async function advanceCycle(cycle, cycles) {

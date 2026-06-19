@@ -37,7 +37,7 @@ function registerSW() {
       showToast(`🎉 All ${e.data.count} tasks done!`);
     } else if (e.data.type === 'test-result') {
       const { setLastTestResult, render } = await import('./render.js');
-      setLastTestResult(e.data.action, e.data.time);
+      setLastTestResult(e.data.action, e.data.time, e.data.raw);
       render();
     } else if (e.data.type === 'navigate') {
       const { navigate } = await import('./render.js');

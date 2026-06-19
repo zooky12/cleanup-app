@@ -19,8 +19,8 @@ import { shareTasksUrl, shareProfileUrl, exportJson, triggerFileImport } from '.
 export let currentView = 'dashboard';
 
 let _testNotifResult = null;
-export function setLastTestResult(action, time) {
-  _testNotifResult = { action, time };
+export function setLastTestResult(action, time, raw) {
+  _testNotifResult = { action, time, raw };
 }
 
 export function navigate(view) {
@@ -205,6 +205,7 @@ export function renderOptions() {
     ? `<div style="margin-top:10px;padding:10px 12px;background:var(--primary-light);border-radius:var(--rs);font-size:13px;font-weight:600;color:var(--primary);">
         Last action: <strong>${esc(_testNotifResult.action)}</strong>
         <span style="font-weight:400;color:var(--g500);margin-left:6px;">${new Date(_testNotifResult.time).toLocaleTimeString()}</span>
+        <div style="font-size:11px;font-weight:400;color:var(--g400);margin-top:2px;">raw e.action = ${JSON.stringify(_testNotifResult.raw ?? '')}</div>
        </div>`
     : `<div style="margin-top:10px;font-size:12px;color:var(--g400);">No result yet — send the notification and tap a button.</div>`;
 
