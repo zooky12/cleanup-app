@@ -1,6 +1,6 @@
 // CleanUp Service Worker
 // Bump CACHE_NAME whenever js/*.js or index.html changes to force re-cache
-const CACHE_NAME = "cleanup-v7";
+const CACHE_NAME = "cleanup-v8";
 
 const VAPID_PUBLIC_KEY = 'BEGiBNfVeFivNRT9QhdpL0FkC-5jWBaRhLxEDovNb83hRLlwIYPciA4HO_Er2D_4o0i4YFo4GJom3X4ap_qkYOg';
 const PUSH_SERVER = ''; // Set after deploying the Deno push server
@@ -153,6 +153,25 @@ self.addEventListener("notificationclick", (e) => {
         }
       }
       self.clients.openWindow("./?view=pending");
+    })());
+    return;
+  }
+
+  if (data.type === "test") {
+    e.waitUntil((async () => {
+      const result = { action: action || "click", time: Date.now() };
+      await putToIDB("meta", "lastTestAction", JSON.stringify(result));
+      const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      let notified = false;
+      for (const c of allClients) {
+        if (c.url.startsWith(self.location.origin)) {
+          await c.focus();
+          c.postMessage({ type: "test-result", ...result });
+          notified = true;
+          break;
+        }
+      }
+      if (!notified) await self.clients.openWindow("./");
     })());
     return;
   }

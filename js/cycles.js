@@ -126,11 +126,15 @@ export async function reconcilePendingOps() {
       return;
     }
 
+    const doneNames = [];
+    const snoozedNames = [];
+
     for (const op of ops) {
       if (op.action === 'done') {
         const t = op.taskId ? state.tasks.find(x => x.id === op.taskId) : null;
         if (t) {
           await completeTask(t, { silent: true });
+          doneNames.push(t.name);
         } else if (op.taskName) {
           await mutate(s => {
             s.totalPoints += op.pointValue || 5;
@@ -143,10 +147,11 @@ export async function reconcilePendingOps() {
               catEmoji: op.catEmoji || '',
             });
           });
+          doneNames.push(op.taskName);
         }
       } else if (op.action === 'snooze' && op.taskId) {
         const t = state.tasks.find(x => x.id === op.taskId);
-        if (t) await snoozeTask(t);
+        if (t) { await snoozeTask(t); snoozedNames.push(t.name); }
       }
     }
 
@@ -160,11 +165,13 @@ export async function reconcilePendingOps() {
     state.tasks = state.tasks.filter(t => t.category !== '__temp__' || live.has(t.id));
 
     await idb.dbClear('pending_ops');
-    // Use immediate save since pending_ops are already cleared — state must persist
     await mutate(() => {}, { immediate: true });
 
     const { showToast } = await import('./components.js');
-    if (ops.length) showToast('Synced notification changes');
+    if (doneNames.length === 1) showToast(`✓ "${doneNames[0]}" marked done via notification`);
+    else if (doneNames.length > 1) showToast(`✓ ${doneNames.length} tasks marked done via notification`);
+    else if (snoozedNames.length === 1) showToast(`📅 "${snoozedNames[0]}" snoozed via notification`);
+    else if (snoozedNames.length > 1) showToast(`📅 ${snoozedNames.length} tasks snoozed via notification`);
   } catch (e) {
     console.warn('reconcilePendingOps error', e);
   } finally {

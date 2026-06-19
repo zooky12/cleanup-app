@@ -12,11 +12,16 @@ import { beginCycle, updateCycle, cancelCycle, addTempTask } from './cycles.js';
 import { redeemReward, saveReward, deleteReward, editPoints } from './rewards.js';
 import { deleteHistoryEntry, updateHistoryDate } from './history.js';
 import { renderCalendar, calPrev, calNext, openCalDay, openTaskCalendar, openCalTaskPicker, calTaskFilter, calYear, calMonth, calAddDate, calAddSelection, confirmCalTasks, resetCalAddDate, resetCalTaskFilter } from './calendar.js';
-import { requestPermission } from './notifications.js';
+import { requestPermission, testNotification } from './notifications.js';
 import { shareTasksUrl, shareProfileUrl, exportJson, triggerFileImport } from './sharing.js';
 
 /* ── View routing ── */
 export let currentView = 'dashboard';
+
+let _testNotifResult = null;
+export function setLastTestResult(action, time) {
+  _testNotifResult = { action, time };
+}
 
 export function navigate(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -196,11 +201,19 @@ export function renderOptions() {
     }).join('');
   }
 
+  const testResultHtml = _testNotifResult
+    ? `<div style="margin-top:10px;padding:10px 12px;background:var(--primary-light);border-radius:var(--rs);font-size:13px;font-weight:600;color:var(--primary);">
+        Last action: <strong>${esc(_testNotifResult.action)}</strong>
+        <span style="font-weight:400;color:var(--g500);margin-left:6px;">${new Date(_testNotifResult.time).toLocaleTimeString()}</span>
+       </div>`
+    : `<div style="margin-top:10px;font-size:12px;color:var(--g400);">No result yet — send the notification and tap a button.</div>`;
+
   html += `
     <div class="slabel" style="margin-top:20px;">🔔 Notifications</div>
     <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Fires a real 1-task cycle notification using your first task. Tap Done on the notification — if the task completes and points update, notifications are working.</div>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Tap Done or Snoozed on the test notification — the result appears below.</div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" data-action="test-notification">🔔 Send Test Notification</button>
+      ${testResultHtml}
     </div>`;
 
   html += `
@@ -560,7 +573,7 @@ export function initEvents() {
   });
   on(A.CONFIRM_CAL_ADD, () => {
     if (calAddDate) {
-      confirmCalTasks(calAddSelection, calAddDate);
+      confirmCalTasks(new Set(calAddSelection), calAddDate);
       calAddSelection.clear();
     }
   });
@@ -747,15 +760,7 @@ export function initEvents() {
 
   // ── Notifications ──
   on(A.NOTIF_REQUEST, () => requestPermission());
-  on(A.TEST_NOTIFICATION, async () => {
-    if (Notification.permission !== 'granted') {
-      showToast('Enable notifications first');
-      return;
-    }
-    const tasks = state.tasks.filter(t => !isTemp(t));
-    if (!tasks.length) { showToast('Add a task first'); return; }
-    await beginCycle({ name: 'Test', notifMode: 'individual', taskIds: [tasks[0].id] });
-  });
+  on(A.TEST_NOTIFICATION, () => testNotification());
 
   // ── Sharing ──
   on(A.SHARE_TASKS, () => shareTasksUrl());

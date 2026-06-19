@@ -35,6 +35,10 @@ function registerSW() {
       const { showToast } = await import('./components.js');
       render();
       showToast(`🎉 All ${e.data.count} tasks done!`);
+    } else if (e.data.type === 'test-result') {
+      const { setLastTestResult, render } = await import('./render.js');
+      setLastTestResult(e.data.action, e.data.time);
+      render();
     } else if (e.data.type === 'navigate') {
       const { navigate } = await import('./render.js');
       if (e.data.view) navigate(e.data.view);

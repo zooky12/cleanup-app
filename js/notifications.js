@@ -60,3 +60,31 @@ export async function subscribe() {
 export async function unsubscribe() {
   // Not fully implemented — would need a PUSH_SERVER DELETE endpoint
 }
+
+export async function testNotification() {
+  const { showToast } = await import('./components.js');
+  if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+    showToast('Notifications not supported');
+    return;
+  }
+  if (Notification.permission !== 'granted') {
+    showToast('Enable notifications first');
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification('🧪 CleanUp Test', {
+      body: 'Tap Done or Snoozed — result will appear under the button',
+      icon: '/icon.svg',
+      requireInteraction: true,
+      actions: [
+        { action: 'done', title: '✓ Done' },
+        { action: 'snooze', title: '📅 Snoozed' },
+      ],
+      data: { type: 'test', time: Date.now() },
+    });
+    showToast('Test notification sent!');
+  } catch (e) {
+    showToast('Could not send: ' + e.message);
+  }
+}
