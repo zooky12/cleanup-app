@@ -1,4 +1,4 @@
-import { open, dbGet, dbPut, dbClear } from './idb.js';
+import { open, dbGet, dbPut, dbDel, dbClear } from './idb.js';
 import { uid, today } from './utils.js';
 
 const FALLBACK_CATS = [
@@ -47,9 +47,11 @@ export const state = {
   rewards: [],
   activeCycles: [],
   notificationSubscribed: false,
+  scheduled: [],
 };
 
 let _saveTimer = null;
+let _fileHandle = null;
 
 export async function init() {
   const raw = await dbGet('state', 'current');
@@ -66,6 +68,10 @@ export async function init() {
     delete state.activeCycle;
   }
   if (!Array.isArray(state.activeCycles)) state.activeCycles = [];
+  if (!Array.isArray(state.scheduled)) state.scheduled = [];
+
+  try { _fileHandle = await dbGet('meta', 'fileHandle') || null; } catch (e) { _fileHandle = null; }
+
   return !raw;
 }
 
@@ -98,6 +104,44 @@ async function _writeIdb() {
   } catch (e) {
     console.warn('IDB write failed', e);
   }
+  _writeFile().catch(() => {});
+}
+
+async function _writeFile() {
+  if (!_fileHandle) return;
+  try {
+    const writable = await _fileHandle.createWritable();
+    await writable.write(JSON.stringify(state, null, 2));
+    await writable.close();
+  } catch (e) {
+    console.warn('File backup write failed', e.name);
+  }
+}
+
+export async function linkBackupFile() {
+  if (!window.showSaveFilePicker) return { ok: false, reason: 'not-supported' };
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'cleanup-backup.json',
+      types: [{ description: 'JSON backup', accept: { 'application/json': ['.json'] } }],
+    });
+    _fileHandle = handle;
+    await dbPut('meta', 'fileHandle', handle);
+    await _writeFile();
+    return { ok: true, filename: handle.name };
+  } catch (e) {
+    if (e.name === 'AbortError') return { ok: false, reason: 'cancelled' };
+    return { ok: false, reason: 'error' };
+  }
+}
+
+export async function unlinkBackupFile() {
+  _fileHandle = null;
+  await dbDel('meta', 'fileHandle');
+}
+
+export function fileBackupStatus() {
+  return { linked: !!_fileHandle, filename: _fileHandle?.name || null };
 }
 
 export async function mutate(fn, { immediate = false } = {}) {
@@ -144,6 +188,7 @@ export async function reset() {
   state.history = [];
   state.rewards = [];
   state.activeCycles = [];
+  state.scheduled = [];
   try {
     const db = await open();
     const tx = db.transaction(['state', 'cycle', 'pending_ops', 'meta'], 'readwrite');

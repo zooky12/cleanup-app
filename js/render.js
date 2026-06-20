@@ -1,4 +1,4 @@
-import { state, reset, mutate } from './store.js';
+import { state, reset, mutate, linkBackupFile, unlinkBackupFile, fileBackupStatus } from './store.js';
 import { esc, fmtDate, catEmoji, isTemp, today, urgency, diffDays, UCARD, UBADGE, urgencyLabel, groupByCategory } from './utils.js';
 import * as sel from './selection.js';
 import { A, on } from './events.js';
@@ -7,11 +7,11 @@ import {
   renderCycleProgress, renderGroupedTaskList, renderCategorySection,
   showToast, bumpPoints, triggerConfetti,
 } from './components.js';
-import { completeTask, snoozeTask, saveTask, deleteTask } from './tasks.js';
+import { completeTask, snoozeTask, saveTask, deleteTask, completeScheduledTask, deleteScheduledTask } from './tasks.js';
 import { beginCycle, updateCycle, cancelCycle, addTempTask } from './cycles.js';
 import { redeemReward, saveReward, deleteReward, editPoints } from './rewards.js';
 import { deleteHistoryEntry, updateHistoryDate } from './history.js';
-import { renderCalendar, calPrev, calNext, openCalDay, openTaskCalendar, openCalTaskPicker, calTaskFilter, calYear, calMonth, calAddDate, calAddSelection, confirmCalTasks, resetCalAddDate, resetCalTaskFilter } from './calendar.js';
+import { renderCalendar, calPrev, calNext, openCalDay, openTaskCalendar, openCalTaskPicker, calTaskFilter, calYear, calMonth, calAddDate, calAddSelection, confirmCalTasks, resetCalAddDate, resetCalTaskFilter, openScheduleForm, saveScheduleForm } from './calendar.js';
 import { requestPermission, testNotification } from './notifications.js';
 import { shareTasksUrl, shareProfileUrl, exportJson, triggerFileImport } from './sharing.js';
 
@@ -74,6 +74,7 @@ export function closeSheets() {
   editCatName = null;
   _returnSheet = null;
   _cycleSelection = null;
+  _scheduledInCycle = [];
   _taskManagerContext = false;
 }
 
@@ -82,8 +83,26 @@ export function renderDashboard() {
   const el = document.getElementById('dashboard-content');
   if (!el) return;
 
+  const todayStr = today();
+  const todayPlans = (state.scheduled || []).filter(x => x.date === todayStr);
+
+  let html = '';
+
+  if (todayPlans.length) {
+    html += `<div class="slabel" style="margin-top:4px;">📅 Today's Plans</div>`;
+    html += todayPlans.map(item => `
+      <div class="task-card due-today" style="margin-bottom:6px;">
+        <div class="task-name">${item.catEmoji} ${esc(item.name)}</div>
+        <div class="badge-row"><span class="badge badge-pts">⭐ ${item.pointValue} pts</span></div>
+        <div class="task-actions">
+          <button class="btn btn-done" data-action="sched-done" data-id="${item.id}">✓ Done</button>
+          <button class="btn btn-snooze" data-action="sched-delete" data-id="${item.id}">✕ Dismiss</button>
+        </div>
+      </div>`).join('');
+  }
+
   const visibleTasks = state.tasks.filter(t => !isTemp(t));
-  if (!visibleTasks.length) {
+  if (!visibleTasks.length && !todayPlans.length) {
     el.innerHTML = renderEmptyState('🏠', 'No tasks yet.<br>Tap <b>Edit Tasks</b> to add some!') +
       `<button class="manage-cats-btn" data-action="open-task-manager" style="margin-top:12px;">
         <span>📋 Edit Tasks</span>
@@ -92,28 +111,30 @@ export function renderDashboard() {
     return;
   }
 
-  const sortedTasks = [...visibleTasks].sort((a, b) => diffDays(a.nextDue) - diffDays(b.nextDue));
-  const html = renderGroupedTaskList({
-    tasks: sortedTasks,
-    categories: state.categories,
-    expanded: _dashboardExpanded,
-    renderHeader: (cat, tasks, emoji) => {
-      const uc = { overdue: 0, today: 0, soon: 0 };
-      tasks.forEach(t => {
-        const u = urgency(t.nextDue).type;
-        if (u in uc) uc[u]++;
-      });
-      let badges = '';
-      if (uc.overdue) badges += `<span class="badge badge-overdue">${uc.overdue} overdue</span>`;
-      if (uc.today) badges += `<span class="badge badge-today">${uc.today} today</span>`;
-      if (uc.soon) badges += `<span class="badge badge-soon">${uc.soon} tomorrow</span>`;
-      return {
-        left: `${emoji} ${esc(cat)} <span style="color:var(--g400);font-weight:500;font-size:12px;">(${tasks.length})</span>`,
-        right: badges,
-      };
-    },
-    renderRow: (t) => renderTaskCard(t),
-  });
+  if (visibleTasks.length) {
+    const sortedTasks = [...visibleTasks].sort((a, b) => diffDays(a.nextDue) - diffDays(b.nextDue));
+    html += renderGroupedTaskList({
+      tasks: sortedTasks,
+      categories: state.categories,
+      expanded: _dashboardExpanded,
+      renderHeader: (cat, tasks, emoji) => {
+        const uc = { overdue: 0, today: 0, soon: 0 };
+        tasks.forEach(t => {
+          const u = urgency(t.nextDue).type;
+          if (u in uc) uc[u]++;
+        });
+        let badges = '';
+        if (uc.overdue) badges += `<span class="badge badge-overdue">${uc.overdue} overdue</span>`;
+        if (uc.today) badges += `<span class="badge badge-today">${uc.today} today</span>`;
+        if (uc.soon) badges += `<span class="badge badge-soon">${uc.soon} tomorrow</span>`;
+        return {
+          left: `${emoji} ${esc(cat)} <span style="color:var(--g400);font-weight:500;font-size:12px;">(${tasks.length})</span>`,
+          right: badges,
+        };
+      },
+      renderRow: (t) => renderTaskCard(t),
+    });
+  }
 
   el.innerHTML = html + `<button class="manage-cats-btn" data-action="open-task-manager" style="margin-top:12px;">
     <span>📋 Edit Tasks</span>
@@ -172,17 +193,29 @@ export function renderOptions() {
   const el = document.getElementById('options-content');
   if (!el) return;
 
+  const backup = fileBackupStatus();
+  const backupHtml = backup.linked
+    ? `<div style="font-size:12px;color:var(--success);font-weight:600;margin-bottom:8px;">✓ Auto-backup active: ${esc(backup.filename)}</div>
+       <div style="display:flex;gap:8px;">
+         <button class="btn btn-primary" style="flex:1;justify-content:center;padding:9px;" data-action="link-backup">Change file</button>
+         <button class="btn btn-secondary" style="flex:1;justify-content:center;padding:9px;" data-action="unlink-backup">Disable</button>
+       </div>`
+    : `<div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Link a file on your disk. Every save will write to it — survives browser cache clears.</div>
+       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" data-action="link-backup">📁 Link backup file</button>`;
+
   let html = `
     <div class="slabel" style="margin-top:4px;">💾 Backup</div>
     <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📤 Export data</div>
-      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Save everything — tasks, rewards, points and history — to a JSON file.</div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" data-action="export-json">Download JSON backup</button>
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">🔄 Auto-backup file</div>
+      ${backupHtml}
     </div>
     <div style="background:var(--g100);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📥 Import data</div>
-      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Restore from a previously exported JSON file.</div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" data-action="import-json">Choose JSON file</button>
+      <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📤 Manual export</div>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:10px;">Download a JSON snapshot of everything.</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;padding:9px;" data-action="export-json">Download JSON</button>
+        <button class="btn btn-secondary" style="flex:1;justify-content:center;padding:9px;" data-action="restore-backup">📥 Restore from file</button>
+      </div>
     </div>`;
 
   if (state.history.length) {
@@ -307,6 +340,7 @@ let _cycleSelection = null;
 let _pendingTempTasks = [];
 let _pendingCycleId = null;
 let _reopenPendingAfterSave = false;
+let _scheduledInCycle = [];  // [{ tempTaskId, scheduledItem }]
 
 /* ── Task editor ── */
 export function populateCatSelect(selectedVal) {
@@ -369,9 +403,22 @@ export function openCycleBuilder(cycleId) {
   _cycleSelection = _cycleSelection || sel.createSelection({ onChange: () => {} });
   _cycleSelection.clear();
   _pendingTempTasks = [];
+  _scheduledInCycle = [];
   _pendingCycleId = cycleId || null;
   document.getElementById('cycle-name-input').value = '';
   document.getElementById('cycle-notif-list').checked = false;
+
+  if (!cycleId) {
+    // Pre-select today's scheduled items as temp tasks
+    const todayStr = today();
+    const todayPlans = (state.scheduled || []).filter(x => x.date === todayStr);
+    for (const item of todayPlans) {
+      const task = addTempTask(item.name, item.pointValue);
+      _pendingTempTasks.push(task);
+      _scheduledInCycle.push({ tempTaskId: task.id, scheduledItem: item });
+      _cycleSelection.toggle(task.id);
+    }
+  }
 
   if (cycleId) {
     const cycle = state.activeCycles.find(c => c.cycleId === cycleId);
@@ -476,7 +523,7 @@ export function toggleCycleCat(name) {
   renderCycleBuilder();
 }
 
-export function beginCycleAction() {
+export async function beginCycleAction() {
   if (!_cycleSelection || !_cycleSelection.size) {
     showToast('Select at least one task');
     return;
@@ -484,27 +531,23 @@ export function beginCycleAction() {
   const notifMode = document.getElementById('cycle-notif-list').checked ? 'simultaneous' : 'individual';
   const name = document.getElementById('cycle-name-input').value.trim() || 'Cycle';
 
+  // Complete any scheduled items that are included in this cycle
+  for (const { tempTaskId, scheduledItem } of _scheduledInCycle) {
+    if (_cycleSelection.has(tempTaskId)) {
+      await completeScheduledTask(scheduledItem, { silent: true });
+    }
+  }
+  _scheduledInCycle = [];
+
   if (_pendingCycleId) {
-    updateCycle(_pendingCycleId, {
-      name,
-      notifMode,
-      taskIds: _cycleSelection.items,
-    }).then(() => {
-      closeSheets();
-      render();
-    });
+    await updateCycle(_pendingCycleId, { name, notifMode, taskIds: _cycleSelection.items });
   } else {
-    beginCycle({
-      name,
-      notifMode,
-      taskIds: _cycleSelection.items,
-    }).then(() => {
-      closeSheets();
-      render();
-    });
+    await beginCycle({ name, notifMode, taskIds: _cycleSelection.items });
   }
 
   _cycleSelection = null;
+  closeSheets();
+  render();
 }
 
 /* ── Event wiring ── */
@@ -581,6 +624,7 @@ export function initEvents() {
     _pendingTempTasks.forEach(t => { state.tasks = state.tasks.filter(x => x.id !== t.id); });
     _cycleSelection = null;
     _pendingTempTasks = [];
+    _scheduledInCycle = [];
     closeSheets();
     render();
   });
@@ -667,6 +711,70 @@ export function initEvents() {
   document.getElementById('cancel-cal-add-btn')?.addEventListener('click', () => closeSheet('cal-add-task-overlay'));
   document.getElementById('cal-day-overlay')?.addEventListener('click', e => {
     if (e.target === e.currentTarget) closeSheet('cal-day-overlay');
+  });
+
+  // ── Scheduled tasks ──
+  on(A.SCHED_DONE, async (el) => {
+    const id = el.dataset.id;
+    const dateStr = el.dataset.date;
+    const item = state.scheduled.find(x => x.id === id);
+    if (!item) return;
+    await completeScheduledTask(item, { date: dateStr || item.date });
+    render();
+    renderCalendar();
+    if (document.getElementById('cal-day-overlay')?.classList.contains('open')) {
+      const date = dateStr || item.date;
+      import('./calendar.js').then(m => m.openCalDay(date));
+    }
+  });
+  on(A.SCHED_DELETE, async (el) => {
+    const id = el.dataset.id;
+    const item = state.scheduled.find(x => x.id === id);
+    if (!item) return;
+    const date = item.date;
+    await deleteScheduledTask(id);
+    render();
+    renderCalendar();
+    if (document.getElementById('cal-day-overlay')?.classList.contains('open')) {
+      import('./calendar.js').then(m => m.openCalDay(date));
+    }
+    showToast('Removed');
+  });
+  on(A.OPEN_SCHEDULE_FORM, (el) => {
+    const dateStr = el.dataset.date || (calAddDate || '');
+    if (dateStr) openScheduleForm(dateStr);
+  });
+  on(A.SAVE_SCHEDULE_FORM, () => saveScheduleForm());
+  document.getElementById('cancel-schedule-btn')?.addEventListener('click', () => closeSheet('schedule-form-overlay'));
+  document.getElementById('save-schedule-btn')?.addEventListener('click', () => saveScheduleForm());
+
+  // ── Backup file ──
+  on(A.LINK_BACKUP, async () => {
+    const result = await linkBackupFile();
+    if (result.ok) showToast(`✓ Backup linked: ${result.filename}`);
+    else if (result.reason !== 'cancelled') showToast('Could not link file');
+    renderOptions();
+  });
+  on(A.UNLINK_BACKUP, async () => {
+    await unlinkBackupFile();
+    showToast('Backup unlinked');
+    renderOptions();
+  });
+  on(A.RESTORE_BACKUP, async () => {
+    if (!window.showOpenFilePicker) {
+      // Fallback: use the existing file input
+      triggerFileImport();
+      return;
+    }
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description: 'JSON backup', accept: { 'application/json': ['.json'] } }],
+      });
+      const file = await handle.getFile();
+      import('./sharing.js').then(m => m.handleImportedFile(file));
+    } catch (e) {
+      if (e.name !== 'AbortError') showToast('Could not open file');
+    }
   });
 
   // ── Rewards ──

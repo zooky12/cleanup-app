@@ -86,6 +86,46 @@ export async function deleteTask(id) {
   showToast('Task deleted');
 }
 
+export async function saveScheduledTask({ id, name, catEmoji, pointValue, date }) {
+  const itemId = id || uid();
+  await mutate(s => {
+    const idx = s.scheduled.findIndex(x => x.id === itemId);
+    const item = { id: itemId, name, catEmoji: catEmoji || '📅', pointValue, date };
+    if (idx >= 0) s.scheduled[idx] = item;
+    else s.scheduled.push(item);
+  });
+  return itemId;
+}
+
+export async function deleteScheduledTask(id) {
+  await mutate(s => { s.scheduled = s.scheduled.filter(x => x.id !== id); });
+}
+
+export async function completeScheduledTask(item, opts = {}) {
+  let prev;
+  const date = opts.date || today();
+  await mutate(s => {
+    prev = s.availablePoints;
+    s.scheduled = s.scheduled.filter(x => x.id !== item.id);
+    s.totalPoints += item.pointValue;
+    s.availablePoints += item.pointValue;
+    s.history.push({
+      name: item.name,
+      taskId: null,
+      pts: item.pointValue,
+      date,
+      type: 'earn',
+      catEmoji: item.catEmoji || '📅',
+    });
+  });
+  if (!opts.silent) {
+    const { showToast, bumpPoints, triggerConfetti } = await import('./components.js');
+    showToast(`✓ Done! +${item.pointValue} pts`);
+    bumpPoints();
+    if (Math.floor(state.availablePoints / 50) > Math.floor(prev / 50)) triggerConfetti();
+  }
+}
+
 function uid() {
   return Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
 }

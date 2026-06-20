@@ -1,6 +1,6 @@
 import { state, mutate } from './store.js';
 import { esc, fmtDate, catEmoji, isTemp, today } from './utils.js';
-import { completeTask, recalcTaskFromHistory } from './tasks.js';
+import { completeTask, recalcTaskFromHistory, completeScheduledTask, deleteScheduledTask, saveScheduledTask } from './tasks.js';
 import { deleteHistoryEntry } from './history.js';
 import { showToast, triggerConfetti } from './components.js';
 
@@ -38,6 +38,12 @@ export function renderCalendar() {
   let startDow = firstDay.getDay();
   startDow = startDow === 0 ? 6 : startDow - 1;
 
+  // Build scheduled map: date → items[]
+  const scheduledMap = {};
+  state.scheduled.forEach(item => {
+    (scheduledMap[item.date] = scheduledMap[item.date] || []).push(item);
+  });
+
   let html = '';
 
   if (calTaskFilter) {
@@ -61,11 +67,26 @@ export function renderCalendar() {
     const entries = dayMap[dateStr] || [];
     const count = entries.length;
     const isToday = dateStr === todayStr;
-    let cls = calTaskFilter
-      ? (count > 0 ? 'ct' : 'c0')
-      : (count === 0 ? 'c0' : count === 1 ? 'c1' : count === 2 ? 'c2' : count === 3 ? 'c3' : 'c4');
+    const isFuture = dateStr > todayStr;
+    const scheduledItems = scheduledMap[dateStr] || [];
+
+    let cls;
+    if (calTaskFilter) {
+      cls = count > 0 ? 'ct' : 'c0';
+    } else if (isFuture && scheduledItems.length > 0) {
+      cls = 'cs';
+    } else if (!isFuture && scheduledItems.length > 0 && count === 0) {
+      cls = 'cm';
+    } else {
+      cls = count === 0 ? 'c0' : count === 1 ? 'c1' : count === 2 ? 'c2' : count === 3 ? 'c3' : 'c4';
+    }
     if (isToday) cls += ' today';
-    html += `<div class="cal-day ${cls}" data-action="cal-day" data-date="${dateStr}">${day}${count > 0 ? `<span class="cal-count">${count}</span>` : ''}</div>`;
+
+    const indicator = scheduledItems.length > 0 && !calTaskFilter
+      ? `<span class="cal-sched-dot">${isFuture ? '●' : '!'}</span>`
+      : (count > 0 ? `<span class="cal-count">${count}</span>` : '');
+
+    html += `<div class="cal-day ${cls}" data-action="cal-day" data-date="${dateStr}">${day}${indicator}</div>`;
   }
 
   html += `</div>`;
@@ -79,6 +100,8 @@ export function renderCalendar() {
         <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#14532d;"></div>2</div>
         <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#15803d;"></div>3</div>
         <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#22c55e;"></div>4+</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:var(--primary-light);border:1px solid var(--primary);"></div>planned</div>
+        <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:#3b1a00;border:1px solid var(--warning);"></div>missed</div>
       </div>`;
   }
 
@@ -98,13 +121,53 @@ export function calNext() {
 }
 
 export function openCalDay(dateStr) {
-  const entries = state.history.filter(h => h.type === 'earn' && h.date === dateStr);
   const [y, m, d] = dateStr.split('-');
   document.getElementById('cal-day-date').textContent = `${d}/${m}/${y.slice(2)}`;
   calAddDate = dateStr;
 
+  const isFuture = dateStr > today();
+  const scheduledItems = state.scheduled.filter(x => x.date === dateStr);
+
+  if (isFuture) {
+    _renderFutureDaySheet(dateStr, scheduledItems);
+  } else {
+    _renderPastDaySheet(dateStr, scheduledItems);
+  }
+
+  document.getElementById('cal-day-overlay').classList.add('open');
+}
+
+function _renderFutureDaySheet(dateStr, scheduledItems) {
+  const tasksEl = document.getElementById('cal-day-tasks');
+  const addBtn = document.getElementById('cal-day-add-btn');
+
+  if (scheduledItems.length) {
+    tasksEl.innerHTML = scheduledItems.map(item => `
+      <div class="cal-day-task" style="border-left:3px solid var(--primary);">
+        <div class="cal-day-task-name">${item.catEmoji} ${esc(item.name)}</div>
+        <div class="cal-day-task-pts">⭐${item.pointValue} pts</div>
+        <button class="icon-btn icon-btn-delete" data-action="sched-delete" data-id="${item.id}" style="font-size:13px;flex-shrink:0;">✕</button>
+      </div>`).join('');
+  } else {
+    tasksEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No plans for this day yet.</div>';
+  }
+
+  if (addBtn) {
+    addBtn.textContent = '+ Plan a task';
+    addBtn.dataset.action = 'open-schedule-form';
+    addBtn.dataset.date = dateStr;
+  }
+}
+
+function _renderPastDaySheet(dateStr, missedItems) {
+  const entries = state.history.filter(h => h.type === 'earn' && h.date === dateStr);
+  const tasksEl = document.getElementById('cal-day-tasks');
+  const addBtn = document.getElementById('cal-day-add-btn');
+
+  let html = '';
+
   if (entries.length) {
-    document.getElementById('cal-day-tasks').innerHTML = entries.map(h => {
+    html += entries.map(h => {
       const task = state.tasks.find(t => t.id === h.taskId || t.name === h.name);
       const emoji = h.catEmoji || (task ? catEmoji(state.categories, task.category) : '');
       return `<div class="cal-day-task" data-action="task-cal-filter" data-name="${esc(h.name).replace(/"/g, '&quot;')}">
@@ -114,10 +177,26 @@ export function openCalDay(dateStr) {
       </div>`;
     }).join('');
   } else {
-    document.getElementById('cal-day-tasks').innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px;">No tasks done on this day.</div>';
+    html += '<div style="text-align:center;padding:12px 20px;color:var(--g400);font-size:13px;">No tasks done on this day.</div>';
   }
 
-  document.getElementById('cal-day-overlay').classList.add('open');
+  if (missedItems.length) {
+    html += `<div class="slabel" style="margin-top:12px;">⚠ Missed plans</div>`;
+    html += missedItems.map(item => `
+      <div class="cal-day-task" style="border-left:3px solid var(--warning);background:var(--warning-light);">
+        <div class="cal-day-task-name">${item.catEmoji} ${esc(item.name)}</div>
+        <div class="cal-day-task-pts" style="color:var(--warning);">⭐${item.pointValue}</div>
+        <button class="btn btn-done" data-action="sched-done" data-id="${item.id}" data-date="${dateStr}" style="padding:5px 10px;font-size:11px;flex-shrink:0;">✓ Done</button>
+        <button class="icon-btn icon-btn-delete" data-action="sched-delete" data-id="${item.id}" style="font-size:13px;flex-shrink:0;">✕</button>
+      </div>`).join('');
+  }
+
+  tasksEl.innerHTML = html;
+  if (addBtn) {
+    addBtn.textContent = '+ Add task completion';
+    addBtn.dataset.action = 'cal-add-completion';
+    delete addBtn.dataset.date;
+  }
 }
 
 export async function openTaskCalendar(name) {
@@ -211,3 +290,33 @@ export async function confirmCalTasks(selection, dateStr) {
   }
   if (Math.floor(state.availablePoints / 50) > Math.floor(prev / 50)) triggerConfetti();
 }
+
+export function openScheduleForm(dateStr) {
+  const overlay = document.getElementById('schedule-form-overlay');
+  if (!overlay) return;
+  const [y, m, d] = dateStr.split('-');
+  document.getElementById('sf-date-label').textContent = `${d}/${m}/${y.slice(2)}`;
+  document.getElementById('sf-emoji').value = '📅';
+  document.getElementById('sf-name').value = '';
+  document.getElementById('sf-pts').value = '5';
+  document.getElementById('sf-date').value = dateStr;
+  overlay.classList.add('open');
+  setTimeout(() => document.getElementById('sf-name')?.focus(), 300);
+}
+
+export async function saveScheduleForm() {
+  const name = document.getElementById('sf-name').value.trim();
+  if (!name) { showToast('Enter a task name'); return; }
+  const catEmoji = document.getElementById('sf-emoji').value.trim() || '📅';
+  const pointValue = Math.max(1, parseInt(document.getElementById('sf-pts').value) || 5);
+  const date = document.getElementById('sf-date').value;
+
+  await saveScheduledTask({ name, catEmoji, pointValue, date });
+
+  document.getElementById('schedule-form-overlay').classList.remove('open');
+  renderCalendar();
+
+  openCalDay(date);
+  showToast('Task planned!');
+}
+

@@ -61,6 +61,13 @@ export const A = {
   EDIT_TASK_MGR: 'edit-task-mgr',
   DELETE_TASK_MGR: 'delete-task-mgr',
   ADD_TASK_MGR: 'add-task-mgr',
+  SCHED_DONE: 'sched-done',
+  SCHED_DELETE: 'sched-delete',
+  OPEN_SCHEDULE_FORM: 'open-schedule-form',
+  SAVE_SCHEDULE_FORM: 'save-schedule-form',
+  LINK_BACKUP: 'link-backup',
+  UNLINK_BACKUP: 'unlink-backup',
+  RESTORE_BACKUP: 'restore-backup',
 };
 
 const _handlers = new Map();

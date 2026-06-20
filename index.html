@@ -339,6 +339,11 @@
     .drag-handle { font-size:18px; color:var(--g400); padding:0 6px 0 0; cursor:grab; flex-shrink:0; touch-action:none; line-height:1; user-select:none; }
     .list-item.dragging  { opacity:.25; }
     .list-item.drag-over { box-shadow:0 -3px 0 var(--primary), var(--sh); }
+
+    /* ── Scheduled / planned calendar markers ── */
+    .cal-day.cs { background:var(--primary-light); color:var(--primary); }
+    .cal-day.cm { background:#3b1a00; color:var(--warning); }
+    .cal-sched-dot { font-size:8px; font-weight:800; line-height:1; margin-top:1px; opacity:.9; }
   </style>
 </head>
 <body>
@@ -614,7 +619,7 @@
         <div class="sheet-handle"></div>
         <div class="sheet-title">📅 <span id="cal-day-date"></span></div>
         <div id="cal-day-tasks"></div>
-        <button class="btn btn-primary btn-full" data-action="cal-add-completion" style="margin-top:8px;">+ Add task completion</button>
+        <button class="btn btn-primary btn-full" id="cal-day-add-btn" data-action="cal-add-completion" style="margin-top:8px;">+ Add task completion</button>
         <button class="btn btn-secondary btn-full" onclick="document.getElementById('cal-day-overlay').classList.remove('open')">Close</button>
       </div>
     </div>
@@ -686,6 +691,31 @@
         </div>
         <button class="btn btn-primary btn-full" id="confirm-edit-hist-date">Save</button>
         <button class="btn btn-secondary btn-full" id="cancel-edit-hist-date">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ── Schedule task form ── -->
+    <div class="overlay" id="schedule-form-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">📅 Plan a task — <span id="sf-date-label"></span></div>
+        <div class="form-row">
+          <div class="form-group" style="flex:0 0 80px">
+            <label class="form-label">Emoji</label>
+            <input class="form-input" id="sf-emoji" placeholder="📅" maxlength="4" style="text-align:center;font-size:22px;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Task name</label>
+            <input class="form-input" id="sf-name" placeholder="e.g. Clean bathroom" maxlength="60">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Points</label>
+          <input class="form-input" id="sf-pts" type="number" min="1" max="999" value="5">
+        </div>
+        <input type="hidden" id="sf-date">
+        <button class="btn btn-primary btn-full" id="save-schedule-btn">📅 Plan this task</button>
+        <button class="btn btn-secondary btn-full" id="cancel-schedule-btn">Cancel</button>
       </div>
     </div>
 
